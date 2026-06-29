@@ -72,7 +72,7 @@ export default function OverviewPage() {
             <CardTitle className="text-base font-semibold text-foreground">Rooftops by OEM</CardTitle>
           </CardHeader>
           <CardContent>
-            <BarList items={byOem} color="primary" />
+            <BarList items={byOem} color="brand" />
           </CardContent>
         </Card>
 
@@ -81,7 +81,7 @@ export default function OverviewPage() {
             <CardTitle className="text-base font-semibold text-foreground">Rooftops by territory</CardTitle>
           </CardHeader>
           <CardContent>
-            <BarList items={byTerritory} color="brand" />
+            <BarList items={byTerritory} color="primary" />
           </CardContent>
         </Card>
       </div>

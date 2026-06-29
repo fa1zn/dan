@@ -20,8 +20,8 @@
   --secondary: 0 0% 96%;
   --secondary-foreground: 0 0% 9%;
 
-  --brand: 0 0% 9%; /* monochrome accent = ink */
-  --brand-foreground: 0 0% 98%;
+  --brand: 243 75% 58%; /* one disciplined accent — indigo */
+  --brand-foreground: 0 0% 100%;
 
   --muted: 0 0% 96%;
   --muted-foreground: 0 0% 40%;
@@ -49,8 +49,8 @@
   --secondary: 0 0% 14%;
   --secondary-foreground: 0 0% 96%;
 
-  --brand: 0 0% 96%;
-  --brand-foreground: 0 0% 9%;
+  --brand: 245 80% 70%; /* indigo, brighter on dark */
+  --brand-foreground: 0 0% 100%;
 
   --muted: 0 0% 14%;
   --muted-foreground: 0 0% 60%;
