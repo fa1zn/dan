@@ -1,4 +1,5 @@
 import { getSqlite } from "./db";
+import { computePamFit } from "./pamfit";
 
 /* These run only in Server Components / route handlers (better-sqlite3 is native). */
 
@@ -284,6 +285,7 @@ export interface CallListItem {
   hs_owner: string | null;
   primary: Person | null;
   people: Person[];
+  pamfit: { score: number; band: "Hot" | "Warm" | "Cool"; talkTrack: string };
 }
 
 // Who a rep most wants to reach, in priority order.
@@ -321,7 +323,9 @@ export function getCallList(state: string, limit = 200): CallListItem[] {
   const rows = getSqlite()
     .prepare(
       `SELECT d.id, d.name, d.oem, d.tier, d.city, d.state_province, d.address_street, d.postal_code,
-              d.country, d.phone, d.contacts, d.hs_in_crm, d.hs_owner, COALESCE(c.status,'new') AS status
+              d.country, d.phone, d.contacts, d.tools_used, d.enrichment, d.website,
+              d.website_valid, d.phone_valid, d.brand_confirmed, d.hs_in_crm, d.hs_owner,
+              COALESCE(c.status,'new') AS status
        FROM dealerships d LEFT JOIN account_crm c ON c.dealership_id = d.id
        WHERE d.state_province = ?
        ORDER BY (d.contacts LIKE '%staff-page%') DESC, (d.phone IS NOT NULL) DESC, d.name
@@ -329,7 +333,7 @@ export function getCallList(state: string, limit = 200): CallListItem[] {
     )
     .all(state.toUpperCase(), limit) as (Record<string, unknown> & { contacts: string | null })[];
 
-  return rows.map((r) => {
+  const items = rows.map((r) => {
     let people: Person[] = [];
     try {
       people = (JSON.parse(r.contacts ?? "[]") as Person[]).filter((p) => p.name);
@@ -337,6 +341,25 @@ export function getCallList(state: string, limit = 200): CallListItem[] {
       people = [];
     }
     people.sort((a, b) => rankPerson(a) - rankPerson(b));
+    let tools: string[] = [];
+    let signals: { rating?: number; reviewCount?: number; hours?: string } = {};
+    try {
+      tools = JSON.parse((r.tools_used as string) ?? "[]");
+    } catch {}
+    try {
+      signals = JSON.parse((r.enrichment as string) ?? "{}");
+    } catch {}
+    const fit = computePamFit({
+      contacts: people,
+      tools,
+      signals,
+      phone: (r.phone as string) ?? null,
+      phoneValid: r.phone_valid === 1,
+      website: (r.website as string) ?? null,
+      websiteValid: r.website_valid == null ? null : r.website_valid === 1,
+      brandConfirmed: r.brand_confirmed === 1,
+      tier: (r.tier as string) ?? null,
+    });
     return {
       id: r.id as number,
       name: r.name as string,
@@ -349,12 +372,17 @@ export function getCallList(state: string, limit = 200): CallListItem[] {
       postal_code: (r.postal_code as string) ?? null,
       country: (r.country as string) ?? null,
       phone: (r.phone as string) ?? null,
+      pamfit: { score: fit.score, band: fit.band, talkTrack: fit.talkTrack },
       hs_in_crm: (r.hs_in_crm as number) ?? 0,
       hs_owner: (r.hs_owner as string) ?? null,
       primary: people[0] ?? null,
       people,
     };
   });
+
+  // Hottest accounts first — reps work the list top-down.
+  items.sort((a, b) => b.pamfit.score - a.pamfit.score);
+  return items;
 }
 
 export function getAccount(id: number): FullAccount | null {

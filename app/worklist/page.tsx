@@ -54,6 +54,11 @@ export default async function WorklistPage({ searchParams }: { searchParams: Pro
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
+                    <Badge
+                      variant={it.pamfit.band === "Hot" ? "brand" : it.pamfit.band === "Warm" ? "secondary" : "outline"}
+                    >
+                      {it.pamfit.band} · {it.pamfit.score}
+                    </Badge>
                     <Link href={`/accounts/${it.id}`} className="font-semibold hover:text-primary">
                       {it.name}
                     </Link>
@@ -78,6 +83,10 @@ export default async function WorklistPage({ searchParams }: { searchParams: Pro
                   ) : (
                     <div className="mt-2 text-sm text-muted-foreground">No named contact yet — call the main line.</div>
                   )}
+
+                  <div className="mt-2 rounded-md bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">Opener:</span> {it.pamfit.talkTrack}
+                  </div>
                 </div>
 
                 <div className="flex shrink-0 flex-col items-end gap-2">

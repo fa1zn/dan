@@ -7,6 +7,7 @@ import { InfoTip } from "@/components/info-tip";
 import { getAccount } from "@/lib/queries";
 import { getCrm, getActivity } from "@/lib/crm";
 import { computeIntel } from "@/lib/intel";
+import { computePamFit } from "@/lib/pamfit";
 import { EXPLAIN } from "@/lib/explain";
 
 interface Contact {
@@ -83,6 +84,18 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
     brandConfirmed: a.brand_confirmed === 1,
   });
   const confVariant = intel.confidence.label === "High" ? "success" : intel.confidence.label === "Medium" ? "default" : "muted";
+  const fit = computePamFit({
+    contacts,
+    tools,
+    signals,
+    phone: a.phone,
+    phoneValid: a.phone_valid === 1,
+    website: a.website,
+    websiteValid: a.website_valid == null ? null : a.website_valid === 1,
+    brandConfirmed: a.brand_confirmed === 1,
+    tier: a.tier,
+  });
+  const fitVariant = fit.band === "Hot" ? "brand" : fit.band === "Warm" ? "secondary" : "outline";
 
   const addr = [a.address_street, [a.city, a.state_province].filter(Boolean).join(", "), a.postal_code, a.country]
     .filter(Boolean)
@@ -134,11 +147,20 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
           <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
             <Sparkles className="h-4 w-4 text-brand" /> Sales intel
           </CardTitle>
-          <Badge variant={confVariant as "success" | "default" | "muted"}>
-            {intel.confidence.label} confidence
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant={fitVariant as "brand" | "secondary" | "outline"}>
+              Pam-fit {fit.band} · {fit.score}/100
+            </Badge>
+            <Badge variant={confVariant as "success" | "default" | "muted"}>
+              {intel.confidence.label} confidence
+            </Badge>
+          </div>
         </CardHeader>
-        <CardContent className="grid gap-5 md:grid-cols-2">
+        <CardContent className="space-y-4">
+          <div className="rounded-md border border-brand/30 bg-brand/5 px-3 py-2 text-sm">
+            <span className="font-medium text-brand">Opener:</span> {fit.talkTrack}
+          </div>
+          <div className="grid gap-5 md:grid-cols-2">
           <div>
             <div className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
               <Target className="h-3.5 w-3.5" /> Call first
@@ -185,6 +207,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                 No standout trigger scraped yet — enrich this rooftop for tech/hours/reviews signals.
               </div>
             )}
+          </div>
           </div>
         </CardContent>
       </Card>
