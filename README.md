@@ -42,6 +42,7 @@ Each step is idempotent and resumable, and can be run on its own:
 | `npm run pipeline:normalize` | Map raw → master schema, standardize address, derive domain/territory, collapse exact-key dupes → SQLite |
 | `npm run pipeline:dedupe` | Merge duplicate rooftops (key = OEM + normalized address, fallback domain), preferring OEM-sourced fields |
 | `npm run pipeline:validate` | `website_valid` (GET + 2xx + dealer-domain sanity), `phone_valid` (libphonenumber), `brand_confirmed` (OEM source) |
+| `npm run pipeline:enrich` | Free website-scrape enricher: pull contact emails from each dealer&rsquo;s own site into `contacts` (cap via `ENRICH_MAX_SITES`) |
 | `npm run pipeline:tier` | Tier A (known group or group_size > 1) vs Tier B |
 | `npm run pipeline:export` | Write `data/dealerships.csv` with HubSpot/Clay column names |
 | `npm run pipeline:report` | Print the QA summary |
@@ -106,10 +107,20 @@ state_province, postal_code, country, territory, phone, email, tools_used (json)
 contacts (json), tier, source, website_valid, phone_valid, brand_confirmed, dedup_key,
 created_at, updated_at` — defined in `lib/schema.ts`.
 
-## Enrichment (Phase 3+)
+## Dashboard (Phase 2) & CRM (Phase 3)
 
-`pipeline/enrich/types.ts` defines an `Enricher` interface so a contact provider can be
-added later. Phase 1 ships **no** paid providers — `contacts[]` stays empty.
+`npm run dev` serves Dan&rsquo;s dashboard (Next.js + Tailwind, Pam-complementary brand,
+light/dark): an **Overview** (KPIs, charts, pipeline funnel), **Accounts** (filter / sort /
+paginate / CSV export over the SQLite db), a **Pipeline** kanban board, and a **rooftop
+detail** page with a map, validation, and a working CRM (status, owner, next step, notes,
+activity timeline). CRM state lives in the `account_crm` and `activity` tables.
+
+## Enrichment
+
+`pipeline/enrich/types.ts` defines an `Enricher` interface. Phase 3 ships a **free**
+website-scrape enricher (`pipeline/enrich/website.ts`) that pulls contact emails from each
+dealer&rsquo;s own site — no paid APIs. Paid providers (Clay/Apollo/ZoomInfo) can be added to
+`ENABLED_ENRICHERS` later without touching the rest of the pipeline.
 
 ## Layout
 

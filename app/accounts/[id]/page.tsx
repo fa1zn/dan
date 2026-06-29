@@ -2,7 +2,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, MapPin, Phone, Globe, Mail } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "@/components/ui";
+import { CrmPanel, StatusBadge } from "@/components/crm-panel";
 import { getAccount } from "@/lib/queries";
+import { getCrm, getActivity } from "@/lib/crm";
+
+interface Contact {
+  name?: string;
+  title?: string;
+  email?: string;
+  phone?: string;
+  source?: string;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -28,8 +38,17 @@ function Flag({ label, state }: { label: string; state: boolean | null }) {
 
 export default async function AccountDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const a = getAccount(Number(id));
+  const accountId = Number(id);
+  const a = getAccount(accountId);
   if (!a) notFound();
+  const crm = getCrm(accountId);
+  const activity = getActivity(accountId);
+  let contacts: Contact[] = [];
+  try {
+    contacts = JSON.parse((a as unknown as { contacts?: string }).contacts ?? "[]");
+  } catch {
+    contacts = [];
+  }
 
   const addr = [a.address_street, [a.city, a.state_province].filter(Boolean).join(", "), a.postal_code, a.country]
     .filter(Boolean)
@@ -49,6 +68,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-semibold tracking-tight">{a.name}</h1>
+            <StatusBadge status={crm.status} />
             {a.tier === "A" ? <Badge variant="brand">Tier A</Badge> : a.tier ? <Badge variant="muted">Tier {a.tier}</Badge> : null}
           </div>
           <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -141,17 +161,51 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold text-foreground">Contacts & activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-            Decision-maker contacts and Dan&rsquo;s outreach activity land in Phase 3 (enrichment + CRM).
-            This rooftop currently has no enriched contacts.
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <CrmPanel
+            id={accountId}
+            status={crm.status}
+            owner={crm.owner}
+            nextStep={crm.nextStep}
+            activity={activity}
+          />
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-semibold text-foreground">Contacts</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {contacts.length === 0 ? (
+              <div className="rounded-md border border-dashed p-5 text-center text-sm text-muted-foreground">
+                No enriched contacts yet. Run <code className="text-foreground">npm run pipeline:enrich</code> to pull
+                contacts from dealer websites.
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {contacts.map((c, i) => (
+                  <li key={i} className="border-b pb-3 last:border-0">
+                    <div className="text-sm font-medium">{c.name ?? c.email ?? "Contact"}</div>
+                    {c.title && <div className="text-xs text-muted-foreground">{c.title}</div>}
+                    {c.email && (
+                      <a href={`mailto:${c.email}`} className="text-xs text-primary hover:underline">
+                        {c.email}
+                      </a>
+                    )}
+                    {c.phone && <div className="text-xs text-muted-foreground">{c.phone}</div>}
+                    {c.source && (
+                      <Badge variant="outline" className="mt-1">
+                        {c.source}
+                      </Badge>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

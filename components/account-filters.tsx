@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, ChevronDown, X } from "lucide-react";
 import { Input, Button, Badge } from "./ui";
 import { cn } from "@/lib/ui";
+import { STATUSES, STATUS_META } from "@/lib/crm-constants";
 import type { FilterOptions } from "@/lib/queries";
 
 export function AccountFilters({ options }: { options: FilterOptions }) {
@@ -77,6 +78,12 @@ export function AccountFilters({ options }: { options: FilterOptions }) {
         value={sp.get("tier") ?? ""}
         options={options.tiers.map((t) => ({ value: t, label: `Tier ${t}` }))}
         onChange={(v) => setParams({ tier: v || null })}
+      />
+      <SelectBox
+        label="Status"
+        value={sp.get("status") ?? ""}
+        options={STATUSES.map((s) => ({ value: s, label: STATUS_META[s].label }))}
+        onChange={(v) => setParams({ status: v || null })}
       />
 
       <FlagButton on={!!sp.get("hasWebsite")} onClick={() => toggleFlag("hasWebsite")}>

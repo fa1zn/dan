@@ -12,6 +12,7 @@
     "pipeline:normalize": "tsx pipeline/run.ts normalize",
     "pipeline:dedupe": "tsx pipeline/run.ts dedupe",
     "pipeline:validate": "tsx pipeline/run.ts validate",
+    "pipeline:enrich": "tsx pipeline/run.ts enrich",
     "pipeline:tier": "tsx pipeline/run.ts tier",
     "pipeline:export": "tsx pipeline/run.ts export",
     "pipeline:report": "tsx pipeline/run.ts report",

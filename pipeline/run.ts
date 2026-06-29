@@ -20,6 +20,7 @@ import { toMaster } from "./steps/normalize";
 import { collapseExact, dedupeRecords } from "./steps/dedupe";
 import { replaceAll, loadAll, countRows } from "./steps/persist";
 import { runValidate } from "./steps/validate";
+import { runEnrich } from "./steps/enrich";
 import { runTier } from "./steps/tier";
 import { runExport } from "./steps/export";
 import { runReport } from "./steps/report";
@@ -76,6 +77,12 @@ async function validate(): Promise<void> {
   console.log(`  phone checked: ${phoneChecked}, websites probed: ${websiteChecked}`);
 }
 
+async function enrich(): Promise<void> {
+  banner("ENRICH");
+  const { attempted, withContacts, totalContacts } = await runEnrich();
+  console.log(`  enriched ${withContacts}/${attempted} accounts with ${totalContacts} contacts`);
+}
+
 function tier(): void {
   banner("TIER");
   const { tierA, tierB } = runTier();
@@ -101,7 +108,7 @@ async function all(): Promise<void> {
   console.log(`✓ pipeline:all complete in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 }
 
-const HELP = `Usage: tsx pipeline/run.ts <ingest|normalize|dedupe|validate|tier|export|report|all>`;
+const HELP = `Usage: tsx pipeline/run.ts <ingest|normalize|dedupe|validate|enrich|tier|export|report|all>`;
 
 async function main() {
   const cmd = (process.argv[2] ?? "all").toLowerCase();
@@ -110,6 +117,7 @@ async function main() {
     case "normalize": normalize(); break;
     case "dedupe": dedupe(); break;
     case "validate": await validate(); break;
+    case "enrich": await enrich(); break;
     case "tier": tier(); break;
     case "export": exportCsv(); break;
     case "report": runReport(); break;

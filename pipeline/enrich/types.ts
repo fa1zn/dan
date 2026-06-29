@@ -12,5 +12,9 @@ export interface Enricher {
   enrich(record: MasterRecord): Promise<Contact[]>;
 }
 
-/** Registry of enabled enrichers. Intentionally empty in Phase 1 (free tier only). */
-export const ENABLED_ENRICHERS: Enricher[] = [];
+// Registry of enabled enrichers. Phase 1 shipped none (free tier only); Phase 3
+// adds a free website-scrape enricher. Paid providers (Clay/Apollo/ZoomInfo) can
+// be added here later without touching the rest of the pipeline.
+import { websiteContactEnricher } from "./website";
+
+export const ENABLED_ENRICHERS: Enricher[] = [websiteContactEnricher];

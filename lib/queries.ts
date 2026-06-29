@@ -103,6 +103,7 @@ export interface AccountFilters {
   country?: string;
   territory?: string;
   tier?: string;
+  status?: string;
   hasWebsite?: boolean;
   hasPhone?: boolean;
   brandConfirmed?: boolean;
@@ -128,9 +129,24 @@ export interface AccountRow {
   website_valid: number | null;
   phone_valid: number | null;
   brand_confirmed: number;
+  status: string;
+  owner: string | null;
 }
 
-const SORTABLE = new Set(["name", "oem", "city", "state_province", "country", "tier"]);
+const FROM = "FROM dealerships d LEFT JOIN account_crm c ON c.dealership_id = d.id";
+const SELECT_COLS = `d.id, d.name, d.oem, d.group_name, d.tier, d.city, d.state_province, d.country, d.territory,
+  d.website, d.domain, d.phone, d.website_valid, d.phone_valid, d.brand_confirmed,
+  COALESCE(c.status,'new') AS status, c.owner AS owner`;
+
+const SORTABLE: Record<string, string> = {
+  name: "d.name",
+  oem: "d.oem",
+  city: "d.city",
+  state_province: "d.state_province",
+  country: "d.country",
+  tier: "d.tier",
+  status: "COALESCE(c.status,'new')",
+};
 
 /** Build the shared WHERE clause + params from filters. */
 function whereClause(f: AccountFilters): { sql: string; params: unknown[] } {
@@ -155,8 +171,12 @@ function whereClause(f: AccountFilters): { sql: string; params: unknown[] } {
     params.push(f.territory);
   }
   if (f.tier) {
-    clauses.push("tier = ?");
+    clauses.push("d.tier = ?");
     params.push(f.tier);
+  }
+  if (f.status) {
+    clauses.push("COALESCE(c.status,'new') = ?");
+    params.push(f.status);
   }
   if (f.hasWebsite) clauses.push("website IS NOT NULL");
   if (f.hasPhone) clauses.push("phone IS NOT NULL");
@@ -177,24 +197,18 @@ export function listAccounts(f: AccountFilters): AccountPage {
   const db = getSqlite();
   const { sql: where, params } = whereClause(f);
 
-  const total = (db.prepare(`SELECT COUNT(*) AS n FROM dealerships ${where}`).get(...params) as { n: number }).n;
+  const total = (db.prepare(`SELECT COUNT(*) AS n ${FROM} ${where}`).get(...params) as { n: number }).n;
 
   const pageSize = f.pageSize ?? 25;
   const page = Math.max(1, f.page ?? 1);
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const offset = (Math.min(page, pageCount) - 1) * pageSize;
 
-  const sort = f.sort && SORTABLE.has(f.sort) ? f.sort : "name";
+  const sort = (f.sort && SORTABLE[f.sort]) || "d.name";
   const dir = f.dir === "desc" ? "DESC" : "ASC";
 
   const rows = db
-    .prepare(
-      `SELECT id, name, oem, group_name, tier, city, state_province, country, territory,
-              website, domain, phone, website_valid, phone_valid, brand_confirmed
-       FROM dealerships ${where}
-       ORDER BY ${sort} ${dir}, name ASC
-       LIMIT ? OFFSET ?`
-    )
+    .prepare(`SELECT ${SELECT_COLS} ${FROM} ${where} ORDER BY ${sort} ${dir}, d.name ASC LIMIT ? OFFSET ?`)
     .all(...params, pageSize, offset) as AccountRow[];
 
   return { rows, total, page, pageSize, pageCount };
@@ -204,14 +218,10 @@ export function listAccounts(f: AccountFilters): AccountPage {
 export function listAllAccounts(f: AccountFilters): AccountRow[] {
   const db = getSqlite();
   const { sql: where, params } = whereClause(f);
-  const sort = f.sort && SORTABLE.has(f.sort) ? f.sort : "name";
+  const sort = (f.sort && SORTABLE[f.sort]) || "d.name";
   const dir = f.dir === "desc" ? "DESC" : "ASC";
   return db
-    .prepare(
-      `SELECT id, name, oem, group_name, tier, city, state_province, country, territory,
-              website, domain, phone, website_valid, phone_valid, brand_confirmed
-       FROM dealerships ${where} ORDER BY ${sort} ${dir}, name ASC`
-    )
+    .prepare(`SELECT ${SELECT_COLS} ${FROM} ${where} ORDER BY ${sort} ${dir}, d.name ASC`)
     .all(...params) as AccountRow[];
 }
 
@@ -230,6 +240,12 @@ export interface FullAccount extends AccountRow {
 }
 
 export function getAccount(id: number): FullAccount | null {
-  const row = getSqlite().prepare("SELECT * FROM dealerships WHERE id = ?").get(id) as FullAccount | undefined;
+  const row = getSqlite()
+    .prepare(
+      `SELECT d.*, COALESCE(c.status,'new') AS status, c.owner AS owner
+       FROM dealerships d LEFT JOIN account_crm c ON c.dealership_id = d.id
+       WHERE d.id = ?`
+    )
+    .get(id) as FullAccount | undefined;
   return row ?? null;
 }

@@ -1,6 +1,9 @@
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { KpiCard, BarList } from "@/components/dashboard-bits";
 import { getKpis, getByOem, getByTerritory, getByTier } from "@/lib/queries";
+import { getPipelineCounts } from "@/lib/crm";
+import { STATUSES, STATUS_META } from "@/lib/crm-constants";
 import { fmt, pct } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +13,7 @@ export default function OverviewPage() {
   const byOem = getByOem(15);
   const byTerritory = getByTerritory();
   const byTier = getByTier();
+  const pipeline = getPipelineCounts();
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -36,6 +40,26 @@ export default function OverviewPage() {
         />
         <KpiCard title="Brand confirmed" value={pct(k.brandConfirmed, k.total)} sub={`${fmt(k.brandConfirmed)} via OEM source`} />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-semibold text-foreground">Dan&rsquo;s pipeline</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {STATUSES.map((s) => (
+              <Link
+                key={s}
+                href={`/accounts?status=${s}`}
+                className="rounded-lg border p-4 transition-colors hover:border-brand hover:bg-accent"
+              >
+                <div className="text-2xl font-semibold tracking-tight">{fmt(pipeline[s])}</div>
+                <div className="text-xs text-muted-foreground">{STATUS_META[s].label}</div>
+              </Link>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>

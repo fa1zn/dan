@@ -150,6 +150,12 @@ export function updateValidation(
     .run({ id, w: b2i(v.websiteValid), p: b2i(v.phoneValid), b: v.brandConfirmed ? 1 : 0 });
 }
 
+export function updateContacts(id: number, contacts: Contact[]): void {
+  getSqlite()
+    .prepare("UPDATE dealerships SET contacts=@c, updated_at=CURRENT_TIMESTAMP WHERE id=@id")
+    .run({ id, c: JSON.stringify(contacts ?? []) });
+}
+
 export function updateTier(id: number, tier: Tier, groupName: string | null, groupSize: number | null): void {
   getSqlite()
     .prepare(

@@ -56,6 +56,26 @@ export function getSqlite(): Database.Database {
     CREATE INDEX IF NOT EXISTS dealerships_oem_idx ON dealerships(oem);
     CREATE INDEX IF NOT EXISTS dealerships_country_idx ON dealerships(country);
     CREATE INDEX IF NOT EXISTS dealerships_domain_idx ON dealerships(domain);
+
+    -- Phase 3 CRM: the sales state Dan layers on top of each rooftop.
+    CREATE TABLE IF NOT EXISTS account_crm (
+      dealership_id INTEGER PRIMARY KEY REFERENCES dealerships(id) ON DELETE CASCADE,
+      status TEXT NOT NULL DEFAULT 'new',
+      owner TEXT,
+      next_step TEXT,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS account_crm_status_idx ON account_crm(status);
+
+    CREATE TABLE IF NOT EXISTS activity (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      dealership_id INTEGER NOT NULL REFERENCES dealerships(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL,
+      body TEXT,
+      author TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS activity_dealership_idx ON activity(dealership_id, created_at);
   `);
 
   _sqlite = db;

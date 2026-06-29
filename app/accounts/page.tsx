@@ -3,7 +3,9 @@ import { Download, ExternalLink } from "lucide-react";
 import { Card, Table, THead, TBody, TR, TH, TD, Badge, Button } from "@/components/ui";
 import { AccountFilters } from "@/components/account-filters";
 import { SortHeader, Pager } from "@/components/account-table-bits";
+import { StatusBadge } from "@/components/crm-panel";
 import { listAccounts, getFilterOptions, type AccountFilters as Filters } from "@/lib/queries";
+import { type Status } from "@/lib/crm-constants";
 import { fmt } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +20,7 @@ function parseFilters(sp: SP): Filters {
     country: one(sp.country),
     territory: one(sp.territory),
     tier: one(sp.tier),
+    status: one(sp.status),
     hasWebsite: !!one(sp.hasWebsite),
     hasPhone: !!one(sp.hasPhone),
     brandConfirmed: !!one(sp.brandConfirmed),
@@ -67,6 +70,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
           <THead>
             <TR className="hover:bg-transparent">
               <TH><SortHeader column="name" label="Dealership" /></TH>
+              <TH><SortHeader column="status" label="Status" /></TH>
               <TH><SortHeader column="oem" label="OEM" /></TH>
               <TH><SortHeader column="tier" label="Tier" /></TH>
               <TH><SortHeader column="city" label="City" /></TH>
@@ -80,7 +84,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
           <TBody>
             {rows.length === 0 && (
               <TR>
-                <TD colSpan={9} className="py-10 text-center text-muted-foreground">
+                <TD colSpan={10} className="py-10 text-center text-muted-foreground">
                   No rooftops match these filters.
                 </TD>
               </TR>
@@ -93,6 +97,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
                   </Link>
                   {r.group_name && <div className="text-xs text-muted-foreground">{r.group_name}</div>}
                 </TD>
+                <TD><StatusBadge status={(r.status as Status) ?? "new"} /></TD>
                 <TD>{r.oem ? <Badge variant="muted">{r.oem}</Badge> : <span className="text-muted-foreground">—</span>}</TD>
                 <TD>
                   {r.tier === "A" ? (
