@@ -1,0 +1,26 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# typescript build info
+*.tsbuildinfo
+
+# build
+/build
+
+# data: keep the directory and cache layout, ignore generated artifacts
+/data/dealerships.sqlite
+/data/dealerships.sqlite-*
+/data/dealerships.csv
+/data/raw/*.jsonl
+/data/cache/**
+
+# misc
+.DS_Store
+*.pem
+.env*
+!.env.example
