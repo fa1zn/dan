@@ -68,6 +68,12 @@ export function AccountFilters({ options }: { options: FilterOptions }) {
         onChange={(v) => setParams({ country: v || null })}
       />
       <SelectBox
+        label="State"
+        value={sp.get("state") ?? ""}
+        options={options.states}
+        onChange={(v) => setParams({ state: v || null })}
+      />
+      <SelectBox
         label="Territory"
         value={sp.get("territory") ?? ""}
         options={options.territories}

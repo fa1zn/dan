@@ -19,6 +19,7 @@ function parseFilters(sp: SP): Filters {
     oem: one(sp.oem) ? one(sp.oem)!.split(",").filter(Boolean) : undefined,
     country: one(sp.country),
     territory: one(sp.territory),
+    state: one(sp.state),
     tier: one(sp.tier),
     status: one(sp.status),
     hasWebsite: !!one(sp.hasWebsite),

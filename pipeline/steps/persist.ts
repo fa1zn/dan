@@ -156,6 +156,13 @@ export function updateContacts(id: number, contacts: Contact[]): void {
     .run({ id, c: JSON.stringify(contacts ?? []) });
 }
 
+/** Backfill a phone discovered during enrichment (it was already libphonenumber-validated). */
+export function backfillPhone(id: number, phone: string): void {
+  getSqlite()
+    .prepare("UPDATE dealerships SET phone=@p, phone_valid=1, updated_at=CURRENT_TIMESTAMP WHERE id=@id AND phone IS NULL")
+    .run({ id, p: phone });
+}
+
 export function updateTier(id: number, tier: Tier, groupName: string | null, groupSize: number | null): void {
   getSqlite()
     .prepare(

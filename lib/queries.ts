@@ -83,6 +83,7 @@ export interface FilterOptions {
   oems: string[];
   countries: string[];
   territories: string[];
+  states: string[];
   tiers: string[];
 }
 
@@ -93,6 +94,7 @@ export function getFilterOptions(): FilterOptions {
     oems: col("SELECT DISTINCT oem AS v FROM dealerships WHERE oem IS NOT NULL ORDER BY oem"),
     countries: col("SELECT DISTINCT country AS v FROM dealerships WHERE country IS NOT NULL ORDER BY country"),
     territories: col("SELECT DISTINCT territory AS v FROM dealerships WHERE territory IS NOT NULL ORDER BY territory"),
+    states: col("SELECT DISTINCT state_province AS v FROM dealerships WHERE state_province IS NOT NULL ORDER BY state_province"),
     tiers: col("SELECT DISTINCT tier AS v FROM dealerships WHERE tier IS NOT NULL ORDER BY tier"),
   };
 }
@@ -102,6 +104,7 @@ export interface AccountFilters {
   oem?: string[];
   country?: string;
   territory?: string;
+  state?: string;
   tier?: string;
   status?: string;
   hasWebsite?: boolean;
@@ -170,6 +173,10 @@ function whereClause(f: AccountFilters): { sql: string; params: unknown[] } {
     clauses.push("territory = ?");
     params.push(f.territory);
   }
+  if (f.state) {
+    clauses.push("d.state_province = ?");
+    params.push(f.state.toUpperCase());
+  }
   if (f.tier) {
     clauses.push("d.tier = ?");
     params.push(f.tier);
@@ -237,6 +244,101 @@ export interface FullAccount extends AccountRow {
   updated_at: string;
   latitude: number | null;
   longitude: number | null;
+}
+
+/* ---------- Rep call list (territory worklist) ---------- */
+
+export interface Person {
+  name?: string;
+  title?: string;
+  email?: string;
+  phone?: string;
+  source?: string;
+}
+
+export interface CallListItem {
+  id: number;
+  name: string;
+  oem: string | null;
+  tier: string | null;
+  status: string;
+  city: string | null;
+  state_province: string | null;
+  address_street: string | null;
+  postal_code: string | null;
+  country: string | null;
+  phone: string | null;
+  primary: Person | null;
+  people: Person[];
+}
+
+// Who a rep most wants to reach, in priority order.
+const TITLE_RANK = [
+  "general manager",
+  "dealer principal",
+  "owner",
+  "president",
+  "managing partner",
+  "general sales manager",
+  "director of sales",
+  "internet",
+  "bdc",
+  "sales manager",
+];
+
+function rankPerson(p: Person): number {
+  const t = (p.title ?? "").toLowerCase();
+  const i = TITLE_RANK.findIndex((k) => t.includes(k));
+  return i === -1 ? TITLE_RANK.length : i;
+}
+
+export function getCallListStates(): { code: string; total: number; named: number }[] {
+  return getSqlite()
+    .prepare(
+      `SELECT state_province AS code, COUNT(*) AS total,
+              SUM(contacts LIKE '%staff-page%') AS named
+       FROM dealerships WHERE state_province IS NOT NULL
+       GROUP BY state_province ORDER BY named DESC, total DESC`
+    )
+    .all() as { code: string; total: number; named: number }[];
+}
+
+export function getCallList(state: string, limit = 200): CallListItem[] {
+  const rows = getSqlite()
+    .prepare(
+      `SELECT d.id, d.name, d.oem, d.tier, d.city, d.state_province, d.address_street, d.postal_code,
+              d.country, d.phone, d.contacts, COALESCE(c.status,'new') AS status
+       FROM dealerships d LEFT JOIN account_crm c ON c.dealership_id = d.id
+       WHERE d.state_province = ?
+       ORDER BY (d.contacts LIKE '%staff-page%') DESC, (d.phone IS NOT NULL) DESC, d.name
+       LIMIT ?`
+    )
+    .all(state.toUpperCase(), limit) as (Record<string, unknown> & { contacts: string | null })[];
+
+  return rows.map((r) => {
+    let people: Person[] = [];
+    try {
+      people = (JSON.parse(r.contacts ?? "[]") as Person[]).filter((p) => p.name);
+    } catch {
+      people = [];
+    }
+    people.sort((a, b) => rankPerson(a) - rankPerson(b));
+    return {
+      id: r.id as number,
+      name: r.name as string,
+      oem: (r.oem as string) ?? null,
+      tier: (r.tier as string) ?? null,
+      status: r.status as string,
+      city: (r.city as string) ?? null,
+      state_province: (r.state_province as string) ?? null,
+      address_street: (r.address_street as string) ?? null,
+      postal_code: (r.postal_code as string) ?? null,
+      country: (r.country as string) ?? null,
+      phone: (r.phone as string) ?? null,
+      primary: people[0] ?? null,
+      people,
+    };
+  });
 }
 
 export function getAccount(id: number): FullAccount | null {

@@ -1,16 +1,21 @@
 import { ENABLED_ENRICHERS } from "../enrich/types";
 import type { Contact } from "../../lib/types";
-import { loadAll, updateContacts } from "./persist";
+import { loadAll, updateContacts, backfillPhone } from "./persist";
 
 const num = (v: string | undefined, dflt: number) => {
   const n = v == null ? NaN : Number(v);
   return Number.isFinite(n) ? n : dflt;
 };
+const list = (v: string | undefined): string[] | null =>
+  v && v.trim() ? v.split(",").map((s) => s.trim().toUpperCase()).filter(Boolean) : null;
 
-/** De-dupe contacts by email (case-insensitive), keeping the first/title-bearing one. */
+const AUTO_SOURCES = new Set(["website", "staff-page"]);
+
+/** Refresh scraped contacts (drop prior auto-sourced, keep manual), then de-dupe. */
 function mergeContacts(existing: Contact[], found: Contact[]): Contact[] {
+  const manual = existing.filter((c) => !AUTO_SOURCES.has(c.source ?? ""));
   const byEmail = new Map<string, Contact>();
-  for (const c of [...existing, ...found]) {
+  for (const c of [...manual, ...found]) {
     const key = (c.email ?? c.name ?? JSON.stringify(c)).toLowerCase();
     const prev = byEmail.get(key);
     if (!prev) byEmail.set(key, c);
@@ -36,7 +41,9 @@ export async function runEnrich(): Promise<EnrichResult> {
   }
 
   const cap = num(process.env.ENRICH_MAX_SITES, 50);
-  const candidates = loadAll().filter((r) => r.website);
+  const regions = list(process.env.ENRICH_REGIONS); // restrict to state/province codes
+  let candidates = loadAll().filter((r) => r.website);
+  if (regions) candidates = candidates.filter((r) => r.stateProvince && regions.includes(r.stateProvince.toUpperCase()));
   const slice = cap > 0 ? candidates.slice(0, cap) : candidates;
   console.log(`  [enrich] ${ENABLED_ENRICHERS.map((e) => e.name).join(", ")} over ${slice.length}/${candidates.length} sited accounts`);
 
@@ -57,6 +64,11 @@ export async function runEnrich(): Promise<EnrichResult> {
       updateContacts(rec.id, merged);
       withContacts++;
       totalContacts += found.length;
+      // Backfill the rooftop's call number when we found one and it had none.
+      if (!rec.phone) {
+        const mainLine = found.find((c) => c.phone)?.phone;
+        if (mainLine) backfillPhone(rec.id, mainLine);
+      }
     }
     if (++i % 25 === 0) console.log(`  [enrich] processed ${i}/${slice.length} (${withContacts} with contacts)`);
   }
