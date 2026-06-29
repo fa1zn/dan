@@ -13,6 +13,7 @@
  *   report     print the QA summary
  *   all        run the whole pipeline end-to-end (default)
  */
+import "./lib/load-env"; // must be first so CONFIG sees .env values
 import { CONFIG } from "./config";
 import { ALL_SOURCES, enabledSources } from "./sources";
 import { readAllRaw, writeRaw } from "./lib/rawstore";
@@ -24,6 +25,7 @@ import { runEnrich } from "./steps/enrich";
 import { runTier } from "./steps/tier";
 import { runExport } from "./steps/export";
 import { runReport } from "./steps/report";
+import { runHubspot } from "./integrations/hubspot";
 
 const nowIso = () => new Date().toISOString();
 const banner = (s: string) => console.log(`\n▶ ${s}`);
@@ -121,6 +123,7 @@ async function main() {
     case "tier": tier(); break;
     case "export": exportCsv(); break;
     case "report": runReport(); break;
+    case "hubspot": await runHubspot((process.argv[3] ?? "sync").toLowerCase()); break;
     case "all": await all(); break;
     case "help": case "-h": case "--help": console.log(HELP); break;
     default:

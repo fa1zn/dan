@@ -78,6 +78,11 @@ export function getSqlite(): Database.Database {
     CREATE INDEX IF NOT EXISTS activity_dealership_idx ON activity(dealership_id, created_at);
   `);
 
+  // Lightweight column migrations for integrations added after the initial schema.
+  const cols = new Set((db.prepare("PRAGMA table_info(dealerships)").all() as { name: string }[]).map((c) => c.name));
+  if (!cols.has("hubspot_company_id")) db.exec("ALTER TABLE dealerships ADD COLUMN hubspot_company_id TEXT");
+  if (!cols.has("hubspot_synced_at")) db.exec("ALTER TABLE dealerships ADD COLUMN hubspot_synced_at TEXT");
+
   _sqlite = db;
   return db;
 }

@@ -16,7 +16,10 @@
     "pipeline:tier": "tsx pipeline/run.ts tier",
     "pipeline:export": "tsx pipeline/run.ts export",
     "pipeline:report": "tsx pipeline/run.ts report",
-    "pipeline:all": "tsx pipeline/run.ts all"
+    "pipeline:all": "tsx pipeline/run.ts all",
+    "hubspot:push": "tsx pipeline/run.ts hubspot push",
+    "hubspot:pull": "tsx pipeline/run.ts hubspot pull",
+    "hubspot:sync": "tsx pipeline/run.ts hubspot sync"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.18",

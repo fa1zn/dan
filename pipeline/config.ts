@@ -55,6 +55,20 @@ export const CONFIG = {
     maxWebsites: num(process.env.VALIDATE_MAX_WEBSITES, 0),
   },
 
+  /** HubSpot two-way sync (Phase: integration). */
+  hubspot: {
+    token: process.env.HUBSPOT_TOKEN ?? "",
+    /** Writes only happen when explicitly enabled; otherwise every run is a dry-run. */
+    apply: bool(process.env.HUBSPOT_APPLY, false),
+    /** Restrict the sync set to these state/province codes. */
+    regions: list(process.env.HUBSPOT_REGIONS) ?? ["TX", "CA", "FL"],
+    /** Only sync rooftops we've enriched (have contacts). Set 0 to sync all in-region. */
+    onlyEnriched: bool(process.env.HUBSPOT_ONLY_ENRICHED, true),
+    batchSize: num(process.env.HUBSPOT_BATCH, 100),
+    /** Base URL of this app, used to write a deep link back to each Dan account. */
+    appBaseUrl: process.env.APP_BASE_URL ?? "http://localhost:3210",
+  },
+
   /** Overpass API mirrors, tried in order on failure. */
   overpassEndpoints: list(process.env.OVERPASS_ENDPOINTS) ?? [
     "https://overpass-api.de/api/interpreter",
