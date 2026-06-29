@@ -156,6 +156,12 @@ export function updateContacts(id: number, contacts: Contact[]): void {
     .run({ id, c: JSON.stringify(contacts ?? []) });
 }
 
+export function updateTools(id: number, tools: string[]): void {
+  getSqlite()
+    .prepare("UPDATE dealerships SET tools_used=@t, updated_at=CURRENT_TIMESTAMP WHERE id=@id")
+    .run({ id, t: JSON.stringify(tools ?? []) });
+}
+
 /** Backfill a phone discovered during enrichment (it was already libphonenumber-validated). */
 export function backfillPhone(id: number, phone: string): void {
   getSqlite()

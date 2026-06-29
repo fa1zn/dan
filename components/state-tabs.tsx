@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui";
 import { cn } from "@/lib/ui";
 
 const PINNED = ["TX", "CA", "FL"];
@@ -44,24 +44,18 @@ export function StateTabs({
         </button>
       ))}
 
-      <div className="relative">
-        <select
-          value={PINNED.includes(current) ? "" : current}
-          onChange={(e) => e.target.value && go(e.target.value)}
-          className={cn(
-            "h-9 appearance-none rounded-md border bg-background pl-3 pr-8 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            PINNED.includes(current) ? "text-muted-foreground" : "border-brand text-foreground"
-          )}
-        >
-          <option value="">Other state…</option>
+      <Select value={PINNED.includes(current) ? undefined : current} onValueChange={(v) => go(v)}>
+        <SelectTrigger className={cn(PINNED.includes(current) ? "text-muted-foreground" : "border-brand text-foreground")}>
+          <SelectValue placeholder="Other state…" />
+        </SelectTrigger>
+        <SelectContent>
           {others.map((s) => (
-            <option key={s.code} value={s.code}>
+            <SelectItem key={s.code} value={s.code}>
               {s.code} · {s.named} named / {s.total}
-            </option>
+            </SelectItem>
           ))}
-        </select>
-        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-      </div>
+        </SelectContent>
+      </Select>
     </div>
   );
 }

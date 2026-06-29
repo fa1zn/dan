@@ -17,6 +17,8 @@
 
   --primary: 221 83% 53%; /* Pam-family trust blue */
   --primary-foreground: 0 0% 100%;
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 222 47% 11%;
 
   --brand: 33 96% 48%; /* Dan's amber */
   --brand-foreground: 30 50% 12%;
@@ -44,6 +46,8 @@
 
   --primary: 217 91% 60%;
   --primary-foreground: 222 47% 7%;
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 20% 96%;
 
   --brand: 38 95% 55%;
   --brand-foreground: 30 50% 10%;

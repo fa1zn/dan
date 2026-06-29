@@ -59,7 +59,7 @@ const TITLE_RE =
 const NAME_RE = /^[A-Z][a-z'’.\-]+(?:\s+[A-Z][a-z'’.\-]+){1,2}$/;
 // Reject section headers / role phrases that look like a Capitalized Name but aren't a person.
 const NAV_WORDS =
-  /\b(department|inventory|service|finance|parts|about|hours|directions|specials|contact|home|staff|team|meet|our|managers?|specialists?|consultants?|coordinators?|directors?|president|marketing|product|sales|certified|pre-?owned|new|used|vehicles?|center|group)\b/i;
+  /\b(department|inventory|service|finance|parts|about|hours|directions|specials|contact|home|staff|team|meet|our|managers?|specialists?|consultants?|coordinators?|directors?|president|marketing|product|sales|certified|pre-?owned|new|used|vehicles?|center|group|buy|cars?|cash|trade|value|credit|apply|shop|view|click|call|get|welcome|hello|offers?|deals?|menu)\b/i;
 
 function textLines(html: string): string[] {
   return html

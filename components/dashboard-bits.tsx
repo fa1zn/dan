@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "./ui";
+import { InfoTip } from "./info-tip";
 import { cn } from "@/lib/ui";
 import { fmt } from "@/lib/format";
 import type { Tally } from "@/lib/queries";
@@ -8,16 +9,21 @@ export function KpiCard({
   value,
   sub,
   accent,
+  info,
 }: {
   title: string;
   value: string;
   sub?: string;
   accent?: boolean;
+  info?: string;
 }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+          {title}
+          {info && <InfoTip label={title}>{info}</InfoTip>}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className={cn("text-3xl font-semibold tracking-tight", accent && "text-brand")}>{value}</div>

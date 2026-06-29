@@ -5,6 +5,8 @@ import { getKpis, getByOem, getByTerritory, getByTier } from "@/lib/queries";
 import { getPipelineCounts } from "@/lib/crm";
 import { STATUSES, STATUS_META } from "@/lib/crm-constants";
 import { fmt, pct } from "@/lib/format";
+import { EXPLAIN } from "@/lib/explain";
+import { InfoTip } from "@/components/info-tip";
 
 export const dynamic = "force-dynamic";
 
@@ -26,19 +28,21 @@ export default function OverviewPage() {
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <KpiCard title="Total rooftops" value={fmt(k.total)} sub={`${fmt(k.us)} US · ${fmt(k.ca)} Canada`} />
-        <KpiCard title="Tier A accounts" value={fmt(k.tierA)} sub={`${pct(k.tierA, k.total)} of book`} accent />
+        <KpiCard title="Tier A accounts" value={fmt(k.tierA)} sub={`${pct(k.tierA, k.total)} of book`} accent info={EXPLAIN.tierA} />
         <KpiCard title="Has website" value={pct(k.withWebsite, k.total)} sub={`${fmt(k.withWebsite)} rooftops`} />
         <KpiCard
           title="Website valid"
           value={pct(k.websiteValid, k.websiteChecked)}
           sub={`${fmt(k.websiteValid)} of ${fmt(k.websiteChecked)} checked`}
+          info={EXPLAIN.websiteValid}
         />
         <KpiCard
           title="Phone valid"
           value={pct(k.phoneValid, k.withPhone)}
           sub={`${fmt(k.phoneValid)} of ${fmt(k.withPhone)} with phone`}
+          info={EXPLAIN.phoneValid}
         />
-        <KpiCard title="Brand confirmed" value={pct(k.brandConfirmed, k.total)} sub={`${fmt(k.brandConfirmed)} via OEM source`} />
+        <KpiCard title="Brand confirmed" value={pct(k.brandConfirmed, k.total)} sub={`${fmt(k.brandConfirmed)} via OEM source`} info={EXPLAIN.brandConfirmed} />
       </div>
 
       <Card>
@@ -83,7 +87,10 @@ export default function OverviewPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base font-semibold text-foreground">Tier breakdown</CardTitle>
+          <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
+            Tier breakdown
+            <InfoTip label="Tier breakdown">{EXPLAIN.tier}</InfoTip>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-6">

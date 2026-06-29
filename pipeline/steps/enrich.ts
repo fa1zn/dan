@@ -1,6 +1,8 @@
 import { ENABLED_ENRICHERS } from "../enrich/types";
+import { detectTools } from "../enrich/tools";
+import { fetchText } from "../lib/http";
 import type { Contact } from "../../lib/types";
-import { loadAll, updateContacts, backfillPhone } from "./persist";
+import { loadAll, updateContacts, updateTools, backfillPhone } from "./persist";
 
 const num = (v: string | undefined, dflt: number) => {
   const n = v == null ? NaN : Number(v);
@@ -28,6 +30,7 @@ export interface EnrichResult {
   attempted: number;
   withContacts: number;
   totalContacts: number;
+  withTools: number;
 }
 
 /**
@@ -37,7 +40,7 @@ export interface EnrichResult {
 export async function runEnrich(): Promise<EnrichResult> {
   if (ENABLED_ENRICHERS.length === 0) {
     console.log("  [enrich] no enrichers enabled");
-    return { attempted: 0, withContacts: 0, totalContacts: 0 };
+    return { attempted: 0, withContacts: 0, totalContacts: 0, withTools: 0 };
   }
 
   const cap = num(process.env.ENRICH_MAX_SITES, 50);
@@ -49,6 +52,7 @@ export async function runEnrich(): Promise<EnrichResult> {
 
   let withContacts = 0;
   let totalContacts = 0;
+  let withTools = 0;
   let i = 0;
   for (const rec of slice) {
     const found: Contact[] = [];
@@ -70,8 +74,19 @@ export async function runEnrich(): Promise<EnrichResult> {
         if (mainLine) backfillPhone(rec.id, mainLine);
       }
     }
-    if (++i % 25 === 0) console.log(`  [enrich] processed ${i}/${slice.length} (${withContacts} with contacts)`);
+    // Tech-stack detection from the (already-cached) homepage.
+    if (rec.website && rec.id != null) {
+      const home = await fetchText(rec.website, { cacheNs: "enrich-website" });
+      if (home.ok) {
+        const tools = detectTools(home.text);
+        if (tools.length) {
+          updateTools(rec.id, tools);
+          withTools++;
+        }
+      }
+    }
+    if (++i % 25 === 0) console.log(`  [enrich] processed ${i}/${slice.length} (${withContacts} contacts, ${withTools} tech stacks)`);
   }
 
-  return { attempted: slice.length, withContacts, totalContacts };
+  return { attempted: slice.length, withContacts, totalContacts, withTools };
 }

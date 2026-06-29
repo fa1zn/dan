@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, MapPin, Phone, Globe, Mail } from "lucide-react";
+import { ArrowLeft, ExternalLink, MapPin, Phone, Globe, Mail, Layers } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "@/components/ui";
 import { CrmPanel, StatusBadge } from "@/components/crm-panel";
+import { InfoTip } from "@/components/info-tip";
 import { getAccount } from "@/lib/queries";
 import { getCrm, getActivity } from "@/lib/crm";
+import { EXPLAIN } from "@/lib/explain";
 
 interface Contact {
   name?: string;
@@ -49,6 +51,18 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
   } catch {
     contacts = [];
   }
+  let tools: string[] = [];
+  try {
+    tools = JSON.parse(a.tools_used ?? "[]");
+  } catch {
+    tools = [];
+  }
+  // Group "Category: Tool" strings by category for display.
+  const toolsByCat = tools.reduce<Record<string, string[]>>((acc, t) => {
+    const [cat, tool] = t.includes(": ") ? t.split(": ") : ["Other", t];
+    (acc[cat] ??= []).push(tool);
+    return acc;
+  }, {});
 
   const addr = [a.address_street, [a.city, a.state_province].filter(Boolean).join(", "), a.postal_code, a.country]
     .filter(Boolean)
@@ -70,6 +84,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
             <h1 className="text-2xl font-semibold tracking-tight">{a.name}</h1>
             <StatusBadge status={crm.status} />
             {a.tier === "A" ? <Badge variant="brand">Tier A</Badge> : a.tier ? <Badge variant="muted">Tier {a.tier}</Badge> : null}
+            <InfoTip label="Tier">{EXPLAIN.tier}</InfoTip>
           </div>
           <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5" /> {addr || "Address unknown"}
@@ -172,9 +187,12 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
           />
         </div>
 
+        <div className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base font-semibold text-foreground">Contacts</CardTitle>
+            <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
+              Contacts <InfoTip label="Contacts">{EXPLAIN.primaryContact}</InfoTip>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {contacts.length === 0 ? (
@@ -205,6 +223,32 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
             )}
           </CardContent>
         </Card>
+
+        {tools.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
+                <Layers className="h-4 w-4 text-brand" /> Tech stack
+                <InfoTip label="Tech stack">{EXPLAIN.tools}</InfoTip>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {Object.entries(toolsByCat).map(([cat, list]) => (
+                <div key={cat}>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground">{cat}</div>
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    {list.map((t) => (
+                      <Badge key={t} variant="secondary">
+                        {t}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+        </div>
       </div>
     </div>
   );

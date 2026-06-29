@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { Download, ExternalLink } from "lucide-react";
-import { Card, Table, THead, TBody, TR, TH, TD, Badge, Button } from "@/components/ui";
+import { Card, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Badge, Button } from "@/components/ui";
 import { AccountFilters } from "@/components/account-filters";
 import { SortHeader, Pager } from "@/components/account-table-bits";
 import { StatusBadge } from "@/components/crm-panel";
+import { InfoTip } from "@/components/info-tip";
 import { listAccounts, getFilterOptions, type AccountFilters as Filters } from "@/lib/queries";
 import { type Status } from "@/lib/crm-constants";
+import { EXPLAIN } from "@/lib/explain";
 import { fmt } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -68,39 +70,49 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
 
       <Card className="overflow-hidden">
         <Table>
-          <THead>
-            <TR className="hover:bg-transparent">
-              <TH><SortHeader column="name" label="Dealership" /></TH>
-              <TH><SortHeader column="status" label="Status" /></TH>
-              <TH><SortHeader column="oem" label="OEM" /></TH>
-              <TH><SortHeader column="tier" label="Tier" /></TH>
-              <TH><SortHeader column="city" label="City" /></TH>
-              <TH><SortHeader column="state_province" label="State" /></TH>
-              <TH><SortHeader column="country" label="Country" /></TH>
-              <TH>Territory</TH>
-              <TH className="text-center">Web</TH>
-              <TH className="text-center">Tel</TH>
-            </TR>
-          </THead>
-          <TBody>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead><SortHeader column="name" label="Dealership" /></TableHead>
+              <TableHead>
+                <span className="inline-flex items-center gap-1">
+                  <SortHeader column="status" label="Status" />
+                  <InfoTip label="Status">{EXPLAIN.status}</InfoTip>
+                </span>
+              </TableHead>
+              <TableHead><SortHeader column="oem" label="OEM" /></TableHead>
+              <TableHead>
+                <span className="inline-flex items-center gap-1">
+                  <SortHeader column="tier" label="Tier" />
+                  <InfoTip label="Tier">{EXPLAIN.tier}</InfoTip>
+                </span>
+              </TableHead>
+              <TableHead><SortHeader column="city" label="City" /></TableHead>
+              <TableHead><SortHeader column="state_province" label="State" /></TableHead>
+              <TableHead><SortHeader column="country" label="Country" /></TableHead>
+              <TableHead>Territory</TableHead>
+              <TableHead className="text-center">Web</TableHead>
+              <TableHead className="text-center">Tel</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.length === 0 && (
-              <TR>
-                <TD colSpan={10} className="py-10 text-center text-muted-foreground">
+              <TableRow>
+                <TableCell colSpan={10} className="py-10 text-center text-muted-foreground">
                   No rooftops match these filters.
-                </TD>
-              </TR>
+                </TableCell>
+              </TableRow>
             )}
             {rows.map((r) => (
-              <TR key={r.id}>
-                <TD>
+              <TableRow key={r.id}>
+                <TableCell>
                   <Link href={`/accounts/${r.id}`} className="font-medium text-foreground hover:text-primary">
                     {r.name}
                   </Link>
                   {r.group_name && <div className="text-xs text-muted-foreground">{r.group_name}</div>}
-                </TD>
-                <TD><StatusBadge status={(r.status as Status) ?? "new"} /></TD>
-                <TD>{r.oem ? <Badge variant="muted">{r.oem}</Badge> : <span className="text-muted-foreground">—</span>}</TD>
-                <TD>
+                </TableCell>
+                <TableCell><StatusBadge status={(r.status as Status) ?? "new"} /></TableCell>
+                <TableCell>{r.oem ? <Badge variant="muted">{r.oem}</Badge> : <span className="text-muted-foreground">—</span>}</TableCell>
+                <TableCell>
                   {r.tier === "A" ? (
                     <Badge variant="brand">Tier A</Badge>
                   ) : r.tier ? (
@@ -108,12 +120,12 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}
-                </TD>
-                <TD className="whitespace-nowrap">{r.city ?? "—"}</TD>
-                <TD>{r.state_province ?? "—"}</TD>
-                <TD>{r.country ?? "—"}</TD>
-                <TD className="whitespace-nowrap text-muted-foreground">{r.territory ?? "—"}</TD>
-                <TD className="text-center">
+                </TableCell>
+                <TableCell className="whitespace-nowrap">{r.city ?? "—"}</TableCell>
+                <TableCell>{r.state_province ?? "—"}</TableCell>
+                <TableCell>{r.country ?? "—"}</TableCell>
+                <TableCell className="whitespace-nowrap text-muted-foreground">{r.territory ?? "—"}</TableCell>
+                <TableCell className="text-center">
                   {r.website ? (
                     <a href={r.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1">
                       <StatusDot state={r.website_valid === null ? null : r.website_valid === 1} title="Website" />
@@ -122,13 +134,13 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}
-                </TD>
-                <TD className="text-center">
+                </TableCell>
+                <TableCell className="text-center">
                   {r.phone ? <StatusDot state={r.phone_valid === 1} title="Phone" /> : <span className="text-muted-foreground">—</span>}
-                </TD>
-              </TR>
+                </TableCell>
+              </TableRow>
             ))}
-          </TBody>
+          </TableBody>
         </Table>
       </Card>
 

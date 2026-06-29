@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
+import { TooltipProvider } from "@/components/ui";
 
 export const metadata = {
   title: "Dan, Pam's sales guy",
@@ -18,7 +19,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
       <body className="font-sans antialiased">
-        <AppShell>{children}</AppShell>
+        <TooltipProvider delayDuration={150}>
+          <AppShell>{children}</AppShell>
+        </TooltipProvider>
       </body>
     </html>
   );

@@ -79,8 +79,8 @@ async function validate(): Promise<void> {
 
 async function enrich(): Promise<void> {
   banner("ENRICH");
-  const { attempted, withContacts, totalContacts } = await runEnrich();
-  console.log(`  enriched ${withContacts}/${attempted} accounts with ${totalContacts} contacts`);
+  const { attempted, withContacts, totalContacts, withTools } = await runEnrich();
+  console.log(`  enriched ${withContacts}/${attempted} accounts · ${totalContacts} contacts · ${withTools} tech stacks`);
 }
 
 function tier(): void {
