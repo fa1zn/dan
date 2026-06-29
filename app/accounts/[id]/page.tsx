@@ -8,7 +8,7 @@ import { getAccount } from "@/lib/queries";
 import { getCrm, getActivity } from "@/lib/crm";
 import { computeIntel } from "@/lib/intel";
 import { computePamFit } from "@/lib/pamfit";
-import { SourceTag, contactSource, osmLink } from "@/components/source-tag";
+import { SourceTag, contactSource, osmLink, sourceLabel } from "@/components/source-tag";
 import { EXPLAIN } from "@/lib/explain";
 
 interface Contact {
@@ -27,6 +27,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
       <dd className="text-sm">{children ?? <span className="text-muted-foreground">—</span>}</dd>
     </div>
+  );
+}
+
+/** A value Dan computed/inferred (not fetched from a source) — labelled so. */
+function Inferred({ children }: { children: React.ReactNode }) {
+  return (
+    <span>
+      {children} <span className="text-xs text-muted-foreground">· inferred by Dan</span>
+    </span>
   );
 }
 
@@ -215,15 +224,18 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardHeader>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle className="text-base font-semibold text-foreground">Identity & contact</CardTitle>
+            <SourceTag label="OpenStreetMap" href={osmLink(a.latitude, a.longitude)} />
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-2 gap-x-8">
               <Field label="OEM brand">{a.oem ? <Badge variant="muted">{a.oem}</Badge> : null}</Field>
-              <Field label="Dealer group">{a.group_name}</Field>
-              <Field label="Group size">{a.group_size}</Field>
-              <Field label="Territory">{a.territory}</Field>
+              <Field label="Dealer group">
+                {a.group_name ? <Inferred>{a.group_name}</Inferred> : null}
+              </Field>
+              <Field label="Group size">{a.group_size ? <Inferred>{a.group_size}</Inferred> : null}</Field>
+              <Field label="Territory">{a.territory ? <Inferred>{a.territory}</Inferred> : null}</Field>
               <Field label="Website">
                 {a.website ? (
                   <a href={a.website} target="_blank" rel="noreferrer" className="text-primary hover:underline">
@@ -241,9 +253,6 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
               </Field>
               <Field label="Coordinates">{hasGeo ? `${lat.toFixed(5)}, ${lng.toFixed(5)}` : null}</Field>
             </dl>
-            <div className="mt-3 border-t pt-2.5">
-              <SourceTag label="OpenStreetMap" href={osmLink(a.latitude, a.longitude)} />
-            </div>
           </CardContent>
         </Card>
 
@@ -259,7 +268,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
               <span className="text-xs text-muted-foreground">Sources:</span>
               {sources.map((s) => (
                 <Badge key={s} variant="outline">
-                  {s}
+                  {sourceLabel(s)}
                 </Badge>
               ))}
             </div>
@@ -268,8 +277,9 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
       </div>
 
       <Card className="overflow-hidden">
-        <CardHeader>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base font-semibold text-foreground">Location</CardTitle>
+          <SourceTag label="OpenStreetMap" href={osmLink(a.latitude, a.longitude)} />
         </CardHeader>
         <CardContent className="px-0 pb-0">
           {hasGeo ? (
@@ -281,9 +291,6 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
           ) : (
             <div className="px-5 pb-5 text-sm text-muted-foreground">No coordinates on file for this rooftop.</div>
           )}
-          <div className="border-t px-5 py-2.5">
-            <SourceTag label="OpenStreetMap" href={osmLink(a.latitude, a.longitude)} />
-          </div>
         </CardContent>
       </Card>
 
@@ -361,11 +368,12 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
 
         {tools.length > 0 && (
           <Card>
-            <CardHeader>
+            <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
                 <Layers className="h-4 w-4 text-brand" /> Tech stack
                 <InfoTip label="Tech stack">{EXPLAIN.tools}</InfoTip>
               </CardTitle>
+              <SourceTag label={`${a.domain ?? "dealer site"} · scripts`} href={a.website} />
             </CardHeader>
             <CardContent className="space-y-3">
               {Object.entries(toolsByCat).map(([cat, list]) => (
@@ -380,17 +388,15 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                   </div>
                 </div>
               ))}
-              <div className="border-t pt-2.5">
-                <SourceTag label={`${a.domain ?? "dealer website"} · page scripts`} href={a.website} />
-              </div>
             </CardContent>
           </Card>
         )}
 
         {hasSignals && (
           <Card>
-            <CardHeader>
+            <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base font-semibold text-foreground">Signals</CardTitle>
+              <SourceTag label={`${a.domain ?? "dealer site"} · schema.org`} href={a.website} />
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               {signals.rating ? (
@@ -425,9 +431,6 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                   ))}
                 </div>
               ) : null}
-              <div className="border-t pt-2.5">
-                <SourceTag label={`${a.domain ?? "dealer website"} · schema.org`} href={a.website} />
-              </div>
             </CardContent>
           </Card>
         )}

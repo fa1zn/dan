@@ -40,3 +40,13 @@ export function osmLink(lat: number | null, lng: number | null): string | undefi
   if (lat == null || lng == null) return undefined;
   return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=19/${lat}/${lng}`;
 }
+
+/** Human-readable label for an ingest source code (osm, oem:toyota, …). */
+export function sourceLabel(code: string): string {
+  if (code === "osm") return "OpenStreetMap";
+  if (code.startsWith("oem:")) {
+    const brand = code.slice(4);
+    return `${brand.charAt(0).toUpperCase()}${brand.slice(1)} dealer locator`;
+  }
+  return code;
+}
