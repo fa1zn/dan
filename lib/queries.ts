@@ -13,6 +13,7 @@ export interface Kpis {
   withPhone: number;
   phoneValid: number;
   brandConfirmed: number;
+  inHubspot: number;
 }
 
 export function getKpis(): Kpis {
@@ -29,7 +30,8 @@ export function getKpis(): Kpis {
         SUM(website_valid=1) AS websiteValid,
         SUM(phone IS NOT NULL) AS withPhone,
         SUM(phone_valid=1) AS phoneValid,
-        SUM(brand_confirmed=1) AS brandConfirmed
+        SUM(brand_confirmed=1) AS brandConfirmed,
+        SUM(hs_in_crm=1) AS inHubspot
       FROM dealerships`
     )
     .get() as Record<string, number>;
@@ -44,6 +46,7 @@ export function getKpis(): Kpis {
     withPhone: row.withPhone ?? 0,
     phoneValid: row.phoneValid ?? 0,
     brandConfirmed: row.brandConfirmed ?? 0,
+    inHubspot: row.inHubspot ?? 0,
   };
 }
 
@@ -134,11 +137,15 @@ export interface AccountRow {
   brand_confirmed: number;
   status: string;
   owner: string | null;
+  hs_in_crm: number;
+  hs_lifecycle_stage: string | null;
+  hs_owner: string | null;
 }
 
 const FROM = "FROM dealerships d LEFT JOIN account_crm c ON c.dealership_id = d.id";
 const SELECT_COLS = `d.id, d.name, d.oem, d.group_name, d.tier, d.city, d.state_province, d.country, d.territory,
   d.website, d.domain, d.phone, d.website_valid, d.phone_valid, d.brand_confirmed,
+  d.hs_in_crm, d.hs_lifecycle_stage, d.hs_owner,
   COALESCE(c.status,'new') AS status, c.owner AS owner`;
 
 const SORTABLE: Record<string, string> = {
@@ -244,6 +251,10 @@ export interface FullAccount extends AccountRow {
   updated_at: string;
   latitude: number | null;
   longitude: number | null;
+  hs_in_crm: number;
+  hs_lifecycle_stage: string | null;
+  hs_owner: string | null;
+  hs_last_activity: string | null;
 }
 
 /* ---------- Rep call list (territory worklist) ---------- */
@@ -268,6 +279,8 @@ export interface CallListItem {
   postal_code: string | null;
   country: string | null;
   phone: string | null;
+  hs_in_crm: number;
+  hs_owner: string | null;
   primary: Person | null;
   people: Person[];
 }
@@ -307,7 +320,7 @@ export function getCallList(state: string, limit = 200): CallListItem[] {
   const rows = getSqlite()
     .prepare(
       `SELECT d.id, d.name, d.oem, d.tier, d.city, d.state_province, d.address_street, d.postal_code,
-              d.country, d.phone, d.contacts, COALESCE(c.status,'new') AS status
+              d.country, d.phone, d.contacts, d.hs_in_crm, d.hs_owner, COALESCE(c.status,'new') AS status
        FROM dealerships d LEFT JOIN account_crm c ON c.dealership_id = d.id
        WHERE d.state_province = ?
        ORDER BY (d.contacts LIKE '%staff-page%') DESC, (d.phone IS NOT NULL) DESC, d.name
@@ -335,6 +348,8 @@ export function getCallList(state: string, limit = 200): CallListItem[] {
       postal_code: (r.postal_code as string) ?? null,
       country: (r.country as string) ?? null,
       phone: (r.phone as string) ?? null,
+      hs_in_crm: (r.hs_in_crm as number) ?? 0,
+      hs_owner: (r.hs_owner as string) ?? null,
       primary: people[0] ?? null,
       people,
     };

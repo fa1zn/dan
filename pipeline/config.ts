@@ -55,17 +55,19 @@ export const CONFIG = {
     maxWebsites: num(process.env.VALIDATE_MAX_WEBSITES, 0),
   },
 
-  /** HubSpot two-way sync (Phase: integration). */
+  /** HubSpot integration — READ-ONLY by default (pull HubSpot → Dan, never write). */
   hubspot: {
     token: process.env.HUBSPOT_TOKEN ?? "",
-    /** Writes only happen when explicitly enabled; otherwise every run is a dry-run. */
+    /**
+     * Writing back to HubSpot is OFF unless explicitly enabled. We only pull their
+     * data in; we do not touch Pam's CRM.
+     */
+    allowWrite: bool(process.env.HUBSPOT_ALLOW_WRITE, false),
+    /** Only used by the (disabled-by-default) push path. */
     apply: bool(process.env.HUBSPOT_APPLY, false),
-    /** Restrict the sync set to these state/province codes. */
     regions: list(process.env.HUBSPOT_REGIONS) ?? ["TX", "CA", "FL"],
-    /** Only sync rooftops we've enriched (have contacts). Set 0 to sync all in-region. */
     onlyEnriched: bool(process.env.HUBSPOT_ONLY_ENRICHED, true),
     batchSize: num(process.env.HUBSPOT_BATCH, 100),
-    /** Base URL of this app, used to write a deep link back to each Dan account. */
     appBaseUrl: process.env.APP_BASE_URL ?? "http://localhost:3210",
   },
 

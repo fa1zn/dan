@@ -1,6 +1,5 @@
 import { CONFIG } from "../config";
 import { getSqlite } from "../../lib/db";
-import { isStatus, type Status } from "../../lib/crm-constants";
 
 /*
  * Two-way HubSpot sync.
@@ -295,68 +294,211 @@ export async function pushToHubspot(apply: boolean): Promise<PushStats> {
   return { companies: companyIdByDan.size, contacts: contactIdByDcid.size, associations };
 }
 
-/* ---------- pull (HubSpot -> Dan) ---------- */
+/* ---------- pull (HubSpot -> Dan), READ-ONLY ---------- */
 
-export async function pullFromHubspot(): Promise<{ checked: number; updated: number }> {
+async function hsGetAll<T>(path: string): Promise<T[]> {
+  const out: T[] = [];
+  let after: string | undefined;
+  do {
+    const sep = path.includes("?") ? "&" : "?";
+    const url = `${path}${after ? `${sep}after=${after}` : ""}`;
+    const res = await hsFetch<{ results: T[]; paging?: { next?: { after: string } } }>(url, "GET");
+    if (!res.ok) throw new Error(`GET ${path} failed (${res.status}): ${res.error}`);
+    out.push(...(res.body.results ?? []));
+    after = res.body.paging?.next?.after;
+  } while (after);
+  return out;
+}
+
+interface HsOwner {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+}
+interface HsObject {
+  id: string;
+  properties: Record<string, string>;
+  associations?: { companies?: { results: { id: string }[] } };
+}
+interface DanRoof {
+  id: number;
+  name: string;
+  oem: string | null;
+  domain: string | null;
+  city: string | null;
+  state_province: string | null;
+}
+
+const norm = (s: string | null | undefined) => (s ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+const tokens = (s: string) => new Set(norm(s).split(" ").filter((t) => t.length > 2));
+function overlap(a: Set<string>, b: Set<string>): number {
+  let n = 0;
+  for (const t of a) if (b.has(t)) n++;
+  return n;
+}
+
+interface PullStats {
+  hsCompanies: number;
+  hsContacts: number;
+  companiesMatched: number;
+  contactsMatched: number;
+  contactsUnmatched: number;
+}
+
+export async function pullFromHubspot(): Promise<PullStats> {
   const db = getSqlite();
-  const mapped = db
-    .prepare("SELECT id, hubspot_company_id, COALESCE((SELECT status FROM account_crm WHERE dealership_id=dealerships.id),'new') AS status FROM dealerships WHERE hubspot_company_id IS NOT NULL")
-    .all() as { id: number; hubspot_company_id: string; status: string }[];
 
-  if (mapped.length === 0) {
-    console.log("  [hubspot] nothing to pull — run a push first to establish the company mapping.");
-    return { checked: 0, updated: 0 };
+  // 1) owner id -> display name
+  const owners = await hsGetAll<HsOwner>("/crm/v3/owners?limit=100");
+  const ownerName = new Map(
+    owners.map((o) => [o.id, [o.firstName, o.lastName].filter(Boolean).join(" ") || o.email || o.id])
+  );
+
+  // 2) companies and contacts (contacts carry their company associations)
+  const companies = await hsGetAll<HsObject>(
+    "/crm/v3/objects/companies?limit=100&properties=name,domain,lifecyclestage,hubspot_owner_id,notes_last_updated"
+  );
+  const contacts = await hsGetAll<HsObject>(
+    "/crm/v3/objects/contacts?limit=100&associations=companies&properties=firstname,lastname,email,jobtitle,phone,lifecyclestage,hs_lead_status,hubspot_owner_id"
+  );
+  console.log(`  [hubspot] fetched ${companies.length} companies, ${contacts.length} contacts, ${owners.length} owners`);
+
+  // Dan rooftops, indexed by domain for fast candidate lookup.
+  const danRows = db
+    .prepare("SELECT id, name, oem, domain, city, state_province FROM dealerships")
+    .all() as DanRoof[];
+  const byDomain = new Map<string, DanRoof[]>();
+  for (const r of danRows) {
+    if (r.domain) (byDomain.get(r.domain) ?? byDomain.set(r.domain, []).get(r.domain)!).push(r);
   }
 
-  const byHsId = new Map(mapped.map((m) => [m.hubspot_company_id, m]));
-  let updated = 0;
-
-  for (const batch of chunk(mapped, CONFIG.hubspot.batchSize)) {
-    const res = await hsFetch<{ results: { id: string; properties: Record<string, string> }[] }>(
-      "/crm/v3/objects/companies/batch/read",
-      "POST",
-      { properties: ["dan_status", "dan_account_id"], inputs: batch.map((m) => ({ id: m.hubspot_company_id })) }
-    );
-    if (!res.ok) throw new Error(`company read failed: ${res.error}`);
-    for (const result of res.body.results ?? []) {
-      const local = byHsId.get(result.id);
-      const hsStatus = result.properties.dan_status;
-      if (local && isStatus(hsStatus) && hsStatus !== local.status) {
-        // HubSpot is the source of truth on pull — reflect the rep's change in Dan.
-        db.prepare(
-          `INSERT INTO account_crm (dealership_id, status, updated_at) VALUES (@id, @s, CURRENT_TIMESTAMP)
-           ON CONFLICT(dealership_id) DO UPDATE SET status=@s, updated_at=CURRENT_TIMESTAMP`
-        ).run({ id: local.id, s: hsStatus as Status });
-        db.prepare("INSERT INTO activity (dealership_id, kind, body, author) VALUES (?,?,?,?)").run(
-          local.id,
-          "status_change",
-          `Status: ${local.status} → ${hsStatus} (synced from HubSpot)`,
-          "HubSpot"
-        );
-        updated++;
+  // Score an HS company against Dan rooftops; prefer domain + oem + city signals so a
+  // group domain (e.g. one site for many stores) still resolves to the right rooftop.
+  function matchCompany(name: string, domainRaw: string): number | null {
+    const domain = domainRaw.toLowerCase().replace(/^www\./, "");
+    const hsTok = tokens(name);
+    let candidates = (domain && byDomain.get(domain)) || [];
+    if (candidates.length === 0 && hsTok.size) {
+      candidates = danRows.filter((r) => overlap(tokens(r.name), hsTok) >= 2);
+    }
+    let best: DanRoof | null = null;
+    let bestScore = 0;
+    for (const c of candidates) {
+      let s = 0;
+      if (domain && c.domain === domain) s += 2;
+      if (c.oem && norm(name).includes(c.oem.toLowerCase())) s += 2;
+      if (c.city && norm(name).includes(norm(c.city))) s += 2;
+      s += overlap(tokens(c.name), hsTok);
+      if (s > bestScore) {
+        bestScore = s;
+        best = c;
       }
     }
+    return best && bestScore >= 2 ? best.id : null;
   }
-  console.log(`  [hubspot] pulled ${mapped.length} companies, applied ${updated} status changes to Dan`);
-  return { checked: mapped.length, updated };
+
+  // Map every HS company -> Dan rooftop, and write the engagement summary.
+  const danByHsCompany = new Map<string, number>();
+  const updCompany = db.prepare(
+    `UPDATE dealerships SET hs_in_crm=1, hubspot_company_id=@hs, hs_lifecycle_stage=@stage,
+       hs_owner=@owner, hs_last_activity=@activity, hubspot_synced_at=@now WHERE id=@id`
+  );
+  let companiesMatched = 0;
+  const now = new Date().toISOString();
+  const ctx = db.transaction(() => {
+    for (const co of companies) {
+      const danId = matchCompany(co.properties.name ?? "", co.properties.domain ?? "");
+      if (!danId) continue;
+      danByHsCompany.set(co.id, danId);
+      updCompany.run({
+        id: danId,
+        hs: co.id,
+        stage: co.properties.lifecyclestage ?? null,
+        owner: ownerName.get(co.properties.hubspot_owner_id ?? "") ?? null,
+        activity: co.properties.notes_last_updated ?? null,
+        now,
+      });
+      companiesMatched++;
+    }
+  });
+  ctx();
+
+  // Attach HubSpot contacts to their matched rooftop (real emails + owner-known leads).
+  const hsContactsByDan = new Map<number, SyncContact[]>();
+  let contactsMatched = 0;
+  let contactsUnmatched = 0;
+  for (const ct of contacts) {
+    const companyIds = ct.associations?.companies?.results?.map((r) => r.id) ?? [];
+    const danId = companyIds.map((cid) => danByHsCompany.get(cid)).find((x) => x != null);
+    const name = [ct.properties.firstname, ct.properties.lastname].filter(Boolean).join(" ");
+    if (danId == null) {
+      contactsUnmatched++;
+      continue;
+    }
+    const list = hsContactsByDan.get(danId) ?? [];
+    list.push({
+      name: name || undefined,
+      title: ct.properties.jobtitle || undefined,
+      email: ct.properties.email || undefined,
+      phone: ct.properties.phone || undefined,
+      source: "hubspot",
+    });
+    hsContactsByDan.set(danId, list);
+    contactsMatched++;
+  }
+
+  // Merge HubSpot contacts into each rooftop's contacts JSON (refresh prior hubspot ones).
+  const getContacts = db.prepare("SELECT contacts FROM dealerships WHERE id=?");
+  const setContacts = db.prepare("UPDATE dealerships SET contacts=@c, updated_at=CURRENT_TIMESTAMP WHERE id=@id");
+  const mergeTx = db.transaction(() => {
+    for (const [danId, hsContacts] of hsContactsByDan) {
+      let existing: SyncContact[] = [];
+      try {
+        existing = JSON.parse((getContacts.get(danId) as { contacts: string } | undefined)?.contacts ?? "[]");
+      } catch {}
+      const kept = existing.filter((c) => c.source !== "hubspot");
+      const seen = new Set(kept.map((c) => (c.email ?? c.name ?? "").toLowerCase()));
+      for (const c of hsContacts) {
+        const key = (c.email ?? c.name ?? "").toLowerCase();
+        if (key && seen.has(key)) continue;
+        seen.add(key);
+        kept.push(c);
+      }
+      setContacts.run({ id: danId, c: JSON.stringify(kept) });
+    }
+  });
+  mergeTx();
+
+  return {
+    hsCompanies: companies.length,
+    hsContacts: contacts.length,
+    companiesMatched,
+    contactsMatched,
+    contactsUnmatched,
+  };
 }
 
 export async function runHubspot(direction: string): Promise<void> {
-  const apply = CONFIG.hubspot.apply;
-  const mode = apply ? "APPLY" : "DRY RUN";
-  console.log(`\n▶ HUBSPOT ${direction.toUpperCase()} (${mode})`);
-  if (apply && !CONFIG.hubspot.token) {
-    throw new Error("HUBSPOT_APPLY=1 but HUBSPOT_TOKEN is not set.");
+  // Writes are off by default — Dan only pulls Pam's data in.
+  if (direction === "push" || direction === "sync") {
+    if (!CONFIG.hubspot.allowWrite) {
+      throw new Error(
+        "Writing to HubSpot is disabled (read-only mode). Dan only pulls from HubSpot. " +
+          "Run `hubspot:pull`, or set HUBSPOT_ALLOW_WRITE=1 to opt into pushing."
+      );
+    }
+    console.log(`\n▶ HUBSPOT PUSH (${CONFIG.hubspot.apply ? "APPLY" : "DRY RUN"})`);
+    await pushToHubspot(CONFIG.hubspot.apply);
+    if (direction === "push") return;
   }
 
-  if (direction === "push" || direction === "sync") {
-    await pushToHubspot(apply);
-  }
-  if (direction === "pull" || direction === "sync") {
-    if (!apply) {
-      console.log("  [hubspot] pull requires a token + HUBSPOT_APPLY=1 (it reads live HubSpot state). Skipped in dry run.");
-    } else {
-      await pullFromHubspot();
-    }
-  }
+  // default + pull/sync
+  if (!CONFIG.hubspot.token) throw new Error("HUBSPOT_TOKEN is not set — required to pull from HubSpot.");
+  console.log("\n▶ HUBSPOT PULL (read-only — reads HubSpot, writes only to Dan)");
+  const r = await pullFromHubspot();
+  console.log(
+    `  ✓ ${r.companiesMatched}/${r.hsCompanies} HubSpot companies matched to Dan rooftops; ` +
+      `${r.contactsMatched} contacts attached (${r.contactsUnmatched} unmatched)`
+  );
 }

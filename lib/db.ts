@@ -82,6 +82,11 @@ export function getSqlite(): Database.Database {
   const cols = new Set((db.prepare("PRAGMA table_info(dealerships)").all() as { name: string }[]).map((c) => c.name));
   if (!cols.has("hubspot_company_id")) db.exec("ALTER TABLE dealerships ADD COLUMN hubspot_company_id TEXT");
   if (!cols.has("hubspot_synced_at")) db.exec("ALTER TABLE dealerships ADD COLUMN hubspot_synced_at TEXT");
+  // Pulled HubSpot engagement summary (read-only mirror of Pam's CRM).
+  if (!cols.has("hs_in_crm")) db.exec("ALTER TABLE dealerships ADD COLUMN hs_in_crm INTEGER NOT NULL DEFAULT 0");
+  if (!cols.has("hs_lifecycle_stage")) db.exec("ALTER TABLE dealerships ADD COLUMN hs_lifecycle_stage TEXT");
+  if (!cols.has("hs_owner")) db.exec("ALTER TABLE dealerships ADD COLUMN hs_owner TEXT");
+  if (!cols.has("hs_last_activity")) db.exec("ALTER TABLE dealerships ADD COLUMN hs_last_activity TEXT");
 
   _sqlite = db;
   return db;

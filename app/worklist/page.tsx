@@ -60,6 +60,7 @@ export default async function WorklistPage({ searchParams }: { searchParams: Pro
                     {it.oem && <Badge variant="muted">{it.oem}</Badge>}
                     {it.tier === "A" && <Badge variant="brand">Tier A</Badge>}
                     <StatusBadge status={it.status as Status} />
+                    {it.hs_in_crm ? <Badge variant="success">In HubSpot</Badge> : null}
                   </div>
                   <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
                     <MapPin className="h-3.5 w-3.5 shrink-0" /> {addr || "Address unknown"}

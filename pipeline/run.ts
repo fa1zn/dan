@@ -123,7 +123,7 @@ async function main() {
     case "tier": tier(); break;
     case "export": exportCsv(); break;
     case "report": runReport(); break;
-    case "hubspot": await runHubspot((process.argv[3] ?? "sync").toLowerCase()); break;
+    case "hubspot": await runHubspot((process.argv[3] ?? "pull").toLowerCase()); break;
     case "all": await all(); break;
     case "help": case "-h": case "--help": console.log(HELP); break;
     default:

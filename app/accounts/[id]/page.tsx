@@ -85,6 +85,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
             <StatusBadge status={crm.status} />
             {a.tier === "A" ? <Badge variant="brand">Tier A</Badge> : a.tier ? <Badge variant="muted">Tier {a.tier}</Badge> : null}
             <InfoTip label="Tier">{EXPLAIN.tier}</InfoTip>
+            {a.hs_in_crm ? <Badge variant="success">In HubSpot</Badge> : null}
           </div>
           <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5" /> {addr || "Address unknown"}
@@ -188,6 +189,30 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
         </div>
 
         <div className="space-y-4">
+        {a.hs_in_crm ? (
+          <Card className="border-emerald-500/40">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
+                <Badge variant="success">In HubSpot</Badge>
+                <InfoTip label="In HubSpot">{EXPLAIN.inHubspot}</InfoTip>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Lifecycle</span>
+                <span className="font-medium capitalize">{a.hs_lifecycle_stage ?? "—"}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Owner</span>
+                <span className="font-medium">{a.hs_owner ?? "Unassigned"}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Last activity</span>
+                <span className="font-medium">{a.hs_last_activity ? a.hs_last_activity.slice(0, 10) : "—"}</span>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">

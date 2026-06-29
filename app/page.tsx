@@ -43,6 +43,7 @@ export default function OverviewPage() {
           info={EXPLAIN.phoneValid}
         />
         <KpiCard title="Brand confirmed" value={pct(k.brandConfirmed, k.total)} sub={`${fmt(k.brandConfirmed)} via OEM source`} info={EXPLAIN.brandConfirmed} />
+        <KpiCard title="In HubSpot" value={fmt(k.inHubspot)} sub={`${pct(k.inHubspot, k.total)} matched to Pam’s CRM`} accent info={EXPLAIN.inHubspot} />
       </div>
 
       <Card>

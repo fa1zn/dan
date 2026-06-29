@@ -1,74 +1,59 @@
-# HubSpot two-way sync — setup
+# HubSpot integration — setup (READ-ONLY pull)
 
-Dan pushes its enriched book of business into HubSpot (Companies + Contacts) and
-pulls pipeline-status changes back, so Dan and Pam's HubSpot stay in step.
+Dan **pulls** Pam's HubSpot data in and never writes to it. For each rooftop that
+matches a HubSpot company, Dan shows the **lifecycle stage, owner, last activity, and
+the real CRM contacts** — so reps don't re-prospect accounts Pam is already working.
 
-## 1. Create a Private App token
+> Writing back to HubSpot is disabled by default. Dan only reads.
+
+## 1. Create a Private App token (read-only scopes)
 
 In HubSpot: **Settings → Integrations → Private Apps → Create a private app**.
 
-Under **Scopes**, grant:
+Grant **read** scopes only:
 
-- `crm.objects.companies.read`, `crm.objects.companies.write`
-- `crm.objects.contacts.read`, `crm.objects.contacts.write`
-- `crm.schemas.companies.write`, `crm.schemas.contacts.write` (to create Dan's custom properties)
+- `crm.objects.companies.read`
+- `crm.objects.contacts.read`
+- `crm.objects.owners.read`
 
-Create the app and copy the **access token**.
+Copy the **access token**.
 
 ## 2. Configure
 
-Copy `.env.example` to `.env` and fill in:
+Copy `.env.example` to `.env`:
 
 ```bash
 HUBSPOT_TOKEN=pat-na1-xxxxxxxx...
-HUBSPOT_APPLY=0            # 0 = dry run (safe). 1 = write to HubSpot.
-HUBSPOT_REGIONS=TX,CA,FL   # scope of the first sync
-HUBSPOT_ONLY_ENRICHED=1    # only rooftops with scraped contacts
-APP_BASE_URL=http://localhost:3210
 ```
 
 `.env` is gitignored — the token is never committed.
 
-## 3. Dry run, then go
+## 3. Pull
 
 ```bash
-# 1) See exactly what would be pushed (no writes, token optional)
-npm run hubspot:push
-
-# 2) Push for real — creates Dan's custom properties, upserts Companies + Contacts,
-#    associates contacts to companies, and stores the HubSpot IDs back in Dan
-HUBSPOT_APPLY=1 npm run hubspot:push
-
-# 3) Pull rep changes back: any company whose Dan Pipeline Status was changed in
-#    HubSpot updates Dan's CRM (logged to the activity timeline)
-HUBSPOT_APPLY=1 npm run hubspot:pull
-
-# Both directions at once
-HUBSPOT_APPLY=1 npm run hubspot:sync
+npm run hubspot:pull
 ```
 
-## What gets created in HubSpot
+This fetches HubSpot companies, contacts, and owners; matches companies to Dan
+rooftops (by domain, OEM brand, and city — so a shared group domain still resolves to
+the right store); and writes the engagement summary + HubSpot contacts onto the
+matched Dan accounts. Re-running refreshes (idempotent). It reads HubSpot and writes
+**only to Dan's local database**.
 
-- **Companies** (one per rooftop) with standard fields (name, domain, phone, address)
-  plus custom properties: `Dan Account ID`, `Dan OEM Brand`, `Dan Tier`,
-  `Dan Territory`, `Dan Pipeline Status`, `Dan Tech Stack`, `Dan Account URL`.
-- **Contacts** (the decision-makers) with name, job title, phone/email, associated to
-  their company. Each carries a `Dan Contact ID`.
+## Where it shows up
 
-## How dedupe / idempotency works
+- **Overview** — an "In HubSpot" KPI (how much of the book overlaps Pam's CRM).
+- **Account page** — an "In HubSpot" badge + a panel with lifecycle / owner / last
+  activity, and the real HubSpot contacts merged into the Contacts list (source `hubspot`).
+- **Call list** — an "In HubSpot" badge so reps can skip or prioritize accordingly.
 
-- Companies **with a domain** upsert by `domain` — this matches and updates companies
-  already in Pam's HubSpot instead of creating duplicates.
-- Companies **without a domain** upsert by the unique `Dan Account ID`.
-- Contacts upsert by the stable `Dan Contact ID` (`<accountId>-<name-slug>`).
+## Matching notes
 
-Re-running the sync therefore **updates** records rather than duplicating them.
+Matching is best-effort (domain + OEM + city scoring). Unmatched HubSpot contacts are
+counted and reported. If match quality needs tuning once you see real data, the scorer
+lives in `matchCompany()` in `pipeline/integrations/hubspot.ts`.
 
-## Two-way: who wins
+## (Optional) writing back
 
-- **push** writes Dan → HubSpot (Dan is the source for accounts/contacts/tech-stack).
-- **pull** applies HubSpot → Dan for pipeline status only (the rep's HubSpot change is
-  the source of truth and is written into Dan's CRM + activity timeline).
-
-Start with the default scope (enriched TX/CA/FL = ~220 companies) and confirm it looks
-right in HubSpot before widening `HUBSPOT_REGIONS` or setting `HUBSPOT_ONLY_ENRICHED=0`.
+Disabled by design. If you ever want Dan → HubSpot push, set `HUBSPOT_ALLOW_WRITE=1`
+and use `hubspot:push` — but the default, intended mode is read-only pull.
