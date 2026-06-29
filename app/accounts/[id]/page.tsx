@@ -63,6 +63,13 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
     (acc[cat] ??= []).push(tool);
     return acc;
   }, {});
+  let signals: { rating?: number; reviewCount?: number; hours?: string; socials?: Record<string, string>; emailPattern?: string } = {};
+  try {
+    signals = JSON.parse(a.enrichment ?? "{}");
+  } catch {
+    signals = {};
+  }
+  const hasSignals = !!(signals.rating || signals.hours || signals.emailPattern || (signals.socials && Object.keys(signals.socials).length));
 
   const addr = [a.address_street, [a.city, a.state_province].filter(Boolean).join(", "), a.postal_code, a.country]
     .filter(Boolean)
@@ -270,6 +277,48 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                   </div>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {hasSignals && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base font-semibold text-foreground">Signals</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              {signals.rating ? (
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Rating</span>
+                  <span className="font-medium">
+                    ★ {signals.rating}
+                    {signals.reviewCount ? <span className="text-muted-foreground"> ({signals.reviewCount} reviews)</span> : null}
+                  </span>
+                </div>
+              ) : null}
+              {signals.hours ? (
+                <div className="flex justify-between gap-3">
+                  <span className="shrink-0 text-muted-foreground">Hours</span>
+                  <span className="text-right font-medium">{signals.hours}</span>
+                </div>
+              ) : null}
+              {signals.emailPattern ? (
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Email pattern</span>
+                  <code className="font-medium">{signals.emailPattern}</code>
+                </div>
+              ) : null}
+              {signals.socials && Object.keys(signals.socials).length ? (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {Object.entries(signals.socials).map(([k, u]) => (
+                    <a key={k} href={u} target="_blank" rel="noreferrer">
+                      <Badge variant="outline" className="capitalize hover:bg-accent">
+                        {k}
+                      </Badge>
+                    </a>
+                  ))}
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         )}

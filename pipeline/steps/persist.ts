@@ -162,6 +162,12 @@ export function updateTools(id: number, tools: string[]): void {
     .run({ id, t: JSON.stringify(tools ?? []) });
 }
 
+export function updateEnrichment(id: number, signals: unknown): void {
+  getSqlite()
+    .prepare("UPDATE dealerships SET enrichment=@e, updated_at=CURRENT_TIMESTAMP WHERE id=@id")
+    .run({ id, e: JSON.stringify(signals ?? {}) });
+}
+
 /** Backfill a phone discovered during enrichment (it was already libphonenumber-validated). */
 export function backfillPhone(id: number, phone: string): void {
   getSqlite()

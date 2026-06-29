@@ -87,6 +87,8 @@ export function getSqlite(): Database.Database {
   if (!cols.has("hs_lifecycle_stage")) db.exec("ALTER TABLE dealerships ADD COLUMN hs_lifecycle_stage TEXT");
   if (!cols.has("hs_owner")) db.exec("ALTER TABLE dealerships ADD COLUMN hs_owner TEXT");
   if (!cols.has("hs_last_activity")) db.exec("ALTER TABLE dealerships ADD COLUMN hs_last_activity TEXT");
+  // Extra scraped signals (rating, hours, socials, email pattern) as flexible JSON.
+  if (!cols.has("enrichment")) db.exec("ALTER TABLE dealerships ADD COLUMN enrichment TEXT");
 
   _sqlite = db;
   return db;

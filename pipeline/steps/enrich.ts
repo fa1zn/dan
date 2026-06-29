@@ -1,8 +1,9 @@
 import { ENABLED_ENRICHERS } from "../enrich/types";
 import { detectTools } from "../enrich/tools";
+import { extractSignals } from "../enrich/signals";
 import { fetchText } from "../lib/http";
 import type { Contact } from "../../lib/types";
-import { loadAll, updateContacts, updateTools, backfillPhone } from "./persist";
+import { loadAll, updateContacts, updateTools, updateEnrichment, backfillPhone } from "./persist";
 
 const num = (v: string | undefined, dflt: number) => {
   const n = v == null ? NaN : Number(v);
@@ -74,7 +75,7 @@ export async function runEnrich(): Promise<EnrichResult> {
         if (mainLine) backfillPhone(rec.id, mainLine);
       }
     }
-    // Tech-stack detection from the (already-cached) homepage.
+    // Tech-stack + signals from the (already-cached) homepage.
     if (rec.website && rec.id != null) {
       const home = await fetchText(rec.website, { cacheNs: "enrich-website" });
       if (home.ok) {
@@ -83,6 +84,13 @@ export async function runEnrich(): Promise<EnrichResult> {
           updateTools(rec.id, tools);
           withTools++;
         }
+        const signals = extractSignals(
+          home.text,
+          rec.domain,
+          found.filter((c) => c.email).map((c) => c.email!),
+          found.filter((c) => c.name).map((c) => ({ name: c.name }))
+        );
+        if (Object.keys(signals).length) updateEnrichment(rec.id, signals);
       }
     }
     if (++i % 25 === 0) console.log(`  [enrich] processed ${i}/${slice.length} (${withContacts} contacts, ${withTools} tech stacks)`);

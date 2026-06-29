@@ -255,6 +255,7 @@ export interface FullAccount extends AccountRow {
   hs_lifecycle_stage: string | null;
   hs_owner: string | null;
   hs_last_activity: string | null;
+  enrichment: string | null;
 }
 
 /* ---------- Rep call list (territory worklist) ---------- */
