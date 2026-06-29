@@ -8,6 +8,7 @@ import { getAccount } from "@/lib/queries";
 import { getCrm, getActivity } from "@/lib/crm";
 import { computeIntel } from "@/lib/intel";
 import { computePamFit } from "@/lib/pamfit";
+import { SourceTag, contactSource, osmLink } from "@/components/source-tag";
 import { EXPLAIN } from "@/lib/explain";
 
 interface Contact {
@@ -240,6 +241,9 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
               </Field>
               <Field label="Coordinates">{hasGeo ? `${lat.toFixed(5)}, ${lng.toFixed(5)}` : null}</Field>
             </dl>
+            <div className="mt-3 border-t pt-2.5">
+              <SourceTag label="OpenStreetMap" href={osmLink(a.latitude, a.longitude)} />
+            </div>
           </CardContent>
         </Card>
 
@@ -277,6 +281,9 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
           ) : (
             <div className="px-5 pb-5 text-sm text-muted-foreground">No coordinates on file for this rooftop.</div>
           )}
+          <div className="border-t px-5 py-2.5">
+            <SourceTag label="OpenStreetMap" href={osmLink(a.latitude, a.longitude)} />
+          </div>
         </CardContent>
       </Card>
 
@@ -341,9 +348,9 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                     )}
                     {c.phone && <div className="text-xs text-muted-foreground">{c.phone}</div>}
                     {c.source && (
-                      <Badge variant="outline" className="mt-1">
-                        {c.source}
-                      </Badge>
+                      <div className="mt-1">
+                        <SourceTag {...contactSource(c.source, a.website)} />
+                      </div>
                     )}
                   </li>
                 ))}
@@ -373,6 +380,9 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                   </div>
                 </div>
               ))}
+              <div className="border-t pt-2.5">
+                <SourceTag label={`${a.domain ?? "dealer website"} · page scripts`} href={a.website} />
+              </div>
             </CardContent>
           </Card>
         )}
@@ -415,6 +425,9 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                   ))}
                 </div>
               ) : null}
+              <div className="border-t pt-2.5">
+                <SourceTag label={`${a.domain ?? "dealer website"} · schema.org`} href={a.website} />
+              </div>
             </CardContent>
           </Card>
         )}
