@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, MapPin, Phone, Globe, Mail, Layers } from "lucide-react";
+import { ArrowLeft, ExternalLink, MapPin, Phone, Globe, Mail, Layers, Sparkles, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "@/components/ui";
 import { CrmPanel, StatusBadge } from "@/components/crm-panel";
 import { InfoTip } from "@/components/info-tip";
 import { getAccount } from "@/lib/queries";
 import { getCrm, getActivity } from "@/lib/crm";
+import { computeIntel } from "@/lib/intel";
 import { EXPLAIN } from "@/lib/explain";
 
 interface Contact {
@@ -71,6 +72,18 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
   }
   const hasSignals = !!(signals.rating || signals.hours || signals.emailPattern || (signals.socials && Object.keys(signals.socials).length));
 
+  const intel = computeIntel({
+    contacts,
+    tools,
+    signals,
+    phone: a.phone,
+    phoneValid: a.phone_valid === 1,
+    website: a.website,
+    websiteValid: a.website_valid == null ? null : a.website_valid === 1,
+    brandConfirmed: a.brand_confirmed === 1,
+  });
+  const confVariant = intel.confidence.label === "High" ? "success" : intel.confidence.label === "Medium" ? "default" : "muted";
+
   const addr = [a.address_street, [a.city, a.state_province].filter(Boolean).join(", "), a.postal_code, a.country]
     .filter(Boolean)
     .join(" · ");
@@ -115,6 +128,66 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
           )}
         </div>
       </div>
+
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+          <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
+            <Sparkles className="h-4 w-4 text-brand" /> Sales intel
+          </CardTitle>
+          <Badge variant={confVariant as "success" | "default" | "muted"}>
+            {intel.confidence.label} confidence
+          </Badge>
+        </CardHeader>
+        <CardContent className="grid gap-5 md:grid-cols-2">
+          <div>
+            <div className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
+              <Target className="h-3.5 w-3.5" /> Call first
+            </div>
+            {intel.champion ? (
+              <div className="mt-1.5">
+                <div className="font-medium">{intel.champion.name}</div>
+                <div className="text-sm text-muted-foreground">
+                  {intel.champion.title} · {intel.champion.reason}
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-3 text-sm">
+                  {(intel.champion.phone ?? a.phone) && (
+                    <a href={`tel:${(intel.champion.phone ?? a.phone)!.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1 text-brand hover:underline">
+                      <Phone className="h-3.5 w-3.5" /> {intel.champion.phone ?? a.phone}
+                    </a>
+                  )}
+                  {intel.champion.email && (
+                    <a href={`mailto:${intel.champion.email}`} className="inline-flex items-center gap-1 text-brand hover:underline">
+                      <Mail className="h-3.5 w-3.5" /> {intel.champion.email}
+                    </a>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="mt-1.5 text-sm text-muted-foreground">
+                No named decision-maker yet — call the main line{a.phone ? ` (${a.phone})` : ""}.
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Why call them</div>
+            {intel.whyCall.length ? (
+              <ul className="mt-1.5 space-y-1.5 text-sm">
+                {intel.whyCall.map((w, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
+                    {w.label}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="mt-1.5 text-sm text-muted-foreground">
+                No standout trigger scraped yet — enrich this rooftop for tech/hours/reviews signals.
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
