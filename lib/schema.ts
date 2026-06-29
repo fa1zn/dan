@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, uniqueIndex, index } from "drizzle-orm/sqlite-core";
+import { integer, real, sqliteTable, text, uniqueIndex, index } from "drizzle-orm/sqlite-core";
 
 /**
  * The single master table for the system of record. JSON-bearing columns
@@ -22,6 +22,8 @@ export const dealerships = sqliteTable(
     postalCode: text("postal_code"),
     country: text("country"),
     territory: text("territory"),
+    latitude: real("latitude"),
+    longitude: real("longitude"),
     phone: text("phone"),
     email: text("email"),
     toolsUsed: text("tools_used", { mode: "json" }).$type<string[]>().default(sql`'[]'`),

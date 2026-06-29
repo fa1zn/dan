@@ -137,6 +137,8 @@ export function toMaster(raw: RawRecord, now: string): MasterRecord | null {
     postalCode: base.postalCode,
     country,
     territory: deriveTerritory(stateProvince, country),
+    latitude: typeof raw.lat === "number" ? raw.lat : null,
+    longitude: typeof raw.lng === "number" ? raw.lng : null,
     phone: collapse(raw.phone),
     email: collapse(raw.email),
     toolsUsed: [],

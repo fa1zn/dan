@@ -53,6 +53,8 @@ export interface MasterRecord {
   postalCode: string | null;
   country: string | null;
   territory: string | null;
+  latitude: number | null;
+  longitude: number | null;
   phone: string | null;
   email: string | null;
   toolsUsed: string[];

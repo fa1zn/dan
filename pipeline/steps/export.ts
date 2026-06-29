@@ -17,6 +17,8 @@ const COLUMNS: { header: string; value: (r: MasterRecord) => string }[] = [
   { header: "Postal Code", value: (r) => r.postalCode ?? "" },
   { header: "Country", value: (r) => r.country ?? "" },
   { header: "Territory", value: (r) => r.territory ?? "" },
+  { header: "Latitude", value: (r) => (r.latitude != null ? String(r.latitude) : "") },
+  { header: "Longitude", value: (r) => (r.longitude != null ? String(r.longitude) : "") },
   { header: "Phone Number", value: (r) => r.phone ?? "" },
   { header: "Email", value: (r) => r.email ?? "" },
   { header: "Tier", value: (r) => r.tier ?? "" },

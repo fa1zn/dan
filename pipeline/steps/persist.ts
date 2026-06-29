@@ -15,6 +15,8 @@ interface Row {
   postal_code: string | null;
   country: string | null;
   territory: string | null;
+  latitude: number | null;
+  longitude: number | null;
   phone: string | null;
   email: string | null;
   tools_used: string | null;
@@ -47,6 +49,8 @@ function rowToMaster(r: Row): MasterRecord {
     postalCode: r.postal_code,
     country: r.country,
     territory: r.territory,
+    latitude: r.latitude,
+    longitude: r.longitude,
     phone: r.phone,
     email: r.email,
     toolsUsed: safeJson<string[]>(r.tools_used, []),
@@ -77,12 +81,12 @@ export function replaceAll(records: MasterRecord[]): void {
   const insert = db.prepare(`
     INSERT INTO dealerships
       (name, oem, group_name, group_size, website, domain, address_street, city,
-       state_province, postal_code, country, territory, phone, email, tools_used,
+       state_province, postal_code, country, territory, latitude, longitude, phone, email, tools_used,
        contacts, tier, source, website_valid, phone_valid, brand_confirmed,
        dedup_key, created_at, updated_at)
     VALUES
       (@name, @oem, @group_name, @group_size, @website, @domain, @address_street, @city,
-       @state_province, @postal_code, @country, @territory, @phone, @email, @tools_used,
+       @state_province, @postal_code, @country, @territory, @latitude, @longitude, @phone, @email, @tools_used,
        @contacts, @tier, @source, @website_valid, @phone_valid, @brand_confirmed,
        @dedup_key, @created_at, @updated_at)
   `);
@@ -103,6 +107,8 @@ export function replaceAll(records: MasterRecord[]): void {
         postal_code: r.postalCode,
         country: r.country,
         territory: r.territory,
+        latitude: r.latitude,
+        longitude: r.longitude,
         phone: r.phone,
         email: r.email,
         tools_used: JSON.stringify(r.toolsUsed ?? []),

@@ -37,6 +37,8 @@ export function getSqlite(): Database.Database {
       postal_code TEXT,
       country TEXT,
       territory TEXT,
+      latitude REAL,
+      longitude REAL,
       phone TEXT,
       email TEXT,
       tools_used TEXT DEFAULT '[]',

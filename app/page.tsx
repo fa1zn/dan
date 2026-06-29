@@ -1,17 +1,79 @@
-export default function Home() {
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import { KpiCard, BarList } from "@/components/dashboard-bits";
+import { getKpis, getByOem, getByTerritory, getByTier } from "@/lib/queries";
+import { fmt, pct } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
+
+export default function OverviewPage() {
+  const k = getKpis();
+  const byOem = getByOem(15);
+  const byTerritory = getByTerritory();
+  const byTier = getByTier();
+
   return (
-    <main style={{ fontFamily: "system-ui, sans-serif", padding: 48, maxWidth: 720 }}>
-      <h1 style={{ marginBottom: 4 }}>Dan</h1>
-      <p style={{ marginTop: 0, color: "#666", fontSize: 18 }}>Pam&rsquo;s sales guy</p>
-      <p>
-        Dan works the North American franchise dealership market. This is his book of
-        business: the system of record for every OEM-affiliated rooftop in the US and Canada.
-      </p>
-      <p>
-        Phase 1 (this repo) is the data pipeline that builds and maintains the dataset. See{" "}
-        <code>/pipeline</code> and the README. The dashboard where Dan works his accounts lands
-        in Phase 2 and reads the pipeline&rsquo;s SQLite database.
-      </p>
-    </main>
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
+        <p className="text-sm text-muted-foreground">
+          Dan&rsquo;s book of business — {fmt(k.total)} franchise rooftops across the US and Canada.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <KpiCard title="Total rooftops" value={fmt(k.total)} sub={`${fmt(k.us)} US · ${fmt(k.ca)} Canada`} />
+        <KpiCard title="Tier A accounts" value={fmt(k.tierA)} sub={`${pct(k.tierA, k.total)} of book`} accent />
+        <KpiCard title="Has website" value={pct(k.withWebsite, k.total)} sub={`${fmt(k.withWebsite)} rooftops`} />
+        <KpiCard
+          title="Website valid"
+          value={pct(k.websiteValid, k.websiteChecked)}
+          sub={`${fmt(k.websiteValid)} of ${fmt(k.websiteChecked)} checked`}
+        />
+        <KpiCard
+          title="Phone valid"
+          value={pct(k.phoneValid, k.withPhone)}
+          sub={`${fmt(k.phoneValid)} of ${fmt(k.withPhone)} with phone`}
+        />
+        <KpiCard title="Brand confirmed" value={pct(k.brandConfirmed, k.total)} sub={`${fmt(k.brandConfirmed)} via OEM source`} />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-semibold text-foreground">Rooftops by OEM</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <BarList items={byOem} color="primary" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-semibold text-foreground">Rooftops by territory</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <BarList items={byTerritory} color="brand" />
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-semibold text-foreground">Tier breakdown</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-6">
+            {byTier.map((t) => (
+              <div key={t.label}>
+                <div className="text-2xl font-semibold tracking-tight">{fmt(t.n)}</div>
+                <div className="text-xs text-muted-foreground">
+                  {t.label} · {pct(t.n, k.total)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

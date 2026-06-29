@@ -42,6 +42,8 @@ export function mergeTwo(a: MasterRecord, b: MasterRecord): MasterRecord {
     postalCode: pick("postalCode"),
     country: pick("country"),
     territory: pick("territory"),
+    latitude: pick("latitude"),
+    longitude: pick("longitude"),
     phone: pick("phone"),
     email: pick("email"),
     toolsUsed: Array.from(new Set([...(primary.toolsUsed ?? []), ...(secondary.toolsUsed ?? [])])),
