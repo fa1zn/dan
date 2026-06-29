@@ -1,0 +1,76 @@
+// Catalogue of data/CRM integrations. Dan runs fully on the free tier with none of
+// these connected; they're optional upgrades you wire up when you have access.
+
+export type IntegrationStatus = "connected" | "available" | "coming-soon";
+
+export interface Integration {
+  id: string;
+  name: string;
+  category: string;
+  tier: "Free" | "Free tier" | "Paid";
+  blurb: string;
+  /** Env var whose presence flips this to "connected". */
+  envVar?: string;
+  /** When no envVar (built-in), this fixed status is used. */
+  fixedStatus?: IntegrationStatus;
+  /** Step-by-step connect instructions shown in the UI. */
+  steps?: string[];
+}
+
+export const INTEGRATIONS: Integration[] = [
+  {
+    id: "website",
+    name: "Website enrichment",
+    category: "Built-in",
+    tier: "Free",
+    fixedStatus: "connected",
+    blurb:
+      "Pulls decision-makers (GM, GSM, sales managers), phone numbers, and the dealer's tech stack straight from each rooftop's own website. No account or key required.",
+  },
+  {
+    id: "hubspot",
+    name: "HubSpot",
+    category: "CRM",
+    tier: "Free tier",
+    envVar: "HUBSPOT_TOKEN",
+    blurb:
+      "Read-only: pull your HubSpot companies, contacts, lifecycle stage, and owners into Dan so reps can see what's already being worked and never double-prospect. Dan never writes to HubSpot.",
+    steps: [
+      "In HubSpot: Settings → Integrations → Private Apps → Create a private app.",
+      "Grant READ scopes: crm.objects.companies.read, crm.objects.contacts.read, crm.objects.owners.read.",
+      "Copy the access token into .env as HUBSPOT_TOKEN=…, then run `npm run hubspot:pull`.",
+    ],
+  },
+  {
+    id: "zoominfo",
+    name: "ZoomInfo",
+    category: "Contact data",
+    tier: "Paid",
+    envVar: "ZOOMINFO_TOKEN",
+    blurb:
+      "Direct dials and verified emails for the decision-makers Dan already found by name — so reps reach the GM's cell, not the front desk.",
+    steps: [
+      "Requires a paid ZoomInfo plan with API access.",
+      "Add ZOOMINFO_TOKEN to .env. An enricher slot is reserved (ENABLED_ENRICHERS) — drop-in when ready.",
+    ],
+  },
+  {
+    id: "clay",
+    name: "Clay",
+    category: "Enrichment",
+    tier: "Paid",
+    envVar: "CLAY_TOKEN",
+    blurb:
+      "Waterfall enrichment across many providers from one place — fills gaps in contacts, emails, and firmographics that the free website pass misses.",
+    steps: [
+      "Requires a paid Clay workspace with API access.",
+      "Add CLAY_TOKEN to .env. Plugs into the same Enricher interface as the website pass.",
+    ],
+  },
+];
+
+export function statusOf(i: Integration, env: NodeJS.ProcessEnv): IntegrationStatus {
+  if (i.fixedStatus) return i.fixedStatus;
+  if (i.envVar && env[i.envVar]) return "connected";
+  return i.tier === "Paid" ? "coming-soon" : "available";
+}

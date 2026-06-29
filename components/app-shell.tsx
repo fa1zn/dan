@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Building2, KanbanSquare, PhoneCall } from "lucide-react";
+import { LayoutDashboard, Building2, KanbanSquare, PhoneCall, Plug } from "lucide-react";
 import { NavLink, ThemeToggle } from "./chrome";
 
 /** Persistent app chrome: branded sidebar + top bar. */
@@ -28,6 +28,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </NavLink>
           <NavLink href="/pipeline" icon={<KanbanSquare className="h-4 w-4" />}>
             Pipeline
+          </NavLink>
+          <NavLink href="/integrations" icon={<Plug className="h-4 w-4" />}>
+            Integrations
           </NavLink>
         </nav>
         <div className="mt-auto px-5 py-4 text-xs text-muted-foreground">
