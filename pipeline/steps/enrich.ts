@@ -54,8 +54,10 @@ export async function runEnrich(): Promise<EnrichResult> {
   let withContacts = 0;
   let totalContacts = 0;
   let withTools = 0;
-  let i = 0;
-  for (const rec of slice) {
+  let done = 0;
+
+  // Process one rooftop. Network fetches dominate, so we run many concurrently.
+  async function processOne(rec: (typeof slice)[number]): Promise<void> {
     const found: Contact[] = [];
     for (const enricher of ENABLED_ENRICHERS) {
       try {
@@ -69,13 +71,11 @@ export async function runEnrich(): Promise<EnrichResult> {
       updateContacts(rec.id, merged);
       withContacts++;
       totalContacts += found.length;
-      // Backfill the rooftop's call number when we found one and it had none.
       if (!rec.phone) {
         const mainLine = found.find((c) => c.phone)?.phone;
         if (mainLine) backfillPhone(rec.id, mainLine);
       }
     }
-    // Tech-stack + signals from the (already-cached) homepage.
     if (rec.website && rec.id != null) {
       const home = await fetchText(rec.website, { cacheNs: "enrich-website" });
       if (home.ok) {
@@ -93,8 +93,22 @@ export async function runEnrich(): Promise<EnrichResult> {
         if (Object.keys(signals).length) updateEnrichment(rec.id, signals);
       }
     }
-    if (++i % 25 === 0) console.log(`  [enrich] processed ${i}/${slice.length} (${withContacts} contacts, ${withTools} tech stacks)`);
+    if (++done % 50 === 0) {
+      console.log(`  [enrich] processed ${done}/${slice.length} (${withContacts} contacts, ${withTools} tech stacks)`);
+    }
   }
+
+  // Bounded-concurrency worker pool. HTTP politeness is per-host, so concurrent
+  // requests to different dealer sites stay polite while going ~Nx faster.
+  const concurrency = Math.max(1, num(process.env.ENRICH_CONCURRENCY, 10));
+  let cursor = 0;
+  await Promise.all(
+    Array.from({ length: concurrency }, async () => {
+      while (cursor < slice.length) {
+        await processOne(slice[cursor++]);
+      }
+    })
+  );
 
   return { attempted: slice.length, withContacts, totalContacts, withTools };
 }
