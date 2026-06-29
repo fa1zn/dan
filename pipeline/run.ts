@@ -26,6 +26,7 @@ import { runTier } from "./steps/tier";
 import { runExport } from "./steps/export";
 import { runReport } from "./steps/report";
 import { runHubspot } from "./integrations/hubspot";
+import { runZoomInfo } from "./integrations/zoominfo";
 
 const nowIso = () => new Date().toISOString();
 const banner = (s: string) => console.log(`\n▶ ${s}`);
@@ -124,6 +125,7 @@ async function main() {
     case "export": exportCsv(); break;
     case "report": runReport(); break;
     case "hubspot": await runHubspot((process.argv[3] ?? "pull").toLowerCase()); break;
+    case "zoominfo": await runZoomInfo(); break;
     case "all": await all(); break;
     case "help": case "-h": case "--help": console.log(HELP); break;
     default:

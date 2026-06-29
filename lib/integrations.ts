@@ -13,6 +13,8 @@ export interface Integration {
   envVar?: string;
   /** When no envVar (built-in), this fixed status is used. */
   fixedStatus?: IntegrationStatus;
+  /** Show as "available" (connectable now) rather than "coming-soon" when unconnected. */
+  availableNow?: boolean;
   /** Step-by-step connect instructions shown in the UI. */
   steps?: string[];
 }
@@ -46,12 +48,14 @@ export const INTEGRATIONS: Integration[] = [
     name: "ZoomInfo",
     category: "Contact data",
     tier: "Paid",
-    envVar: "ZOOMINFO_TOKEN",
+    envVar: "ZOOMINFO_USERNAME",
+    availableNow: true,
     blurb:
-      "Direct dials and verified emails for the decision-makers Dan already found by name — so reps reach the GM's cell, not the front desk.",
+      "Direct dials and verified emails for the decision-makers Dan already found by name — so reps reach the GM's cell, not the front desk. Credit-safe: dry-run first, scoped to your top accounts.",
     steps: [
-      "Requires a paid ZoomInfo plan with API access.",
-      "Add ZOOMINFO_TOKEN to .env. An enricher slot is reserved (ENABLED_ENRICHERS) — drop-in when ready.",
+      "In ZoomInfo GTM Studio: API/MCP → REST API → Set up keys (not the MCP connectors).",
+      "Add ZOOMINFO_USERNAME + ZOOMINFO_PASSWORD to .env.",
+      "Dry-run cost first: `npm run zoominfo:enrich` (no credits). Then ZOOMINFO_APPLY=1 to enrich.",
     ],
   },
   {
@@ -72,5 +76,6 @@ export const INTEGRATIONS: Integration[] = [
 export function statusOf(i: Integration, env: NodeJS.ProcessEnv): IntegrationStatus {
   if (i.fixedStatus) return i.fixedStatus;
   if (i.envVar && env[i.envVar]) return "connected";
+  if (i.availableNow) return "available";
   return i.tier === "Paid" ? "coming-soon" : "available";
 }

@@ -71,6 +71,22 @@ export const CONFIG = {
     appBaseUrl: process.env.APP_BASE_URL ?? "http://localhost:3210",
   },
 
+  /** ZoomInfo enrichment (PAID — credit-gated, dry-run by default). */
+  zoominfo: {
+    username: process.env.ZOOMINFO_USERNAME ?? "",
+    password: process.env.ZOOMINFO_PASSWORD ?? "",
+    /** Optional PKI auth (more secure) instead of username/password. */
+    clientId: process.env.ZOOMINFO_CLIENT_ID ?? "",
+    privateKey: process.env.ZOOMINFO_PRIVATE_KEY ?? "",
+    /** Nothing is spent unless this is on; otherwise every run is a dry run. */
+    apply: bool(process.env.ZOOMINFO_APPLY, false),
+    /** Scope: only enrich these regions, capped, to protect credits. */
+    regions: list(process.env.ZOOMINFO_REGIONS) ?? ["TX", "CA", "FL"],
+    maxAccounts: num(process.env.ZOOMINFO_MAX_ACCOUNTS, 50),
+    /** Only spend credits on accounts at/above this Pam-fit score. */
+    minPamFit: num(process.env.ZOOMINFO_MIN_FIT, 0),
+  },
+
   /** Overpass API mirrors, tried in order on failure. */
   overpassEndpoints: list(process.env.OVERPASS_ENDPOINTS) ?? [
     "https://overpass-api.de/api/interpreter",

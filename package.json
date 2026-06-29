@@ -19,7 +19,8 @@
     "pipeline:all": "tsx pipeline/run.ts all",
     "hubspot:push": "tsx pipeline/run.ts hubspot push",
     "hubspot:pull": "tsx pipeline/run.ts hubspot pull",
-    "hubspot:sync": "tsx pipeline/run.ts hubspot sync"
+    "hubspot:sync": "tsx pipeline/run.ts hubspot sync",
+    "zoominfo:enrich": "tsx pipeline/run.ts zoominfo"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.18",
