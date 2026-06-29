@@ -8,11 +8,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen">
       <aside className="hidden w-60 shrink-0 flex-col border-r bg-card md:flex">
         <Link href="/" className="flex items-center gap-2.5 px-5 py-5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand text-brand-foreground font-bold">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-foreground text-background font-bold tracking-tight">
             D
           </span>
           <span className="leading-tight">
-            <span className="block text-sm font-semibold">Dan</span>
+            <span className="block text-sm font-semibold tracking-tight">Dan</span>
             <span className="block text-xs text-muted-foreground">Pam&rsquo;s sales guy</span>
           </span>
         </Link>
