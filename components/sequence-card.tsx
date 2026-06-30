@@ -118,8 +118,8 @@ export function SequenceCard({ motion, dealershipId }: { motion: MotionView | nu
 
         <MotionStepper steps={motion.steps} />
 
-        <div className="flex items-center gap-2 rounded-md bg-blue-500/5 px-3 py-2 text-sm text-blue-700 dark:text-blue-300">
-          <Clock className="h-4 w-4 shrink-0" />
+        <div className="flex items-center gap-2 rounded-md bg-brand/5 px-3 py-2 text-sm text-foreground">
+          <Clock className="h-4 w-4 shrink-0 text-brand" />
           {nextActionText(motion)}
         </div>
 

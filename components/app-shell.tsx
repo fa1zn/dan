@@ -12,7 +12,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             D
           </span>
           <span className="leading-tight">
-            <span className="block text-sm font-semibold tracking-tight">Dan</span>
+            <span className="block font-serif text-base font-medium tracking-tight">Dan</span>
             <span className="block text-xs text-muted-foreground">Pam&rsquo;s sales guy</span>
           </span>
         </Link>

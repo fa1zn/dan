@@ -3,65 +3,65 @@
 @tailwind utilities;
 
 /*
-  Theme tokens — editorial monochrome (Antigen-style): near-black on white, bold
-  tight type, lots of whitespace, colour reserved for status only (green = good,
-  red = critical). "brand" is monochrome ink so accents stay disciplined.
+  Theme tokens — warm editorial (Anthropic-inspired): a paper-cream canvas, soft warm
+  ink, a single clay/terracotta accent, and a serif for display headings over a clean
+  sans. Calm, human, content-forward. Status colour (green/red) stays semantic.
 */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 5%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 5%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 5%;
+  --background: 40 30% 97%; /* warm paper canvas */
+  --foreground: 36 11% 12%; /* soft warm ink */
+  --card: 42 38% 99%;
+  --card-foreground: 36 11% 12%;
+  --popover: 42 38% 99%;
+  --popover-foreground: 36 11% 12%;
 
-  --primary: 0 0% 9%; /* ink */
-  --primary-foreground: 0 0% 98%;
-  --secondary: 0 0% 96%;
-  --secondary-foreground: 0 0% 9%;
+  --primary: 36 11% 15%; /* ink */
+  --primary-foreground: 40 30% 98%;
+  --secondary: 40 20% 93%;
+  --secondary-foreground: 36 11% 15%;
 
-  --brand: 243 75% 58%; /* one disciplined accent — indigo */
-  --brand-foreground: 0 0% 100%;
+  --brand: 15 52% 55%; /* clay / terracotta — the single accent */
+  --brand-foreground: 40 33% 98%;
 
-  --muted: 0 0% 96%;
-  --muted-foreground: 0 0% 40%;
-  --accent: 0 0% 95%;
-  --accent-foreground: 0 0% 9%;
-  --destructive: 0 72% 48%;
-  --destructive-foreground: 0 0% 98%;
+  --muted: 40 20% 93%;
+  --muted-foreground: 36 8% 42%;
+  --accent: 40 24% 91%;
+  --accent-foreground: 36 11% 15%;
+  --destructive: 8 60% 49%;
+  --destructive-foreground: 40 30% 98%;
 
-  --border: 0 0% 90%;
-  --input: 0 0% 89%;
-  --ring: 0 0% 9%;
+  --border: 38 18% 87%;
+  --input: 38 18% 84%;
+  --ring: 15 52% 55%;
   --radius: 0.75rem;
 }
 
 .dark {
-  --background: 0 0% 4%;
-  --foreground: 0 0% 96%;
-  --card: 0 0% 7%;
-  --card-foreground: 0 0% 96%;
-  --popover: 0 0% 7%;
-  --popover-foreground: 0 0% 96%;
+  --background: 30 8% 9%; /* warm charcoal, not pure black */
+  --foreground: 40 18% 91%;
+  --card: 30 7% 12%;
+  --card-foreground: 40 18% 91%;
+  --popover: 30 7% 12%;
+  --popover-foreground: 40 18% 91%;
 
-  --primary: 0 0% 96%;
-  --primary-foreground: 0 0% 9%;
-  --secondary: 0 0% 14%;
-  --secondary-foreground: 0 0% 96%;
+  --primary: 40 18% 91%;
+  --primary-foreground: 30 8% 11%;
+  --secondary: 30 6% 16%;
+  --secondary-foreground: 40 18% 91%;
 
-  --brand: 245 80% 70%; /* indigo, brighter on dark */
-  --brand-foreground: 0 0% 100%;
+  --brand: 18 58% 63%; /* clay, brighter on dark */
+  --brand-foreground: 30 10% 10%;
 
-  --muted: 0 0% 14%;
-  --muted-foreground: 0 0% 60%;
-  --accent: 0 0% 15%;
-  --accent-foreground: 0 0% 96%;
-  --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 98%;
+  --muted: 30 6% 16%;
+  --muted-foreground: 38 10% 62%;
+  --accent: 30 6% 18%;
+  --accent-foreground: 40 18% 91%;
+  --destructive: 8 58% 53%;
+  --destructive-foreground: 40 30% 98%;
 
-  --border: 0 0% 16%;
-  --input: 0 0% 20%;
-  --ring: 0 0% 83%;
+  --border: 30 6% 20%;
+  --input: 30 6% 24%;
+  --ring: 18 58% 63%;
 }
 
 * {
@@ -71,18 +71,21 @@
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+  font-feature-settings: "rlig" 1, "calt" 1;
 }
 
-/* Editorial display type: large, bold, tight tracking. */
+/* Editorial display: page titles in serif, medium weight, calm tracking. */
 h1 {
-  letter-spacing: -0.03em;
+  font-family: var(--font-serif), ui-serif, Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 h2,
 h3 {
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
-/* Thin, unobtrusive scrollbars to match the SaaS feel. */
+/* Soft, warm, unobtrusive scrollbars. */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); }
