@@ -2,8 +2,22 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { Rocket } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, Button, Input } from "@/components/ui";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Button,
+  Input,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui";
 import { previewSegmentAction, launchSegmentAction } from "@/app/sequences/actions";
+
+const ANY = "__any";
 
 export function SegmentLauncher({ oems, states }: { oems: string[]; states: string[] }) {
   const [oem, setOem] = useState("");
@@ -21,8 +35,6 @@ export function SegmentLauncher({ oems, states }: { oems: string[]; states: stri
     return () => clearTimeout(t);
   }, [oem, state, city]);
 
-  const selectCls = "h-9 rounded-md border bg-transparent px-3 text-sm";
-
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -31,31 +43,46 @@ export function SegmentLauncher({ oems, states }: { oems: string[]; states: stri
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form action={launchSegmentAction} className="flex flex-wrap items-end gap-3">
-          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-            Brand
-            <select name="oem" value={oem} onChange={(e) => setOem(e.target.value)} className={selectCls}>
-              <option value="">Any brand</option>
-              {oems.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-            State / Province
-            <select name="state" value={state} onChange={(e) => setState(e.target.value)} className={selectCls}>
-              <option value="">Any state</option>
-              {states.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-            City (optional)
+        <form action={launchSegmentAction} className="flex flex-wrap items-end gap-4">
+          <input type="hidden" name="oem" value={oem} />
+          <input type="hidden" name="state" value={state} />
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Brand</label>
+            <Select value={oem || ANY} onValueChange={(v) => setOem(v === ANY ? "" : v)}>
+              <SelectTrigger className="w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY}>Any brand</SelectItem>
+                {oems.map((o) => (
+                  <SelectItem key={o} value={o}>
+                    {o}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-muted-foreground">State / province</label>
+            <Select value={state || ANY} onValueChange={(v) => setState(v === ANY ? "" : v)}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY}>Any state</SelectItem>
+                {states.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-muted-foreground">City (optional)</label>
             <Input
               name="city"
               value={city}
@@ -63,11 +90,12 @@ export function SegmentLauncher({ oems, states }: { oems: string[]; states: stri
               placeholder="e.g. Marysville"
               className="h-9 w-40"
             />
-          </label>
+          </div>
+
           <Button type="submit" variant="brand" size="sm" disabled={count === 0}>
             <Rocket className="h-4 w-4" /> Launch{count != null ? ` ${Math.min(count, 100)}` : ""}
           </Button>
-          <span className="text-sm text-muted-foreground">
+          <span className="pb-1.5 text-sm text-muted-foreground">
             {pending
               ? "counting…"
               : count != null
@@ -75,8 +103,9 @@ export function SegmentLauncher({ oems, states }: { oems: string[]; states: stri
                 : "pick a brand and/or area"}
           </span>
         </form>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Paced 2 min apart (compliant, never a blast). Each gets Pam&rsquo;s disclosed inquiry first; sales follow-ups wait for consent.
+        <p className="mt-3 text-xs text-muted-foreground">
+          Paced 2 minutes apart (never a blast). Each dealer gets Pam&rsquo;s disclosed inquiry first; sales follow-ups
+          wait for consent.
         </p>
       </CardContent>
     </Card>
