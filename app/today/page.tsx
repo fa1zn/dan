@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Flame, Phone, ArrowRight, Workflow, MessageSquare, Gift, Activity, Coffee } from "lucide-react";
 import { Card, CardContent } from "@/components/ui";
 import { listHotLeads, recentActivity, motionCounts, type FeedItem } from "@/lib/sequence-ui";
+import { computeGoal } from "@/lib/goals";
+import { GoalCard } from "@/components/goal-card";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +45,8 @@ export default function TodayPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Today</h1>
         <p className="mt-1 text-sm text-muted-foreground">{summary}</p>
       </div>
+
+      <GoalCard g={computeGoal()} />
 
       {hot.length > 0 && (
         <section className="space-y-3">
