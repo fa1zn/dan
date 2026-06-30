@@ -2,6 +2,7 @@ import type { Channel } from "../../../lib/sequence-constants";
 import type { ChannelAdapter } from "./types";
 import { simulatedChannel } from "./simulated";
 import { twilioCall, twilioSms } from "./twilio";
+import { blandCall } from "./bland";
 import { giftingChannel } from "./gifting";
 
 /**
@@ -22,8 +23,10 @@ export function resolveChannel(kind: Channel, env: NodeJS.ProcessEnv = process.e
   const twilioReady = !!(env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_FROM);
   const giftReady = !!(env.GIFT_API_URL && env.GIFT_API_KEY);
 
-  if (kind === "sms" && twilioReady) return twilioSms(env);
+  // Call: prefer Bland (live conversation) when keyed; fall back to Twilio TTS (message drop).
+  if (kind === "call" && env.BLAND_API_KEY) return blandCall(env);
   if (kind === "call" && twilioReady) return twilioCall(env);
+  if (kind === "sms" && twilioReady) return twilioSms(env);
   if (kind === "gift" && giftReady) return giftingChannel(env);
 
   console.warn(`[sequence] SEQUENCE_APPLY=1 but no real ${kind} provider configured — falling back to simulated.`);
