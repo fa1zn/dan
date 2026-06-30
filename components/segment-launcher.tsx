@@ -16,6 +16,7 @@ import {
   SelectItem,
 } from "@/components/ui";
 import { previewSegmentAction, launchSegmentAction } from "@/app/sequences/actions";
+import { toast } from "@/components/toast";
 
 const ANY = "__any";
 
@@ -43,7 +44,11 @@ export function SegmentLauncher({ oems, states }: { oems: string[]; states: stri
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form action={launchSegmentAction} className="flex flex-wrap items-end gap-4">
+        <form
+          action={launchSegmentAction}
+          onSubmit={() => toast("Launching outreach — Pam's on it.", "call")}
+          className="flex flex-wrap items-end gap-4"
+        >
           <input type="hidden" name="oem" value={oem} />
           <input type="hidden" name="state" value={state} />
 

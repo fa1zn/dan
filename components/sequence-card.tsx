@@ -5,6 +5,7 @@ import type { MotionStepView, MotionView } from "@/lib/sequence-ui";
 import { TEMPERATURE_LABEL } from "@/lib/sequence-ui";
 import { cn } from "@/lib/ui";
 import { enrollAndRunAction, runStepAction, stopAction } from "@/app/motion-actions";
+import { ToastForm } from "@/components/toast";
 
 const CHANNEL_ICON: Record<Channel, React.ComponentType<{ className?: string }>> = {
   call: Phone,
@@ -98,12 +99,12 @@ export function SequenceCard({ motion, dealershipId }: { motion: MotionView | nu
           <p className="text-sm text-muted-foreground">
             Pam hasn&rsquo;t reached out yet. Start with a call, then follow-ups once they say yes.
           </p>
-          <form action={enrollAndRunAction}>
+          <ToastForm action={enrollAndRunAction} toastMsg="Pam is placing the call…" toastKind="call">
             <input type="hidden" name="dealershipId" value={dealershipId} />
             <Button type="submit" variant="brand" size="sm">
               <Play className="h-4 w-4" /> Have Pam call
             </Button>
-          </form>
+          </ToastForm>
         </CardContent>
       </Card>
     );
@@ -160,27 +161,37 @@ export function SequenceCard({ motion, dealershipId }: { motion: MotionView | nu
 
         {nextStep ? (
           <div className="flex flex-wrap items-center gap-2 border-t pt-3">
-            <form action={runStepAction}>
+            <ToastForm
+              action={runStepAction}
+              toastKind={nextStep.channel === "call" ? "call" : "default"}
+              toastMsg={
+                nextStep.channel === "call"
+                  ? "Pam is calling…"
+                  : nextStep.channel === "sms"
+                    ? "Sending the text…"
+                    : "Sending the gift…"
+              }
+            >
               <input type="hidden" name="dealershipId" value={dealershipId} />
               <Button type="submit" variant="brand" size="sm">
                 <Play className="h-4 w-4" /> {RUN_LABEL[nextStep.channel]}
               </Button>
-            </form>
-            <form action={stopAction}>
+            </ToastForm>
+            <ToastForm action={stopAction} toastMsg="Outreach stopped.">
               <input type="hidden" name="dealershipId" value={dealershipId} />
               <Button type="submit" variant="outline" size="sm">
                 Stop
               </Button>
-            </form>
+            </ToastForm>
           </div>
         ) : (
           <div className="border-t pt-3">
-            <form action={enrollAndRunAction}>
+            <ToastForm action={enrollAndRunAction} toastMsg="Reaching out again…" toastKind="call">
               <input type="hidden" name="dealershipId" value={dealershipId} />
               <Button type="submit" variant="outline" size="sm">
                 <Play className="h-4 w-4" /> Reach out again
               </Button>
-            </form>
+            </ToastForm>
           </div>
         )}
       </CardContent>

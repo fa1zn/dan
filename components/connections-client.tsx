@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Input, Label } from "@/components/ui";
 import { saveConnectionAction, clearConnectionAction, testConnectionAction } from "@/app/connections/actions";
+import { toast } from "@/components/toast";
 import type { ProviderStatus, ProviderSection } from "@/lib/connections";
 
 const SECTION_LABEL: Record<ProviderSection, string> = {
@@ -53,7 +54,7 @@ function ProviderCard({ p, activeForCalls }: { p: ProviderStatus; activeForCalls
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">{p.blurb}</p>
-        <form action={saveConnectionAction} className="space-y-3">
+        <form action={saveConnectionAction} onSubmit={() => toast(`${p.name} saved.`)} className="space-y-3">
           <input type="hidden" name="__provider" value={p.id} />
           {p.fields.map((f) => (
             <div key={f.name} className="space-y-1">
