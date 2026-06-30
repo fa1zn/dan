@@ -89,6 +89,10 @@ export function getSqlite(): Database.Database {
   if (!cols.has("hs_last_activity")) db.exec("ALTER TABLE dealerships ADD COLUMN hs_last_activity TEXT");
   // Extra scraped signals (rating, hours, socials, email pattern) as flexible JSON.
   if (!cols.has("enrichment")) db.exec("ALTER TABLE dealerships ADD COLUMN enrichment TEXT");
+  // Cross-source provenance / trust.
+  if (!cols.has("sources")) db.exec("ALTER TABLE dealerships ADD COLUMN sources TEXT DEFAULT '[]'");
+  if (!cols.has("confirmation_count")) db.exec("ALTER TABLE dealerships ADD COLUMN confirmation_count INTEGER NOT NULL DEFAULT 0");
+  if (!cols.has("trust_tier")) db.exec("ALTER TABLE dealerships ADD COLUMN trust_tier TEXT");
 
   _sqlite = db;
   return db;

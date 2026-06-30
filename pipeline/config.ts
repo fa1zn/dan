@@ -45,7 +45,16 @@ export const CONFIG = {
     maxRetries: num(process.env.HTTP_MAX_RETRIES, 4),
     timeoutMs: num(process.env.HTTP_TIMEOUT_MS, 60_000),
     useCache: bool(process.env.HTTP_USE_CACHE, true),
+    /** Route outbound requests through this proxy so bot-blocked OEM endpoints work. */
+    proxyUrl: process.env.PROXY_URL ?? "",
   },
+
+  /** Google Places cross-confirmation enricher (paid; needs an API key). */
+  googlePlacesKey: process.env.GOOGLE_PLACES_API_KEY ?? "",
+
+  /** Authority totals for the benchmark report. */
+  benchmarkCsv: path.join(process.cwd(), "data", "benchmarks.csv"),
+  targetTotal: num(process.env.TARGET_TOTAL, 24000),
 
   /** Website validation knobs (step 4). */
   validate: {

@@ -25,6 +25,9 @@ import { runEnrich } from "./steps/enrich";
 import { runTier } from "./steps/tier";
 import { runExport } from "./steps/export";
 import { runReport } from "./steps/report";
+import { runProvenance } from "./steps/provenance";
+import { runBenchmark } from "./steps/benchmark";
+import { runGooglePlaces } from "./integrations/google-places";
 import { runHubspot } from "./integrations/hubspot";
 import { runZoomInfo } from "./integrations/zoominfo";
 
@@ -86,6 +89,21 @@ async function enrich(): Promise<void> {
   console.log(`  enriched ${withContacts}/${attempted} accounts · ${totalContacts} contacts · ${withTools} tech stacks`);
 }
 
+async function places(): Promise<void> {
+  banner("GOOGLE PLACES CROSS-CONFIRM");
+  await runGooglePlaces();
+}
+
+function provenance(): void {
+  banner("PROVENANCE / TRUST TIERS");
+  const { tiers } = runProvenance();
+  console.log(`  platinum ${tiers.platinum} · gold ${tiers.gold} · silver ${tiers.silver} · flagged ${tiers.flagged}`);
+}
+
+function benchmark(): void {
+  runBenchmark();
+}
+
 function tier(): void {
   banner("TIER");
   const { tierA, tierB } = runTier();
@@ -104,14 +122,17 @@ async function all(): Promise<void> {
   const { rawCount } = normalize();
   dedupe();
   await validate();
+  await places(); // cross-confirm (no-op without GOOGLE_PLACES_API_KEY)
+  provenance(); // sources[] + confirmation_count + trust_tier
   tier();
   exportCsv();
   const finalCount = countRows();
   runReport({ removedByDedupe: Math.max(0, rawCount - finalCount) });
+  benchmark();
   console.log(`✓ pipeline:all complete in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 }
 
-const HELP = `Usage: tsx pipeline/run.ts <ingest|normalize|dedupe|validate|enrich|tier|export|report|all>`;
+const HELP = `Usage: tsx pipeline/run.ts <ingest|normalize|dedupe|validate|enrich|places|provenance|tier|export|report|benchmark|all>`;
 
 async function main() {
   const cmd = (process.argv[2] ?? "all").toLowerCase();
@@ -121,9 +142,12 @@ async function main() {
     case "dedupe": dedupe(); break;
     case "validate": await validate(); break;
     case "enrich": await enrich(); break;
+    case "places": await places(); break;
+    case "provenance": provenance(); break;
     case "tier": tier(); break;
     case "export": exportCsv(); break;
     case "report": runReport(); break;
+    case "benchmark": benchmark(); break;
     case "hubspot": await runHubspot((process.argv[3] ?? "pull").toLowerCase()); break;
     case "zoominfo": await runZoomInfo(); break;
     case "all": await all(); break;

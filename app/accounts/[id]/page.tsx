@@ -106,6 +106,10 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
     tier: a.tier,
   });
   const fitVariant = fit.band === "Hot" ? "brand" : fit.band === "Warm" ? "secondary" : "outline";
+  const trustTier = (a as unknown as { trust_tier?: string }).trust_tier;
+  const confCount = (a as unknown as { confirmation_count?: number }).confirmation_count ?? 0;
+  const trustVariant =
+    trustTier === "platinum" ? "success" : trustTier === "gold" ? "default" : trustTier === "silver" ? "muted" : "danger";
 
   const addr = [a.address_street, [a.city, a.state_province].filter(Boolean).join(", "), a.postal_code, a.country]
     .filter(Boolean)
@@ -128,6 +132,14 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
             <StatusBadge status={crm.status} />
             {a.tier === "A" ? <Badge variant="brand">Tier A</Badge> : a.tier ? <Badge variant="muted">Tier {a.tier}</Badge> : null}
             <InfoTip label="Tier">{EXPLAIN.tier}</InfoTip>
+            {trustTier ? (
+              <Badge
+                variant={trustVariant as "success" | "default" | "muted" | "danger"}
+                title={`${confCount} independent source${confCount === 1 ? "" : "s"} confirmed this rooftop`}
+              >
+                {trustTier} · {confCount} source{confCount === 1 ? "" : "s"}
+              </Badge>
+            ) : null}
             {a.hs_in_crm ? <Badge variant="success">In HubSpot</Badge> : null}
           </div>
           <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">

@@ -16,6 +16,9 @@
     "pipeline:tier": "tsx pipeline/run.ts tier",
     "pipeline:export": "tsx pipeline/run.ts export",
     "pipeline:report": "tsx pipeline/run.ts report",
+    "pipeline:places": "tsx pipeline/run.ts places",
+    "pipeline:provenance": "tsx pipeline/run.ts provenance",
+    "pipeline:benchmark": "tsx pipeline/run.ts benchmark",
     "pipeline:all": "tsx pipeline/run.ts all",
     "hubspot:push": "tsx pipeline/run.ts hubspot push",
     "hubspot:pull": "tsx pipeline/run.ts hubspot pull",
@@ -40,6 +43,7 @@
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "undici": "^6.27.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {

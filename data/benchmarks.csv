@@ -1,0 +1,18 @@
+# PLACEHOLDER — replace with real authority totals (NADA / OEM franchise counts).
+# Format: state,brand,authority_count   (one row per state+brand)
+# These example rows are rough illustrations so the benchmark table renders; the
+# >5% short flags they produce are EXPECTED here because the OEM adapters are
+# blocked from this machine (no PROXY_URL) so brand counts come from OSM only.
+state,brand,authority_count
+CA,Toyota,110
+CA,Honda,95
+CA,Ford,140
+CA,Chevrolet,150
+CA,Nissan,90
+TX,Toyota,130
+TX,Ford,220
+TX,Chevrolet,240
+TX,Honda,80
+FL,Toyota,90
+FL,Ford,110
+FL,Honda,75

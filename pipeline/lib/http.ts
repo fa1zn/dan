@@ -1,7 +1,12 @@
+import { ProxyAgent } from "undici";
 import { CONFIG } from "../config";
 import { cacheKey, readCache, writeCache } from "./cache";
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Optional proxy so bot-blocked OEM locators work from a non-blocked IP.
+const proxyDispatcher = CONFIG.http.proxyUrl ? new ProxyAgent(CONFIG.http.proxyUrl) : undefined;
+if (proxyDispatcher) console.log(`[http] routing requests through proxy ${new URL(CONFIG.http.proxyUrl).host}`);
 
 /** Per-host timestamp of last request, used to honour minDelayMs politeness. */
 const lastHit = new Map<string, number>();
@@ -24,6 +29,8 @@ export interface FetchOptions {
   cacheParts?: unknown[];
   timeoutMs?: number;
   retries?: number;
+  /** Route this request through PROXY_URL (used by OEM adapters). */
+  useProxy?: boolean;
   /** Treat a non-2xx as retryable rather than throwing immediately. */
   acceptText?: boolean;
 }
@@ -78,7 +85,9 @@ export async function fetchText(url: string, opts: FetchOptions = {}): Promise<F
         body: opts.body,
         redirect: "follow",
         signal: ctrl.signal,
-      });
+        // undici proxy dispatcher (OEM adapters opt in via useProxy)
+        ...(opts.useProxy && proxyDispatcher ? { dispatcher: proxyDispatcher } : {}),
+      } as RequestInit & { dispatcher?: unknown });
       const text = await res.text();
       clearTimeout(timer);
 

@@ -69,6 +69,7 @@ export function createOemSource(cfg: OemLocatorConfig): Source {
           body: req.body,
           cacheNs: cfg.name,
           cacheParts: [point.lat, point.lng, radiusMi],
+          useProxy: true,
         });
         if (!res.ok) {
           blockedPoints++;
