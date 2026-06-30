@@ -52,6 +52,9 @@ export const CONFIG = {
   /** Google Places cross-confirmation enricher (paid; needs an API key). */
   googlePlacesKey: process.env.GOOGLE_PLACES_API_KEY ?? "",
 
+  /** Meta Ad Library — which dealers actively run FB/IG ads (buying intent). */
+  metaAdLibraryToken: process.env.META_ADLIBRARY_TOKEN ?? "",
+
   /** Authority totals for the benchmark report. */
   benchmarkCsv: path.join(process.cwd(), "data", "benchmarks.csv"),
   targetTotal: num(process.env.TARGET_TOTAL, 24000),
