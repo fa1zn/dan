@@ -179,15 +179,32 @@ export interface FeedItem {
   created_at: string;
 }
 
+/** Translate any legacy / system phrasing in a log line into plain, human language. */
+function cleanBody(body: string | null): string | null {
+  if (!body) return body;
+  return body
+    .replace(/Enrolled in ".*?"/g, "Pam started outreach")
+    .replace(/ · simulated\/dry/g, "")
+    .replace(/ · simulated/g, "")
+    .replace(/"Dan core motion"/g, "the outreach")
+    .replace(/Dan core motion/g, "outreach");
+}
+
 export function recentActivity(limit = 12): FeedItem[] {
-  return getSqlite()
+  const rows = getSqlite()
     .prepare(
       `SELECT a.dealership_id AS dealershipId, d.name, a.kind, a.body, a.created_at
        FROM activity a JOIN dealerships d ON d.id = a.dealership_id
        WHERE a.kind IN ('call','sms','gift','sequence','status_change')
        ORDER BY a.id DESC LIMIT ?`
     )
-    .all(limit) as FeedItem[];
+    .all(limit * 3) as FeedItem[];
+  // Clean the copy, then drop the low-signal "started outreach" noise so the feed shows
+  // what actually happened (calls, replies, gifts), not bulk enrollment events.
+  return rows
+    .map((r) => ({ ...r, body: cleanBody(r.body) }))
+    .filter((r) => r.body !== "Pam started outreach")
+    .slice(0, limit);
 }
 
 export function motionCounts(): { active: number; hot: number; dueSoon: number } {

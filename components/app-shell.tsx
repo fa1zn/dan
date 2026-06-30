@@ -28,8 +28,11 @@ function StatusBar() {
         {live ? "Live" : "Dry run"}
       </span>
       {testTo && (
-        <span className="text-muted-foreground">
-          test → <span className="font-medium text-foreground">{testTo}</span>
+        <span
+          className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 font-medium text-amber-700 dark:text-amber-400"
+          title={`Calls and texts go to ${testTo} while in test mode`}
+        >
+          Test mode
         </span>
       )}
       <span className="inline-flex items-center gap-1.5 text-muted-foreground">
@@ -84,10 +87,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center justify-between border-b bg-card/60 px-5 backdrop-blur">
-          <div className="text-sm text-muted-foreground md:hidden">Dan</div>
-          <div className="hidden text-sm text-muted-foreground lg:block">
-            System of record · US + Canada franchise dealerships
-          </div>
+          <div className="text-sm font-medium md:hidden">Dan</div>
+          <div className="hidden lg:block" />
           <div className="flex items-center gap-4">
             <StatusBar />
             <ThemeToggle />

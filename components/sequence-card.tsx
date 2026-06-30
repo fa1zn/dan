@@ -73,7 +73,9 @@ function nextActionText(m: MotionView): string {
   const step = m.steps[m.currentStep];
   if (!step) return "—";
   const label = CHANNEL_LABEL[step.channel];
-  const when = m.nextRunAt ? new Date(m.nextRunAt).toLocaleString() : "now";
+  const when = m.nextRunAt
+    ? new Date(m.nextRunAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+    : "now";
   return `Next: ${label.toLowerCase()} · ${when}`;
 }
 

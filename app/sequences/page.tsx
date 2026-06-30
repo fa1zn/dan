@@ -39,7 +39,7 @@ export default function SequencesPage() {
   const counts = {
     total: motions.length,
     hot: motions.filter((m) => m.temperature === "hot").length,
-    active: motions.filter((m) => m.state === "active").length,
+    warm: motions.filter((m) => m.temperature === "warm").length,
     stalled: motions.filter((m) => m.temperature === "stalled").length,
   };
 
@@ -60,7 +60,7 @@ export default function SequencesPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Metric label="In outreach" value={counts.total} />
         <Metric label="Hot" value={counts.hot} />
-        <Metric label="Working" value={counts.active} />
+        <Metric label="Warm" value={counts.warm} />
         <Metric label="Stalled" value={counts.stalled} />
       </div>
 
