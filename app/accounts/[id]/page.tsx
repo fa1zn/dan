@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, MapPin, Phone, Globe, Mail, Layers, Sparkles, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "@/components/ui";
 import { CrmPanel, StatusBadge } from "@/components/crm-panel";
+import { SequenceCard } from "@/components/sequence-card";
+import { getMotionForDealership } from "@/lib/sequence-ui";
 import { InfoTip } from "@/components/info-tip";
 import { getAccount } from "@/lib/queries";
 import { getCrm, getActivity } from "@/lib/crm";
@@ -57,6 +59,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
   if (!a) notFound();
   const crm = getCrm(accountId);
   const activity = getActivity(accountId);
+  const motion = getMotionForDealership(accountId);
   let contacts: Contact[] = [];
   try {
     contacts = JSON.parse((a as unknown as { contacts?: string }).contacts ?? "[]");
@@ -318,6 +321,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
         </div>
 
         <div className="space-y-4">
+        <SequenceCard motion={motion} />
         {a.hs_in_crm ? (
           <Card className="border-emerald-500/40">
             <CardHeader>

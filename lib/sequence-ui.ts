@@ -1,0 +1,146 @@
+import { getSqlite } from "./db";
+import {
+  temperature,
+  type Channel,
+  type EnrollmentState,
+  type Step,
+  type Temperature,
+} from "./sequence-constants";
+
+/*
+ * Server-only read helpers shaped for the UI. Joins enrollments + dealerships + CRM +
+ * step runs into a single view, and derives the engagement temperature.
+ */
+
+export type StepViewState = "sent" | "skipped" | "pending" | "next";
+
+export interface MotionStepView {
+  index: number;
+  channel: Channel;
+  giftKind?: string;
+  state: StepViewState;
+  provider?: string;
+  costCents?: number;
+}
+
+export interface MotionView {
+  enrollmentId: number;
+  dealershipId: number;
+  dealershipName: string;
+  oem: string | null;
+  city: string | null;
+  stateProvince: string | null;
+  contactName: string | null;
+  sequenceName: string;
+  state: EnrollmentState;
+  currentStep: number;
+  nextRunAt: string | null;
+  exitReason: string | null;
+  steps: MotionStepView[];
+  temperature: Temperature;
+  crmStatus: string;
+  touches: number;
+}
+
+interface JoinRow {
+  enrollment_id: number;
+  dealership_id: number;
+  name: string;
+  oem: string | null;
+  city: string | null;
+  state_province: string | null;
+  contacts: string | null;
+  seq_name: string;
+  steps: string;
+  state: EnrollmentState;
+  current_step: number;
+  next_run_at: string | null;
+  exit_reason: string | null;
+  crm_status: string | null;
+}
+
+function toView(row: JoinRow): MotionView {
+  const steps = JSON.parse(row.steps || "[]") as Step[];
+  const runs = getSqlite()
+    .prepare("SELECT step_index, channel, state, provider, cost_cents FROM sequence_step_runs WHERE enrollment_id = ?")
+    .all(row.enrollment_id) as { step_index: number; channel: Channel; state: string; provider: string | null; cost_cents: number }[];
+  const runByIdx = new Map(runs.map((r) => [r.step_index, r]));
+
+  const stepViews: MotionStepView[] = steps.map((s, i) => {
+    const run = runByIdx.get(i);
+    let state: StepViewState;
+    if (run) state = run.state === "sent" ? "sent" : run.state === "skipped" ? "skipped" : "pending";
+    else if (i === row.current_step && row.state === "active") state = "next";
+    else state = "pending";
+    return { index: i, channel: s.channel, giftKind: s.giftKind, state, provider: run?.provider ?? undefined, costCents: run?.cost_cents };
+  });
+
+  const touches = stepViews.filter((s) => s.state === "sent").length;
+  const crmStatus = row.crm_status ?? "new";
+  const engaged = crmStatus === "engaged" || crmStatus === "won";
+  const completedNoReply = row.state === "completed" && !engaged;
+
+  let contactName: string | null = null;
+  try {
+    const c = JSON.parse(row.contacts || "[]");
+    contactName = c[0]?.name ?? null;
+  } catch {
+    contactName = null;
+  }
+
+  return {
+    enrollmentId: row.enrollment_id,
+    dealershipId: row.dealership_id,
+    dealershipName: row.name,
+    oem: row.oem,
+    city: row.city,
+    stateProvince: row.state_province,
+    contactName,
+    sequenceName: row.seq_name,
+    state: row.state,
+    currentStep: row.current_step,
+    nextRunAt: row.next_run_at,
+    exitReason: row.exit_reason,
+    steps: stepViews,
+    temperature: temperature({ engaged, touches, completedNoReply }),
+    crmStatus,
+    touches,
+  };
+}
+
+const SELECT = `
+  SELECT e.id AS enrollment_id, e.dealership_id, d.name, d.oem, d.city, d.state_province, d.contacts,
+         s.name AS seq_name, s.steps, e.state, e.current_step, e.next_run_at, e.exit_reason,
+         c.status AS crm_status
+  FROM enrollments e
+  JOIN dealerships d ON d.id = e.dealership_id
+  JOIN sequences s ON s.id = e.sequence_id
+  LEFT JOIN account_crm c ON c.dealership_id = e.dealership_id
+`;
+
+function hasSequenceTables(): boolean {
+  return !!getSqlite()
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='enrollments'")
+    .get();
+}
+
+export function listMotions(): MotionView[] {
+  if (!hasSequenceTables()) return [];
+  const rows = getSqlite().prepare(`${SELECT} ORDER BY e.id DESC`).all() as JoinRow[];
+  return rows.map(toView);
+}
+
+export function getMotionForDealership(dealershipId: number): MotionView | null {
+  if (!hasSequenceTables()) return null;
+  const row = getSqlite()
+    .prepare(`${SELECT} WHERE e.dealership_id = ? ORDER BY e.id DESC LIMIT 1`)
+    .get(dealershipId) as JoinRow | undefined;
+  return row ? toView(row) : null;
+}
+
+export const TEMPERATURE_LABEL: Record<Temperature, string> = {
+  hot: "Hot",
+  warm: "Warm",
+  cold: "Cold",
+  stalled: "Stalled",
+};
