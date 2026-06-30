@@ -12,8 +12,8 @@ export default function IntegrationsPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Integrations</h1>
         <p className="text-sm text-muted-foreground">
-          Dan runs entirely on the free tier — {connected} connected today, nothing else required. Connect a CRM or
-          paid data source whenever you&rsquo;re ready; the app works fully without them.
+          Dan works great as-is — {connected} connected today, nothing else needed. Hook up your CRM or extra data
+          whenever you want. Everything keeps working without them.
         </p>
       </div>
 
@@ -23,10 +23,7 @@ export default function IntegrationsPage() {
         ))}
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Connections are configured locally via a <code className="text-foreground">.env</code> file — tokens stay on
-        your machine and are never committed. No token? No problem: everything you see in Dan today was built free.
-      </p>
+      <p className="text-xs text-muted-foreground">Your connections stay private to you.</p>
     </div>
   );
 }

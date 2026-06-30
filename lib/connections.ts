@@ -18,6 +18,7 @@ export interface ProviderField {
   secret?: boolean;
   placeholder?: string;
   optional?: boolean;
+  help?: string; // plain-language "where do I find this?"
 }
 
 export type ProviderSection = "voice" | "text" | "edible";
@@ -37,9 +38,9 @@ export const MOTION_PROVIDERS: ProviderDef[] = [
     blurb: "Composable voice AI for the call — bring your own Vapi number and assistant.",
     section: "voice",
     fields: [
-      { name: "VAPI_API_KEY", label: "API key", secret: true },
-      { name: "VAPI_PHONE_NUMBER_ID", label: "Phone number ID" },
-      { name: "VAPI_ASSISTANT_ID", label: "Assistant ID", optional: true, placeholder: "optional — uses a built-in Dan assistant if blank" },
+      { name: "VAPI_API_KEY", label: "API key", secret: true, help: "In your Vapi dashboard → API Keys. Use the private (server) key." },
+      { name: "VAPI_PHONE_NUMBER_ID", label: "Phone number ID", help: "In Vapi → Phone Numbers → click your number → copy its ID." },
+      { name: "VAPI_ASSISTANT_ID", label: "Assistant ID", optional: true, placeholder: "leave blank to use Dan’s built-in assistant" },
     ],
   },
   {
@@ -47,7 +48,7 @@ export const MOTION_PROVIDERS: ProviderDef[] = [
     name: "Bland.ai",
     blurb: "Turnkey conversational voice agent — Dan holds a real two-way call.",
     section: "voice",
-    fields: [{ name: "BLAND_API_KEY", label: "API key", secret: true }],
+    fields: [{ name: "BLAND_API_KEY", label: "API key", secret: true, help: "In your Bland dashboard → API Keys." }],
   },
   {
     id: "twilio",
@@ -55,9 +56,9 @@ export const MOTION_PROVIDERS: ProviderDef[] = [
     blurb: "Texts, plus a fallback TTS voice. SMS to US numbers also needs A2P 10DLC registration.",
     section: "text",
     fields: [
-      { name: "TWILIO_ACCOUNT_SID", label: "Account SID", placeholder: "AC…" },
-      { name: "TWILIO_AUTH_TOKEN", label: "Auth token", secret: true },
-      { name: "TWILIO_FROM", label: "From number", placeholder: "+1…" },
+      { name: "TWILIO_ACCOUNT_SID", label: "Account SID", placeholder: "AC…", help: "Twilio Console home page → Account Info." },
+      { name: "TWILIO_AUTH_TOKEN", label: "Auth token", secret: true, help: "Right next to the SID — click to reveal it." },
+      { name: "TWILIO_FROM", label: "From number", placeholder: "+1…", help: "Your Twilio phone number, like +1 415 555 0123." },
     ],
   },
   {

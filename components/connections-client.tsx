@@ -68,6 +68,7 @@ function ProviderCard({ p, activeForCalls }: { p: ProviderStatus; activeForCalls
                 placeholder={f.masked ?? f.placeholder ?? ""}
                 autoComplete="off"
               />
+              {f.help && <p className="text-xs text-muted-foreground">{f.help}</p>}
             </div>
           ))}
           <div className="flex flex-wrap items-center gap-2 pt-1">
