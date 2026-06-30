@@ -69,7 +69,12 @@ export async function syncCallOutcomes(opts?: { log?: (s: string) => void }): Pr
     const summary = outcome.summary?.trim() || `Call ended — ${outcome.reason ?? "completed"}`;
     setStepOutcome(r.enrollment_id, r.step_index, summary);
     logSeqActivity(r.dealership_id, "call", `Call outcome: ${summary}`);
-    if (outcome.interested) setStatus(r.dealership_id, "engaged");
+    if (outcome.interested) {
+      // Consent / interest captured on the inquiry call → opens the gate for the sales follow-up.
+      setStatus(r.dealership_id, "engaged");
+    } else {
+      logSeqActivity(r.dealership_id, "sequence", "No follow-up consent captured — sales touches held (compliance gate)");
+    }
     synced++;
     log(`outcome · dealership ${r.dealership_id}${outcome.interested ? " · HOT" : ""} · ${summary.slice(0, 70)}`);
   }

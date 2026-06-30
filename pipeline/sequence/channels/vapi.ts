@@ -1,5 +1,5 @@
 import type { ChannelAdapter, ChannelContext, ChannelResult } from "./types";
-import { buildCallTask } from "../call-script";
+import { buildCallScript } from "../call-script";
 
 /*
  * Real Vapi adapter — autonomous voice agent for the call step. Places an outbound call
@@ -27,7 +27,7 @@ export function vapiCall(env: Env): ChannelAdapter {
       } else {
         body.assistant = {
           firstMessage: ctx.rendered,
-          model: { provider: "openai", model: "gpt-4o", messages: [{ role: "system", content: buildCallTask(ctx) }] },
+          model: { provider: "openai", model: "gpt-4o", messages: [{ role: "system", content: buildCallScript(ctx) }] },
           ...(env.VAPI_VOICE ? { voice: { provider: "vapi", voiceId: env.VAPI_VOICE } } : {}),
         };
       }

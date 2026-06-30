@@ -1,5 +1,5 @@
 import type { ChannelAdapter, ChannelContext, ChannelResult } from "./types";
-import { buildCallTask } from "../call-script";
+import { buildCallScript } from "../call-script";
 
 /*
  * Real Bland.ai adapter — an autonomous voice agent that holds a live two-way call as Dan.
@@ -24,7 +24,7 @@ export function blandCall(env: Env): ChannelAdapter {
           headers: { authorization: env.BLAND_API_KEY!, "Content-Type": "application/json" },
           body: JSON.stringify({
             phone_number: to,
-            task: buildCallTask(ctx),
+            task: buildCallScript(ctx),
             voice: env.BLAND_VOICE || undefined,
             wait_for_greeting: true,
           }),

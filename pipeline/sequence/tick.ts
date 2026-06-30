@@ -12,6 +12,7 @@ import {
   listDueEnrollments,
   logSeqActivity,
   recordStepRun,
+  setEnrollment,
   setStatus,
   type EnrollmentRow,
 } from "../../lib/sequence";
@@ -98,6 +99,16 @@ export async function tick(opts: TickOptions = {}): Promise<TickResult> {
     const existing = getStepRun(e.id, e.current_step);
     if (existing?.state === "sent") {
       advance(e.id, steps, now);
+      continue;
+    }
+
+    // Compliance gate: a sales touch (requiresConsent) is BLOCKED until consent was captured
+    // on the inquiry call (status → engaged). Until then, hold — never send a sales message
+    // to someone who didn't opt in.
+    if (step.requiresConsent && env.SEQ_REQUIRE_CONSENT !== "0" && crm.status !== "engaged") {
+      setEnrollment(e.id, { next_run_at: new Date(now.getTime() + 3_600_000).toISOString() }); // re-check in 1h
+      res.skipped++;
+      log(`hold  · enrollment ${e.id} · ${step.channel} · awaiting consent (compliance gate)`);
       continue;
     }
 

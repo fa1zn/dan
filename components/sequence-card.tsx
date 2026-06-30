@@ -1,4 +1,4 @@
-import { Phone, MessageSquare, Gift, Clock, Workflow, Play } from "lucide-react";
+import { Phone, MessageSquare, Gift, Clock, Workflow, Play, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "@/components/ui";
 import type { Channel } from "@/lib/sequence-constants";
 import type { MotionStepView, MotionView } from "@/lib/sequence-ui";
@@ -121,6 +121,11 @@ export function SequenceCard({ motion, dealershipId }: { motion: MotionView | nu
         <div className="flex items-center gap-2 rounded-md bg-brand/5 px-3 py-2 text-sm text-foreground">
           <Clock className="h-4 w-4 shrink-0 text-brand" />
           {nextActionText(motion)}
+        </div>
+
+        <div className="flex items-start gap-2 text-xs text-muted-foreground">
+          <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          Compliance-first: Pam opens with a disclosed, no-sell inquiry. Text &amp; gift are held until consent.
         </div>
 
         <div className="flex flex-wrap gap-x-6 gap-y-1 border-t pt-3 text-sm">
