@@ -1,6 +1,38 @@
 import Link from "next/link";
-import { LayoutDashboard, Building2, KanbanSquare, PhoneCall, Plug, Workflow, KeyRound } from "lucide-react";
+import { LayoutDashboard, Building2, KanbanSquare, PhoneCall, Plug, Workflow, KeyRound, Inbox } from "lucide-react";
 import { NavLink, ThemeToggle } from "./chrome";
+import { repEnv } from "@/lib/connections";
+import { autopilotActive } from "@/lib/meta";
+
+function StatusBar() {
+  const env = repEnv();
+  const live = env.SEQUENCE_APPLY === "1";
+  const testTo = env.SEQ_TEST_TO;
+  const autopilot = autopilotActive();
+  return (
+    <div className="hidden items-center gap-3 text-xs md:flex">
+      <span
+        className={
+          live
+            ? "inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-2.5 py-1 font-medium text-brand"
+            : "inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-muted-foreground"
+        }
+      >
+        <span className={live ? "h-1.5 w-1.5 rounded-full bg-brand" : "h-1.5 w-1.5 rounded-full bg-muted-foreground"} />
+        {live ? "Live" : "Dry run"}
+      </span>
+      {testTo && (
+        <span className="text-muted-foreground">
+          test → <span className="font-medium text-foreground">{testTo}</span>
+        </span>
+      )}
+      <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+        <span className={autopilot ? "h-1.5 w-1.5 rounded-full bg-emerald-500" : "h-1.5 w-1.5 rounded-full bg-muted-foreground"} />
+        Autopilot {autopilot ? "on" : "off"}
+      </span>
+    </div>
+  );
+}
 
 /** Persistent app chrome: branded sidebar + top bar. */
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -17,6 +49,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </span>
         </Link>
         <nav className="flex flex-col gap-1 px-3 py-2">
+          <NavLink href="/today" icon={<Inbox className="h-4 w-4" />}>
+            Today
+          </NavLink>
           <NavLink href="/" icon={<LayoutDashboard className="h-4 w-4" />}>
             Overview
           </NavLink>
@@ -49,10 +84,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center justify-between border-b bg-card/60 px-5 backdrop-blur">
           <div className="text-sm text-muted-foreground md:hidden">Dan</div>
-          <div className="hidden text-sm text-muted-foreground md:block">
+          <div className="hidden text-sm text-muted-foreground lg:block">
             System of record · US + Canada franchise dealerships
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-4">
+            <StatusBar />
+            <ThemeToggle />
+          </div>
         </header>
         <main className="flex-1 p-5 md:p-8">{children}</main>
       </div>

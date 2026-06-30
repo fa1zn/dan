@@ -66,6 +66,11 @@ function sdb() {
       CREATE UNIQUE INDEX IF NOT EXISTS step_runs_uniq
         ON sequence_step_runs(enrollment_id, step_index);
     `);
+    // Call outcome (transcript summary) synced back from the voice provider.
+    const cols = new Set(
+      (db.prepare("PRAGMA table_info(sequence_step_runs)").all() as { name: string }[]).map((c) => c.name)
+    );
+    if (!cols.has("outcome")) db.exec("ALTER TABLE sequence_step_runs ADD COLUMN outcome TEXT");
     _ensured = true;
   }
   return db;
@@ -282,6 +287,29 @@ export function getStepRuns(enrollmentId: number): any[] {
   return sdb()
     .prepare("SELECT * FROM sequence_step_runs WHERE enrollment_id = ? ORDER BY step_index")
     .all(enrollmentId) as any[];
+}
+
+/** Sent calls that don't yet have a synced outcome (transcript summary). */
+export function listUnsyncedCallRuns(): Array<{
+  enrollment_id: number;
+  step_index: number;
+  external_ref: string;
+  provider: string;
+  dealership_id: number;
+}> {
+  return sdb()
+    .prepare(
+      `SELECT r.enrollment_id, r.step_index, r.external_ref, r.provider, e.dealership_id
+       FROM sequence_step_runs r JOIN enrollments e ON e.id = r.enrollment_id
+       WHERE r.channel = 'call' AND r.state = 'sent' AND r.external_ref IS NOT NULL AND r.outcome IS NULL`
+    )
+    .all() as any;
+}
+
+export function setStepOutcome(enrollmentId: number, stepIndex: number, outcome: string) {
+  sdb()
+    .prepare("UPDATE sequence_step_runs SET outcome = ? WHERE enrollment_id = ? AND step_index = ?")
+    .run(outcome, enrollmentId, stepIndex);
 }
 
 /** Running total of money committed to gifts (sent gift runs). */

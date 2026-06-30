@@ -144,3 +144,61 @@ export const TEMPERATURE_LABEL: Record<Temperature, string> = {
   cold: "Cold",
   stalled: "Stalled",
 };
+
+/* ---------- Today inbox feeds ---------- */
+
+export interface HotLead {
+  dealershipId: number;
+  name: string;
+  oem: string | null;
+  city: string | null;
+  status: string;
+  phone: string | null;
+  lastOutcome: string | null;
+}
+
+export function listHotLeads(limit = 25): HotLead[] {
+  if (!hasSequenceTables()) return [];
+  return getSqlite()
+    .prepare(
+      `SELECT d.id AS dealershipId, d.name, d.oem, d.city, d.phone, c.status,
+         (SELECT r.outcome FROM sequence_step_runs r JOIN enrollments e ON e.id = r.enrollment_id
+          WHERE e.dealership_id = d.id AND r.outcome IS NOT NULL ORDER BY r.id DESC LIMIT 1) AS lastOutcome
+       FROM dealerships d JOIN account_crm c ON c.dealership_id = d.id
+       WHERE c.status IN ('engaged','won')
+       ORDER BY c.updated_at DESC LIMIT ?`
+    )
+    .all(limit) as HotLead[];
+}
+
+export interface FeedItem {
+  dealershipId: number;
+  name: string;
+  kind: string;
+  body: string | null;
+  created_at: string;
+}
+
+export function recentActivity(limit = 12): FeedItem[] {
+  return getSqlite()
+    .prepare(
+      `SELECT a.dealership_id AS dealershipId, d.name, a.kind, a.body, a.created_at
+       FROM activity a JOIN dealerships d ON d.id = a.dealership_id
+       WHERE a.kind IN ('call','sms','gift','sequence','status_change')
+       ORDER BY a.id DESC LIMIT ?`
+    )
+    .all(limit) as FeedItem[];
+}
+
+export function motionCounts(): { active: number; hot: number; dueSoon: number } {
+  const db = getSqlite();
+  const hot = (db.prepare("SELECT COUNT(*) AS n FROM account_crm WHERE status IN ('engaged','won')").get() as { n: number }).n;
+  if (!hasSequenceTables()) return { active: 0, hot, dueSoon: 0 };
+  const active = (db.prepare("SELECT COUNT(*) AS n FROM enrollments WHERE state='active'").get() as { n: number }).n;
+  const dueSoon = (
+    db
+      .prepare("SELECT COUNT(*) AS n FROM enrollments WHERE state='active' AND (next_run_at IS NULL OR next_run_at <= datetime('now','+1 day'))")
+      .get() as { n: number }
+  ).n;
+  return { active, hot, dueSoon };
+}

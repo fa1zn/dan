@@ -26,6 +26,8 @@ import {
 import { getSqlite } from "../../lib/db";
 import { DAN_SEQUENCE_NAME } from "../../lib/sequence-constants";
 import { tick } from "./tick";
+import { syncCallOutcomes } from "./sync";
+import { watch } from "./watch";
 
 function arg(flag: string): string | undefined {
   const i = process.argv.indexOf(flag);
@@ -80,6 +82,18 @@ async function main() {
         if (after && after.current_step === before && after.state === "active") break; // no progress
       }
       printTimeline(id);
+      break;
+    }
+
+    case "sync": {
+      const r = await syncCallOutcomes({ log: (s) => console.log(s) });
+      console.log(`sync: ${r.synced} outcome(s) from ${r.checked} pending call(s)`);
+      break;
+    }
+
+    case "watch": {
+      const interval = Number(arg("--interval")) || 20;
+      await watch(interval);
       break;
     }
 
