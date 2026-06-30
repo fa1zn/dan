@@ -30,7 +30,8 @@
     "sequence:tick": "tsx pipeline/sequence/run.ts tick",
     "sequence:status": "tsx pipeline/sequence/run.ts status",
     "sequence:sync": "tsx pipeline/sequence/run.ts sync",
-    "sequence:watch": "tsx pipeline/sequence/run.ts watch"
+    "sequence:watch": "tsx pipeline/sequence/run.ts watch",
+    "enrich:tech": "tsx pipeline/enrich/fingerprint-cli.ts"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.18",

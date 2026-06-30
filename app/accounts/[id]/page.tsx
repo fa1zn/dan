@@ -84,6 +84,9 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
   } catch {
     signals = {};
   }
+  const techSignals: Array<{ vendor: string; category: string; evidence: string }> =
+    (signals as { techSignals?: Array<{ vendor: string; category: string; evidence: string }> }).techSignals ?? [];
+  const pamAngles: string[] = (signals as { pamAngles?: string[] }).pamAngles ?? [];
   const hasSignals = !!(signals.rating || signals.hours || signals.emailPattern || (signals.socials && Object.keys(signals.socials).length));
 
   const intel = computeIntel({
@@ -322,6 +325,36 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
 
         <div className="space-y-4">
         <SequenceCard motion={motion} dealershipId={accountId} />
+        {(pamAngles.length > 0 || techSignals.length > 0) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
+                <Sparkles className="h-4 w-4 text-brand" /> Why Pam fits
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {pamAngles.map((angle, i) => (
+                <p key={i} className="text-sm">
+                  {angle}
+                </p>
+              ))}
+              {techSignals.length > 0 && (
+                <div className="border-t pt-3">
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground">Detected · with evidence</div>
+                  <ul className="mt-1.5 space-y-1.5 text-sm">
+                    {techSignals.map((d, i) => (
+                      <li key={i} className="flex flex-wrap items-baseline gap-x-2">
+                        <span className="font-medium">{d.vendor}</span>
+                        <span className="text-xs text-muted-foreground">{d.category}</span>
+                        <code className="text-xs text-muted-foreground">&ldquo;{d.evidence}&rdquo;</code>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
         {a.hs_in_crm ? (
           <Card className="border-emerald-500/40">
             <CardHeader>
