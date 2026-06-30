@@ -15,6 +15,7 @@
 import "../lib/load-env";
 import {
   enroll,
+  enrollSegment,
   findDealershipByName,
   getDealership,
   getEnrollmentById,
@@ -46,11 +47,23 @@ async function main() {
 
     case "enroll": {
       const seq = getSequenceByName(DAN_SEQUENCE_NAME) ?? { id: seedDanSequence(), name: DAN_SEQUENCE_NAME };
+      const oem = arg("--oem");
+      const state = arg("--state");
+      const city = arg("--city");
+      if (oem || state || city) {
+        const cap = Number(arg("--limit")) || 100;
+        const stagger = Number(arg("--stagger")) || 120;
+        const r = enrollSegment({ oem, state, city }, seq.id, { cap, staggerSec: stagger });
+        console.log(
+          `Segment [${[oem, state, city].filter(Boolean).join(" / ")}] — ${r.matched} match, enrolled ${r.enrolled} (paced ${stagger}s apart).`
+        );
+        break;
+      }
       const idArg = arg("--id");
       const nameArg = arg("--name");
       const d = idArg ? getDealership(Number(idArg)) : nameArg ? findDealershipByName(nameArg) : null;
       if (!d) {
-        console.error("No rooftop found. Use --id <n> or --name \"<name>\".");
+        console.error("No rooftop found. Use --id <n>, --name \"<name>\", or a segment (--oem/--state/--city).");
         process.exit(1);
       }
       const e = enroll(d.id, seq.id);

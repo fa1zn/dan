@@ -2,7 +2,9 @@ import Link from "next/link";
 import { Workflow, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui";
 import { listMotions, type MotionView } from "@/lib/sequence-ui";
+import { segmentOptions } from "@/lib/sequence";
 import { MotionStepper, TemperaturePill } from "@/components/sequence-card";
+import { SegmentLauncher } from "@/components/segment-launcher";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +31,7 @@ function Metric({ label, value }: { label: string; value: number }) {
 }
 
 export default function SequencesPage() {
+  const { oems, states } = segmentOptions();
   const motions = listMotions().sort(
     (a, b) => TEMP_ORDER[a.temperature] - TEMP_ORDER[b.temperature] || a.dealershipName.localeCompare(b.dealershipName)
   );
@@ -50,6 +53,8 @@ export default function SequencesPage() {
           Dan&rsquo;s autonomous call → text → edible sequence. Hot accounts (they responded) rise to the top.
         </p>
       </div>
+
+      <SegmentLauncher oems={oems} states={states} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Metric label="Enrolled" value={counts.total} />

@@ -171,6 +171,76 @@ export function enroll(dealershipId: number, sequenceId: number, by = "Dan"): En
   return getEnrollmentById(Number(info.lastInsertRowid))!;
 }
 
+/* ---------- segment targeting (brand + geography) ---------- */
+
+export interface SegmentFilter {
+  oem?: string;
+  state?: string;
+  city?: string;
+}
+
+function segmentWhere(f: SegmentFilter): { sql: string; params: unknown[] } {
+  const clauses = ["phone IS NOT NULL", "phone <> ''"];
+  const params: unknown[] = [];
+  if (f.oem) {
+    clauses.push("oem = ?");
+    params.push(f.oem);
+  }
+  if (f.state) {
+    clauses.push("state_province = ?");
+    params.push(f.state);
+  }
+  if (f.city) {
+    clauses.push("city LIKE ?");
+    params.push(`%${f.city}%`);
+  }
+  return { sql: clauses.join(" AND "), params };
+}
+
+export function countSegment(f: SegmentFilter): number {
+  const { sql, params } = segmentWhere(f);
+  return (sdb().prepare(`SELECT COUNT(*) AS n FROM dealerships WHERE ${sql}`).get(...params) as { n: number }).n;
+}
+
+export function segmentOptions(): { oems: string[]; states: string[] } {
+  const db = sdb();
+  const oems = (
+    db
+      .prepare("SELECT oem, COUNT(*) c FROM dealerships WHERE oem IS NOT NULL AND oem <> '' GROUP BY oem ORDER BY c DESC LIMIT 40")
+      .all() as { oem: string }[]
+  ).map((r) => r.oem);
+  const states = (
+    db
+      .prepare("SELECT DISTINCT state_province AS s FROM dealerships WHERE state_province IS NOT NULL AND state_province <> '' ORDER BY s")
+      .all() as { s: string }[]
+  ).map((r) => r.s);
+  return { oems, states };
+}
+
+/** Enroll every rooftop in a segment, paced (staggered next_run_at) and capped. */
+export function enrollSegment(
+  f: SegmentFilter,
+  sequenceId: number,
+  opts: { cap?: number; staggerSec?: number } = {}
+): { matched: number; enrolled: number } {
+  const cap = opts.cap ?? 100;
+  const staggerSec = opts.staggerSec ?? 0;
+  const { sql, params } = segmentWhere(f);
+  const ids = (
+    sdb()
+      .prepare(`SELECT id FROM dealerships WHERE ${sql} ORDER BY id LIMIT ?`)
+      .all(...params, cap) as { id: number }[]
+  ).map((r) => r.id);
+  const base = Date.now();
+  let enrolled = 0;
+  ids.forEach((id, i) => {
+    const e = enroll(id, sequenceId);
+    if (staggerSec > 0) setEnrollment(e.id, { next_run_at: new Date(base + i * staggerSec * 1000).toISOString() });
+    enrolled++;
+  });
+  return { matched: countSegment(f), enrolled };
+}
+
 export function listDueEnrollments(now: string, ignoreSchedule = false): EnrollmentRow[] {
   const sql = ignoreSchedule
     ? "SELECT * FROM enrollments WHERE state = 'active' ORDER BY next_run_at"
