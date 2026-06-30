@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, KanbanSquare, Plug, KeyRound, Inbox, Rocket } from "lucide-react";
+import { Building2, Plug, KeyRound, Inbox, Rocket } from "lucide-react";
 import { NavLink, ThemeToggle } from "./chrome";
 import { repEnv } from "@/lib/connections";
 import { autopilotActive } from "@/lib/meta";
@@ -63,9 +63,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </NavLink>
           <NavLink href="/accounts" icon={<Building2 className="h-4 w-4" />}>
             Book
-          </NavLink>
-          <NavLink href="/pipeline" icon={<KanbanSquare className="h-4 w-4" />}>
-            Board
           </NavLink>
 
           <div className="mt-5 px-3 pb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">

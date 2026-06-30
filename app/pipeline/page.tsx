@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui";
+import { BookTabs } from "@/components/book-tabs";
 import { listAccounts } from "@/lib/queries";
 import { getPipelineCounts } from "@/lib/crm";
 import { STATUSES, STATUS_META } from "@/lib/crm-constants";
@@ -15,10 +16,11 @@ export default function PipelinePage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Pipeline</h1>
-        <p className="text-sm text-muted-foreground">
-          Dan&rsquo;s accounts by stage. Open a rooftop to move it, log notes, or set the next step.
-        </p>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-semibold tracking-tight">Book</h1>
+          <BookTabs current="board" />
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">Your dealers by stage. Open one to work it.</p>
       </div>
 
       <div className="flex gap-4 overflow-x-auto pb-4">

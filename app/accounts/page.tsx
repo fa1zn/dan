@@ -4,6 +4,7 @@ import { Card, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Ba
 import { AccountFilters } from "@/components/account-filters";
 import { SortHeader, Pager } from "@/components/account-table-bits";
 import { StatusBadge } from "@/components/crm-panel";
+import { BookTabs } from "@/components/book-tabs";
 import { InfoTip } from "@/components/info-tip";
 import { listAccounts, getFilterOptions, type AccountFilters as Filters } from "@/lib/queries";
 import { type Status } from "@/lib/crm-constants";
@@ -56,8 +57,11 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
     <div className="mx-auto max-w-7xl space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Accounts</h1>
-          <p className="text-sm text-muted-foreground">{fmt(total)} matching rooftops</p>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight">Book</h1>
+            <BookTabs current="list" />
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">{fmt(total)} dealers in your territory</p>
         </div>
         <Link href={exportHref}>
           <Button variant="outline" size="sm">
