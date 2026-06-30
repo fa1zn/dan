@@ -9,8 +9,14 @@ function StatusBar() {
   const live = env.SEQUENCE_APPLY === "1";
   const testTo = env.SEQ_TEST_TO;
   const autopilot = autopilotActive();
+  const manualCalls = live && !testTo && env.SEQ_AUTONOMOUS_CALLS !== "1";
   return (
     <div className="hidden items-center gap-3 text-xs md:flex">
+      {manualCalls && (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
+          calls: click-to-call
+        </span>
+      )}
       <span
         className={
           live

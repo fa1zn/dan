@@ -20,20 +20,20 @@ function refresh(id: number) {
   revalidatePath("/sequences");
 }
 
-/** Enroll the rooftop and immediately fire the first step (the call). */
+/** Enroll the rooftop and immediately fire the first step. A person clicked this → human-initiated. */
 export async function enrollAndRunAction(formData: FormData) {
   const id = Number(formData.get("dealershipId"));
   const seqId = danSequenceId();
   const e = enroll(id, seqId);
-  await tick({ enrollmentId: e.id, ignoreSchedule: true });
+  await tick({ enrollmentId: e.id, ignoreSchedule: true, humanInitiated: true });
   refresh(id);
 }
 
-/** Advance one step now (ignores the scheduled wait, for driving the demo). */
+/** Advance one step now. A person clicked this → human-initiated (allowed to place a real call). */
 export async function runStepAction(formData: FormData) {
   const id = Number(formData.get("dealershipId"));
   const e = getActiveEnrollment(id, danSequenceId());
-  if (e) await tick({ enrollmentId: e.id, ignoreSchedule: true });
+  if (e) await tick({ enrollmentId: e.id, ignoreSchedule: true, humanInitiated: true });
   refresh(id);
 }
 

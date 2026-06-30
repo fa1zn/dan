@@ -29,6 +29,8 @@ export interface TickOptions {
   ignoreSchedule?: boolean;
   /** Only this enrollment (used by `simulate`). */
   enrollmentId?: number;
+  /** A person clicked "Call" — allowed to place a real call. Autonomous ticks are not. */
+  humanInitiated?: boolean;
   log?: (s: string) => void;
 }
 
@@ -100,6 +102,20 @@ export async function tick(opts: TickOptions = {}): Promise<TickResult> {
     if (existing?.state === "sent") {
       advance(e.id, steps, now);
       continue;
+    }
+
+    // Human-initiated lock: never AUTONOMOUSLY dial a real number. In test mode (SEQ_TEST_TO
+    // set) auto-dialing is fine — it rings your own phone. On real numbers, only a human-clicked
+    // call goes out, unless explicitly overridden (SEQ_AUTONOMOUS_CALLS=1, post-counsel).
+    if (step.channel === "call" && !opts.humanInitiated) {
+      const testMode = !!env.SEQ_TEST_TO;
+      const allowAutonomous = env.SEQ_AUTONOMOUS_CALLS === "1";
+      if (!testMode && !allowAutonomous) {
+        setEnrollment(e.id, { next_run_at: new Date(now.getTime() + 3_600_000).toISOString() });
+        res.skipped++;
+        log(`hold  · enrollment ${e.id} · call · human-initiated only (click to call)`);
+        continue;
+      }
     }
 
     // Compliance gate: a sales touch (requiresConsent) is BLOCKED until consent was captured
