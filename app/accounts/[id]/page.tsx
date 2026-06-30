@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, MapPin, Phone, Globe, Mail, Layers, Sparkles, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "@/components/ui";
 import { CrmPanel, StatusBadge } from "@/components/crm-panel";
-import { SequenceCard } from "@/components/sequence-card";
+import { SequenceCard, TemperaturePill } from "@/components/sequence-card";
 import { getMotionForDealership } from "@/lib/sequence-ui";
 import { InfoTip } from "@/components/info-tip";
 import { getAccount } from "@/lib/queries";
@@ -125,6 +125,15 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
   const lng = a.longitude ?? 0;
   const sources = a.source.split("+");
 
+  const whyCall =
+    crm.status === "engaged" || crm.status === "won"
+      ? "They responded. Your turn — give them a call."
+      : motion && motion.touches > 0
+        ? "Pam reached out. No reply yet — worth a personal call."
+        : pamAngles[0]
+          ? pamAngles[0]
+          : "Fresh lead — start with a call.";
+
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <Link href="/accounts" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
@@ -169,6 +178,24 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
           )}
         </div>
       </div>
+
+      {a.phone && (
+        <div className="rounded-lg border bg-card p-4 sm:p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Why call</div>
+              <p className="mt-1 text-base">{whyCall}</p>
+            </div>
+            {motion?.temperature && <TemperaturePill temp={motion.temperature} />}
+          </div>
+          <a
+            href={`tel:${a.phone.replace(/[^\d+]/g, "")}`}
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90 sm:w-auto"
+          >
+            <Phone className="h-4 w-4" /> Call {a.phone}
+          </a>
+        </div>
+      )}
 
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">

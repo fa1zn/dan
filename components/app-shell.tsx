@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Building2, Plug, KeyRound, Inbox, Rocket } from "lucide-react";
-import { NavLink, ThemeToggle } from "./chrome";
+import { NavLink, ThemeToggle, MobileNav } from "./chrome";
 import { repEnv } from "@/lib/connections";
 import { autopilotActive } from "@/lib/meta";
 
@@ -93,8 +93,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <ThemeToggle />
           </div>
         </header>
-        <main className="flex-1 p-5 md:p-8">{children}</main>
+        <main className="flex-1 p-5 pb-24 md:p-8 md:pb-8">{children}</main>
       </div>
+      <MobileNav />
     </div>
   );
 }
