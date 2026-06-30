@@ -17,26 +17,43 @@ export interface ProviderField {
   label: string;
   secret?: boolean;
   placeholder?: string;
+  optional?: boolean;
 }
+
+export type ProviderSection = "voice" | "text" | "edible";
 
 export interface ProviderDef {
   id: string;
   name: string;
   blurb: string;
+  section: ProviderSection;
   fields: ProviderField[];
 }
 
 export const MOTION_PROVIDERS: ProviderDef[] = [
   {
+    id: "vapi",
+    name: "Vapi",
+    blurb: "Composable voice AI for the call — bring your own Vapi number and assistant.",
+    section: "voice",
+    fields: [
+      { name: "VAPI_API_KEY", label: "API key", secret: true },
+      { name: "VAPI_PHONE_NUMBER_ID", label: "Phone number ID" },
+      { name: "VAPI_ASSISTANT_ID", label: "Assistant ID", optional: true, placeholder: "optional — uses a built-in Dan assistant if blank" },
+    ],
+  },
+  {
     id: "bland",
     name: "Bland.ai",
-    blurb: "Live conversational voice agent for the call step — Dan holds a real two-way call.",
+    blurb: "Turnkey conversational voice agent — Dan holds a real two-way call.",
+    section: "voice",
     fields: [{ name: "BLAND_API_KEY", label: "API key", secret: true }],
   },
   {
     id: "twilio",
     name: "Twilio",
-    blurb: "Texts (and fallback voice). SMS to US numbers also needs A2P 10DLC registration.",
+    blurb: "Texts, plus a fallback TTS voice. SMS to US numbers also needs A2P 10DLC registration.",
+    section: "text",
     fields: [
       { name: "TWILIO_ACCOUNT_SID", label: "Account SID", placeholder: "AC…" },
       { name: "TWILIO_AUTH_TOKEN", label: "Auth token", secret: true },
@@ -47,12 +64,28 @@ export const MOTION_PROVIDERS: ProviderDef[] = [
     id: "gifting",
     name: "Gifting platform",
     blurb: "Programmatic edible sends (Postal / Sendoso / Reachdesk).",
+    section: "edible",
     fields: [
       { name: "GIFT_API_URL", label: "API URL", placeholder: "https://…" },
       { name: "GIFT_API_KEY", label: "API key", secret: true },
     ],
   },
 ];
+
+/** The voice providers a rep can choose between for the call step. */
+export const CALL_PROVIDERS = [
+  { id: "vapi", name: "Vapi" },
+  { id: "bland", name: "Bland.ai" },
+  { id: "twilio", name: "Twilio (TTS)" },
+] as const;
+
+export function getCallProvider(repId = DEFAULT_REP_ID): string {
+  return getConnection("CALL_PROVIDER", repId) || "vapi";
+}
+
+export function setCallProvider(providerId: string, repId = DEFAULT_REP_ID) {
+  setConnection("CALL_PROVIDER", providerId, repId);
+}
 
 let _ensured = false;
 function cdb() {
@@ -117,6 +150,7 @@ export interface ProviderStatus {
   id: string;
   name: string;
   blurb: string;
+  section: ProviderSection;
   connected: boolean;
   fields: Array<ProviderField & { masked: string | null }>;
 }
@@ -132,13 +166,26 @@ export function connectionStatus(repId = DEFAULT_REP_ID): ProviderStatus[] {
     id: p.id,
     name: p.name,
     blurb: p.blurb,
-    connected: p.fields.every((f) => !!env[f.name]),
+    section: p.section,
+    connected: p.fields.filter((f) => !f.optional).every((f) => !!env[f.name]),
     fields: p.fields.map((f) => ({ ...f, masked: env[f.name] ? mask(env[f.name]!, f.secret) : null })),
   }));
 }
 
 export async function validateProvider(providerId: string, repId = DEFAULT_REP_ID): Promise<{ ok: boolean; message: string }> {
   const env = repEnv(repId);
+  if (providerId === "vapi") {
+    if (!env.VAPI_API_KEY) return { ok: false, message: "No API key saved." };
+    if (!env.VAPI_PHONE_NUMBER_ID) return { ok: false, message: "API key saved — add a Phone number ID to place calls." };
+    try {
+      const r = await fetch("https://api.vapi.ai/phone-number", { headers: { Authorization: `Bearer ${env.VAPI_API_KEY}` } });
+      if (r.ok) return { ok: true, message: "Vapi key valid." };
+      if (r.status === 401 || r.status === 403) return { ok: false, message: "Vapi rejected the key." };
+      return { ok: true, message: "Saved (couldn't fully verify; will confirm on first call)." };
+    } catch (e) {
+      return { ok: true, message: `Saved (network check skipped: ${(e as Error).message}).` };
+    }
+  }
   if (providerId === "bland") {
     if (!env.BLAND_API_KEY) return { ok: false, message: "No API key saved." };
     try {

@@ -3,26 +3,52 @@
 import { useState, useTransition } from "react";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Input, Label } from "@/components/ui";
 import { saveConnectionAction, clearConnectionAction, testConnectionAction } from "@/app/connections/actions";
-import type { ProviderStatus } from "@/lib/connections";
+import type { ProviderStatus, ProviderSection } from "@/lib/connections";
 
-export function ConnectionsClient({ providers }: { providers: ProviderStatus[] }) {
+const SECTION_LABEL: Record<ProviderSection, string> = {
+  voice: "Voice — the call",
+  text: "Text",
+  edible: "Edible",
+};
+
+const SECTION_ORDER: ProviderSection[] = ["voice", "text", "edible"];
+
+export function ConnectionsClient({
+  providers,
+  activeCallProvider,
+}: {
+  providers: ProviderStatus[];
+  activeCallProvider: string;
+}) {
   return (
-    <div className="space-y-4">
-      {providers.map((p) => (
-        <ProviderCard key={p.id} p={p} />
-      ))}
+    <div className="space-y-8">
+      {SECTION_ORDER.map((section) => {
+        const group = providers.filter((p) => p.section === section);
+        if (!group.length) return null;
+        return (
+          <section key={section} className="space-y-3">
+            <h2 className="text-sm font-medium text-muted-foreground">{SECTION_LABEL[section]}</h2>
+            {group.map((p) => (
+              <ProviderCard key={p.id} p={p} activeForCalls={p.section === "voice" && p.id === activeCallProvider} />
+            ))}
+          </section>
+        );
+      })}
     </div>
   );
 }
 
-function ProviderCard({ p }: { p: ProviderStatus }) {
+function ProviderCard({ p, activeForCalls }: { p: ProviderStatus; activeForCalls: boolean }) {
   const [pending, start] = useTransition();
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
 
   return (
-    <Card>
+    <Card className={activeForCalls ? "border-brand/40" : undefined}>
       <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-base font-semibold text-foreground">{p.name}</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
+          {p.name}
+          {activeForCalls && <Badge variant="brand">Active for calls</Badge>}
+        </CardTitle>
         <Badge variant={p.connected ? "success" : "muted"}>{p.connected ? "Connected" : "Not connected"}</Badge>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -31,7 +57,10 @@ function ProviderCard({ p }: { p: ProviderStatus }) {
           <input type="hidden" name="__provider" value={p.id} />
           {p.fields.map((f) => (
             <div key={f.name} className="space-y-1">
-              <Label htmlFor={f.name}>{f.label}</Label>
+              <Label htmlFor={f.name}>
+                {f.label}
+                {f.optional && <span className="ml-1 text-xs text-muted-foreground">(optional)</span>}
+              </Label>
               <Input
                 id={f.name}
                 name={f.name}

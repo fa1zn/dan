@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { MOTION_PROVIDERS, setConnection, clearProvider, validateProvider } from "@/lib/connections";
+import { MOTION_PROVIDERS, setConnection, clearProvider, validateProvider, setCallProvider } from "@/lib/connections";
 
 /** Save the fields a rep typed for one provider. Empty fields are left unchanged. */
 export async function saveConnectionAction(formData: FormData) {
@@ -23,4 +23,9 @@ export async function clearConnectionAction(formData: FormData) {
 
 export async function testConnectionAction(providerId: string): Promise<{ ok: boolean; message: string }> {
   return validateProvider(providerId);
+}
+
+export async function setCallProviderAction(formData: FormData) {
+  setCallProvider(String(formData.get("provider") ?? ""));
+  revalidatePath("/connections");
 }

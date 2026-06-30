@@ -3,6 +3,7 @@ import type { ChannelAdapter } from "./types";
 import { simulatedChannel } from "./simulated";
 import { twilioCall, twilioSms } from "./twilio";
 import { blandCall } from "./bland";
+import { vapiCall } from "./vapi";
 import { giftingChannel } from "./gifting";
 
 /**
@@ -10,12 +11,14 @@ import { giftingChannel } from "./gifting";
  *
  * Routing rules (fail safe, never a surprise send):
  *  - SEQUENCE_APPLY !== "1"            → simulated (dry-run). The default.
- *  - APPLY=1 + real provider creds set → the real adapter (Twilio / gifting API).
- *  - APPLY=1 but creds missing         → simulated + a warning (so it never silently fails).
+ *  - APPLY=1 + the rep's chosen/keyed provider → the real adapter.
+ *  - APPLY=1 but nothing configured   → simulated + a warning.
  *
- * SAFETY: with SEQ_TEST_TO set, Twilio sends are redirected to that number; with
- * SEQ_TEST_ADDRESS set, gifts are redirected to that address. Use these to prove a real
- * send against yourself before pointing the motion at a dealership.
+ * Call provider is the rep's choice (CALL_PROVIDER = vapi | bland | twilio), falling back
+ * to whichever voice provider has credentials.
+ *
+ * SAFETY: SEQ_TEST_TO redirects calls/texts to your own number; SEQ_TEST_ADDRESS redirects
+ * gifts. Use them to prove a real send against yourself before pointing at a dealership.
  */
 export function resolveChannel(kind: Channel, env: NodeJS.ProcessEnv = process.env): ChannelAdapter {
   if (env.SEQUENCE_APPLY !== "1") return simulatedChannel(kind);
@@ -23,9 +26,19 @@ export function resolveChannel(kind: Channel, env: NodeJS.ProcessEnv = process.e
   const twilioReady = !!(env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_FROM);
   const giftReady = !!(env.GIFT_API_URL && env.GIFT_API_KEY);
 
-  // Call: prefer Bland (live conversation) when keyed; fall back to Twilio TTS (message drop).
-  if (kind === "call" && env.BLAND_API_KEY) return blandCall(env);
-  if (kind === "call" && twilioReady) return twilioCall(env);
+  if (kind === "call") {
+    const voice = (p: string): ChannelAdapter | null => {
+      if (p === "vapi" && env.VAPI_API_KEY) return vapiCall(env);
+      if (p === "bland" && env.BLAND_API_KEY) return blandCall(env);
+      if (p === "twilio" && twilioReady) return twilioCall(env);
+      return null;
+    };
+    // The rep's selected provider first, then any keyed voice provider.
+    const chosen = env.CALL_PROVIDER ?? "";
+    const adapter = voice(chosen) || voice("vapi") || voice("bland") || voice("twilio");
+    if (adapter) return adapter;
+  }
+
   if (kind === "sms" && twilioReady) return twilioSms(env);
   if (kind === "gift" && giftReady) return giftingChannel(env);
 
