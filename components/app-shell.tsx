@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Building2, KanbanSquare, PhoneCall, Plug, Workflow, KeyRound, Inbox } from "lucide-react";
+import { Building2, KanbanSquare, Plug, KeyRound, Inbox, Rocket } from "lucide-react";
 import { NavLink, ThemeToggle } from "./chrome";
 import { repEnv } from "@/lib/connections";
 import { autopilotActive } from "@/lib/meta";
@@ -58,26 +58,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <NavLink href="/today" icon={<Inbox className="h-4 w-4" />}>
             Today
           </NavLink>
-          <NavLink href="/" icon={<LayoutDashboard className="h-4 w-4" />}>
-            Overview
-          </NavLink>
-          <NavLink href="/worklist" icon={<PhoneCall className="h-4 w-4" />}>
-            Call list
+          <NavLink href="/sequences" icon={<Rocket className="h-4 w-4" />}>
+            Prospect
           </NavLink>
           <NavLink href="/accounts" icon={<Building2 className="h-4 w-4" />}>
-            Accounts
+            Book
           </NavLink>
           <NavLink href="/pipeline" icon={<KanbanSquare className="h-4 w-4" />}>
-            Pipeline
+            Board
           </NavLink>
-          <NavLink href="/sequences" icon={<Workflow className="h-4 w-4" />}>
-            Sales motion
+
+          <div className="mt-5 px-3 pb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
+            Setup
+          </div>
+          <NavLink href="/connections" icon={<KeyRound className="h-4 w-4" />}>
+            Connections
           </NavLink>
           <NavLink href="/integrations" icon={<Plug className="h-4 w-4" />}>
             Integrations
-          </NavLink>
-          <NavLink href="/connections" icon={<KeyRound className="h-4 w-4" />}>
-            Connections
           </NavLink>
         </nav>
         <div className="mt-auto px-5 py-4 text-xs text-muted-foreground">
