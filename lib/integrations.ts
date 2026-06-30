@@ -21,13 +21,52 @@ export interface Integration {
 
 export const INTEGRATIONS: Integration[] = [
   {
-    id: "website",
-    name: "Website enrichment",
-    category: "Built-in",
+    id: "openstreetmap",
+    name: "OpenStreetMap",
+    category: "Data source",
     tier: "Free",
     fixedStatus: "connected",
     blurb:
-      "Pulls decision-makers (GM, GSM, sales managers), phone numbers, and the dealer's tech stack straight from each rooftop's own website. No account or key required.",
+      "The rooftop backbone — every franchise dealership's name, brand, address, and coordinates, pulled from OpenStreetMap via the Overpass API. No key required.",
+  },
+  {
+    id: "website",
+    name: "Website enrichment",
+    category: "Data source",
+    tier: "Free",
+    fixedStatus: "connected",
+    blurb:
+      "Pulls decision-makers (GM, GSM, sales managers), phone numbers, the dealer's tech stack, and ratings/hours straight from each rooftop's own website. No account or key required.",
+  },
+  {
+    id: "oem-locators",
+    name: "OEM dealer locators",
+    category: "Data source",
+    tier: "Free",
+    envVar: "PROXY_URL",
+    availableNow: true,
+    blurb:
+      "Official franchise lists for ~20 brands (GM, Stellantis, Hyundai, Kia, Nissan, Subaru, BMW, Mercedes, Lexus, Acura, Audi, Volvo…) — sets brand_confirmed and pushes coverage toward ~24K. Endpoints are bot-protected, so they need a non-blocked IP.",
+    steps: [
+      "Get a residential/mobile proxy (Bright Data, Oxylabs, Smartproxy, IPRoyal…).",
+      "Add PROXY_URL=http://user:pass@host:port to .env.",
+      "Run `npm run pipeline:ingest` — the OEM adapters fire through the proxy.",
+    ],
+  },
+  {
+    id: "google-places",
+    name: "Google Places",
+    category: "Verification",
+    tier: "Paid",
+    envVar: "GOOGLE_PLACES_API_KEY",
+    availableNow: true,
+    blurb:
+      "Independent cross-confirmation — matches each rooftop on name+geo, confirms/fills address, phone, and website, and counts as a second source so rooftops reach gold/platinum trust. ~$200/mo Google credit covers a big chunk.",
+    steps: [
+      "Google Cloud → enable Places API → create an API key (billing required).",
+      "Add GOOGLE_PLACES_API_KEY to .env (restrict the key to Places API).",
+      "Run `npm run pipeline:places` (capped/cached; dry-safe by scope).",
+    ],
   },
   {
     id: "hubspot",
@@ -64,11 +103,12 @@ export const INTEGRATIONS: Integration[] = [
     category: "Enrichment",
     tier: "Paid",
     envVar: "CLAY_TOKEN",
+    availableNow: true,
     blurb:
-      "Waterfall enrichment across many providers from one place — fills gaps in contacts, emails, and firmographics that the free website pass misses.",
+      "Waterfall enrichment across many providers from one place — fills gaps in contacts, emails, and firmographics the free website pass misses. Plugs into the same Enricher interface.",
     steps: [
-      "Requires a paid Clay workspace with API access.",
-      "Add CLAY_TOKEN to .env. Plugs into the same Enricher interface as the website pass.",
+      "In Clay: create a table + an HTTP API / webhook source, copy its API key.",
+      "Add CLAY_TOKEN (and CLAY_WEBHOOK_URL) to .env; I'll wire the enricher to your table's fields.",
     ],
   },
 ];
