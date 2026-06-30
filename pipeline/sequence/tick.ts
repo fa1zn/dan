@@ -17,6 +17,7 @@ import {
 } from "../../lib/sequence";
 import { resolveChannel } from "./channels";
 import { render } from "./render";
+import { repEnv } from "../../lib/connections";
 
 const EXIT_STATUSES = new Set(["engaged", "won", "lost"]);
 
@@ -54,7 +55,9 @@ export async function tick(opts: TickOptions = {}): Promise<TickResult> {
     return res;
   }
 
-  const apply = opts.apply ?? process.env.SEQUENCE_APPLY === "1";
+  // The rep's connected credentials (from the Connections UI) merged over process.env.
+  const env = repEnv();
+  const apply = opts.apply ?? env.SEQUENCE_APPLY === "1";
   const now = opts.now ?? new Date();
   const giftMax = intCents("SEQ_GIFT_MAX_CENTS", 4000);
   const giftBudget = intCents("SEQ_GIFT_BUDGET_CENTS", 50000);
@@ -122,7 +125,7 @@ export async function tick(opts: TickOptions = {}): Promise<TickResult> {
     }
 
     const rendered = render(step.template, dealership, contact);
-    const channel = resolveChannel(step.channel, process.env);
+    const channel = resolveChannel(step.channel, env);
     const result = await channel.send({
       dealership,
       contact,

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Building2, KanbanSquare, PhoneCall, Plug, Workflow } from "lucide-react";
+import { LayoutDashboard, Building2, KanbanSquare, PhoneCall, Plug, Workflow, KeyRound } from "lucide-react";
 import { NavLink, ThemeToggle } from "./chrome";
 
 /** Persistent app chrome: branded sidebar + top bar. */
@@ -34,6 +34,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </NavLink>
           <NavLink href="/integrations" icon={<Plug className="h-4 w-4" />}>
             Integrations
+          </NavLink>
+          <NavLink href="/connections" icon={<KeyRound className="h-4 w-4" />}>
+            Connections
           </NavLink>
         </nav>
         <div className="mt-auto px-5 py-4 text-xs text-muted-foreground">
