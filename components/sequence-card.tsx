@@ -23,7 +23,13 @@ const TEMP_CLASS: Record<MotionView["temperature"], string> = {
 
 export function TemperaturePill({ temp }: { temp: MotionView["temperature"] }) {
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium", TEMP_CLASS[temp])}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
+        TEMP_CLASS[temp],
+        temp === "hot" && "pulse-hot"
+      )}
+    >
       {TEMPERATURE_LABEL[temp]}
     </span>
   );

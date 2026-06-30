@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Flame, Phone, ArrowRight, Workflow, MessageSquare, Gift, Activity } from "lucide-react";
+import { Flame, Phone, ArrowRight, Workflow, MessageSquare, Gift, Activity, Coffee } from "lucide-react";
 import { Card, CardContent } from "@/components/ui";
 import { listHotLeads, recentActivity, motionCounts, type FeedItem } from "@/lib/sequence-ui";
 
@@ -78,6 +78,20 @@ export default function TodayPage() {
             ))}
           </div>
         </section>
+      )}
+
+      {hot.length === 0 && (
+        <div className="rounded-xl border bg-card px-6 py-12 text-center">
+          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-brand/10 text-brand">
+            <Coffee className="h-5 w-5" />
+          </div>
+          <p className="text-base font-medium">You&rsquo;re all caught up</p>
+          <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+            {counts.active > 0
+              ? `Pam’s out there working ${counts.active} dealers. The moment one bites, they’ll show up right here.`
+              : "Head to Prospect, point Pam at a market, and she’ll start the calls."}
+          </p>
+        </div>
       )}
 
       <section className="space-y-2">

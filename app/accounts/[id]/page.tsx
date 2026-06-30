@@ -197,6 +197,13 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
         </div>
       )}
 
+      <SequenceCard motion={motion} dealershipId={accountId} />
+
+      <div className="flex items-center gap-3 pt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        More on this dealer
+        <div className="h-px flex-1 bg-border" />
+      </div>
+
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
@@ -351,7 +358,6 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
         </div>
 
         <div className="space-y-4">
-        <SequenceCard motion={motion} dealershipId={accountId} />
         {(pamAngles.length > 0 || techSignals.length > 0) && (
           <Card>
             <CardHeader>
