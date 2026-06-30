@@ -321,7 +321,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
         </div>
 
         <div className="space-y-4">
-        <SequenceCard motion={motion} />
+        <SequenceCard motion={motion} dealershipId={accountId} />
         {a.hs_in_crm ? (
           <Card className="border-emerald-500/40">
             <CardHeader>

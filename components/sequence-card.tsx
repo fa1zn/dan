@@ -1,9 +1,10 @@
-import { Phone, MessageSquare, Gift, Clock, Workflow } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, Badge } from "@/components/ui";
+import { Phone, MessageSquare, Gift, Clock, Workflow, Play } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "@/components/ui";
 import type { Channel } from "@/lib/sequence-constants";
 import type { MotionStepView, MotionView } from "@/lib/sequence-ui";
 import { TEMPERATURE_LABEL } from "@/lib/sequence-ui";
 import { cn } from "@/lib/ui";
+import { enrollAndRunAction, runStepAction, stopAction } from "@/app/motion-actions";
 
 const CHANNEL_ICON: Record<Channel, React.ComponentType<{ className?: string }>> = {
   call: Phone,
@@ -70,8 +71,10 @@ function nextActionText(m: MotionView): string {
   return `Next: ${label.toLowerCase()} · ${when}`;
 }
 
+const RUN_LABEL: Record<Channel, string> = { call: "Place call now", sms: "Send text now", gift: "Send gift now" };
+
 /** The per-rooftop motion card for the account detail page. */
-export function SequenceCard({ motion }: { motion: MotionView | null }) {
+export function SequenceCard({ motion, dealershipId }: { motion: MotionView | null; dealershipId: number }) {
   if (!motion) {
     return (
       <Card>
@@ -80,17 +83,23 @@ export function SequenceCard({ motion }: { motion: MotionView | null }) {
             <Workflow className="h-4 w-4 text-brand" /> Sales motion
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border border-dashed p-5 text-center text-sm text-muted-foreground">
-            Not enrolled in a sequence. Run <code className="text-foreground">npm run sequence:enroll -- --id {"<id>"}</code> to
-            start the call → text → edible motion.
-          </div>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Not enrolled. Start the call → text → edible motion for this rooftop.
+          </p>
+          <form action={enrollAndRunAction}>
+            <input type="hidden" name="dealershipId" value={dealershipId} />
+            <Button type="submit" variant="brand" size="sm">
+              <Play className="h-4 w-4" /> Enroll &amp; place first call
+            </Button>
+          </form>
         </CardContent>
       </Card>
     );
   }
 
   const sentCount = motion.touches;
+  const nextStep = motion.state === "active" ? motion.steps[motion.currentStep] : undefined;
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
@@ -132,6 +141,32 @@ export function SequenceCard({ motion }: { motion: MotionView | null }) {
             </div>
           )}
         </div>
+
+        {nextStep ? (
+          <div className="flex flex-wrap items-center gap-2 border-t pt-3">
+            <form action={runStepAction}>
+              <input type="hidden" name="dealershipId" value={dealershipId} />
+              <Button type="submit" variant="brand" size="sm">
+                <Play className="h-4 w-4" /> {RUN_LABEL[nextStep.channel]}
+              </Button>
+            </form>
+            <form action={stopAction}>
+              <input type="hidden" name="dealershipId" value={dealershipId} />
+              <Button type="submit" variant="outline" size="sm">
+                Stop
+              </Button>
+            </form>
+          </div>
+        ) : (
+          <div className="border-t pt-3">
+            <form action={enrollAndRunAction}>
+              <input type="hidden" name="dealershipId" value={dealershipId} />
+              <Button type="submit" variant="outline" size="sm">
+                <Play className="h-4 w-4" /> Re-enroll &amp; run
+              </Button>
+            </form>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
