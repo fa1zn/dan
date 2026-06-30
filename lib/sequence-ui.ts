@@ -184,10 +184,10 @@ function cleanBody(body: string | null): string | null {
   if (!body) return body;
   return body
     .replace(/Enrolled in ".*?"/g, "Pam started outreach")
-    .replace(/ · simulated\/dry/g, "")
-    .replace(/ · simulated/g, "")
+    .replace(/ · (vapi|bland|twilio|simulated)(\/dry)?/g, "")
     .replace(/"Dan core motion"/g, "the outreach")
-    .replace(/Dan core motion/g, "outreach");
+    .replace(/Dan core motion/g, "outreach")
+    .replace(/Status: \w+ → (\w+)/g, (_m, to: string) => `Now ${to}`);
 }
 
 export function recentActivity(limit = 12): FeedItem[] {

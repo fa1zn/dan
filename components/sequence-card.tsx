@@ -52,14 +52,17 @@ function StepDot({ step }: { step: MotionStepView }) {
   );
 }
 
-/** Horizontal call → text → edible stepper. */
-export function MotionStepper({ steps }: { steps: MotionStepView[] }) {
+/** Horizontal call → text → edible stepper. `labeled` adds the step name under each dot. */
+export function MotionStepper({ steps, labeled = false }: { steps: MotionStepView[]; labeled?: boolean }) {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-start gap-1.5">
       {steps.map((s, i) => (
-        <div key={s.index} className="flex items-center gap-1.5">
-          <StepDot step={s} />
-          {i < steps.length - 1 && <span className="h-px w-4 bg-border" />}
+        <div key={s.index} className="flex items-start gap-1.5">
+          <div className="flex flex-col items-center gap-1">
+            <StepDot step={s} />
+            {labeled && <span className="text-[11px] text-muted-foreground">{CHANNEL_LABEL[s.channel]}</span>}
+          </div>
+          {i < steps.length - 1 && <span className="mt-4 h-px w-4 bg-border" />}
         </div>
       ))}
     </div>
@@ -124,7 +127,7 @@ export function SequenceCard({ motion, dealershipId }: { motion: MotionView | nu
           <span className="text-xs text-muted-foreground">{sentCount} sent</span>
         </div>
 
-        <MotionStepper steps={motion.steps} />
+        <MotionStepper steps={motion.steps} labeled />
 
         <div className="flex items-center gap-2 rounded-md bg-brand/5 px-3 py-2 text-sm text-foreground">
           <Clock className="h-4 w-4 shrink-0 text-brand" />

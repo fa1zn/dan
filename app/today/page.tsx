@@ -80,7 +80,7 @@ export default function TodayPage() {
         </section>
       )}
 
-      {hot.length === 0 && (
+      {hot.length === 0 && feed.length === 0 && (
         <div className="rounded-xl border bg-card px-6 py-12 text-center">
           <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-brand/10 text-brand">
             <Coffee className="h-5 w-5" />
