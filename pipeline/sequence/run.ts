@@ -16,16 +16,12 @@ import "../lib/load-env";
 import {
   enroll,
   findDealershipByName,
-  getActiveEnrollment,
   getDealership,
   getEnrollmentById,
   getSequenceByName,
   getStepRuns,
   listSequences,
-  logSeqActivity,
   seedDanSequence,
-  setStatus,
-  type DealershipLite,
 } from "../../lib/sequence";
 import { getSqlite } from "../../lib/db";
 import { DAN_SEQUENCE_NAME } from "../../lib/sequence-constants";
@@ -87,31 +83,6 @@ async function main() {
       break;
     }
 
-    case "demo": {
-      const d = ensureHondaOfDublin();
-      const seqId = seedDanSequence();
-      console.log(`Seeded sequence #${seqId}, target: ${d.name} (#${d.id}).`);
-      const existing = getActiveEnrollment(d.id, seqId);
-      const e = existing ?? enroll(d.id, seqId);
-      console.log(`\nSimulating enrollment #${e.id} (dry-run)\n`);
-      for (let guard = 0; guard < 20; guard++) {
-        const cur = getEnrollmentById(e.id);
-        if (!cur || cur.state !== "active") break;
-        const before = cur.current_step;
-        await tick({ enrollmentId: e.id, ignoreSchedule: true, apply: false });
-        const after = getEnrollmentById(e.id);
-        if (after && after.current_step === before && after.state === "active") break;
-      }
-      printTimeline(e.id);
-      break;
-    }
-
-    case "demo-seed": {
-      await seedDemoStates();
-      printStatus();
-      break;
-    }
-
     case "status":
     default: {
       printStatus();
@@ -158,80 +129,6 @@ function printTimeline(enrollmentId: number) {
   for (const a of acts) console.log(`  · ${a.kind.padEnd(13)} ${a.body}`);
   const crm = db.prepare("SELECT status FROM account_crm WHERE dealership_id = ?").get(e.dealership_id) as any;
   console.log(`CRM status: ${crm?.status ?? "new"}\n`);
-}
-
-/** Enroll a handful of real rooftops in varied states so the UI shows hot/warm/cold/stalled. */
-async function seedDemoStates() {
-  const seqId = seedDanSequence();
-  const db = getSqlite();
-  const rows = db
-    .prepare(
-      `SELECT id, name FROM dealerships
-       WHERE phone IS NOT NULL AND phone <> ''
-       ORDER BY (state_province IN ('OH','TX','CA','FL')) DESC, id
-       LIMIT 8`
-    )
-    .all() as { id: number; name: string }[];
-  if (!rows.length) {
-    console.error("No dealerships with phones found — copy a populated db into data/dealerships.sqlite first.");
-    return;
-  }
-  const ids = rows.map((r) => r.id);
-  for (const id of ids) enroll(id, seqId);
-  const eid = (di: number) => (ids[di] != null ? getActiveEnrollment(ids[di], seqId)?.id : undefined);
-
-  // [0] hot: one touch + a reply (engaged)
-  if (eid(0)) {
-    await tick({ enrollmentId: eid(0)!, apply: false });
-    setStatus(ids[0], "engaged");
-  }
-  // [1],[2] warm: mid-motion (call sent, text scheduled)
-  for (const di of [1, 2]) if (eid(di)) await tick({ enrollmentId: eid(di)!, apply: false });
-  // [3] stalled: ran the whole motion, no reply
-  if (eid(3)) {
-    const id = eid(3)!;
-    for (let g = 0; g < 12; g++) {
-      const e = getEnrollmentById(id);
-      if (!e || e.state !== "active") break;
-      const before = e.current_step;
-      await tick({ enrollmentId: id, ignoreSchedule: true, apply: false });
-      const after = getEnrollmentById(id);
-      if (after && after.current_step === before && after.state === "active") break;
-    }
-  }
-  // [4..] cold: enrolled, untouched
-  console.log(`\nSeeded demo states across ${ids.length} rooftops (hot / warm / cold / stalled).`);
-}
-
-/** Ensure a Honda of Dublin rooftop exists so the acceptance demo runs on any db. */
-function ensureHondaOfDublin(): DealershipLite {
-  const found = findDealershipByName("Honda of Dublin");
-  if (found) return found;
-  const db = getSqlite();
-  const contacts = JSON.stringify([{ name: "Maya Reyes", title: "GM", phone: "+16145550123" }]);
-  const info = db
-    .prepare(
-      `INSERT INTO dealerships
-         (name, oem, group_name, city, state_province, country, address_street, postal_code, phone, contacts, source, dedup_key, brand_confirmed)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,0)`
-    )
-    .run(
-      "Honda of Dublin",
-      "Honda",
-      null,
-      "Dublin",
-      "OH",
-      "US",
-      "6500 Sawmill Rd",
-      "43017",
-      "+16145550123",
-      contacts,
-      "demo",
-      "demo:honda-of-dublin"
-    );
-  const d = getDealership(Number(info.lastInsertRowid))!;
-  logSeqActivity(d.id, "sequence", "Demo rooftop created");
-  return d;
 }
 
 main().catch((err) => {

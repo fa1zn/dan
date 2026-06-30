@@ -28,8 +28,7 @@
     "sequence:seed": "tsx pipeline/sequence/run.ts seed",
     "sequence:enroll": "tsx pipeline/sequence/run.ts enroll",
     "sequence:tick": "tsx pipeline/sequence/run.ts tick",
-    "sequence:status": "tsx pipeline/sequence/run.ts status",
-    "sequence:demo": "tsx pipeline/sequence/run.ts demo"
+    "sequence:status": "tsx pipeline/sequence/run.ts status"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.18",
