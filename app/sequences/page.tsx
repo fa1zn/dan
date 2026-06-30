@@ -47,27 +47,27 @@ export default function SequencesPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-          <Workflow className="h-6 w-6 text-brand" /> Sales motion
+          <Workflow className="h-6 w-6 text-brand" /> Prospect
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Dan&rsquo;s autonomous call → text → edible sequence. Hot accounts (they responded) rise to the top.
+          Pick a brand and area, and Pam works each dealer for you — a call first, follow-ups once they say yes. The ones
+          who respond rise to the top.
         </p>
       </div>
 
       <SegmentLauncher oems={oems} states={states} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Metric label="Enrolled" value={counts.total} />
+        <Metric label="In outreach" value={counts.total} />
         <Metric label="Hot" value={counts.hot} />
-        <Metric label="Active" value={counts.active} />
+        <Metric label="Working" value={counts.active} />
         <Metric label="Stalled" value={counts.stalled} />
       </div>
 
       {motions.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center text-sm text-muted-foreground">
-            No rooftops enrolled yet. Run <code className="text-foreground">npm run sequence:demo</code> or{" "}
-            <code className="text-foreground">npm run sequence:enroll -- --name &quot;Honda of Dublin&quot;</code>.
+            No dealers in outreach yet. Pick a brand and area above and launch — Pam takes it from there.
           </CardContent>
         </Card>
       ) : (

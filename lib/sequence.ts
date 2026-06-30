@@ -167,7 +167,7 @@ export function enroll(dealershipId: number, sequenceId: number, by = "Dan"): En
        VALUES (?, ?, 'active', 0, ?, ?)`
     )
     .run(dealershipId, sequenceId, nextRun, by);
-  logSeqActivity(dealershipId, "sequence", `Enrolled in "${seq.name}"`, by);
+  logSeqActivity(dealershipId, "sequence", "Pam started outreach", by);
   return getEnrollmentById(Number(info.lastInsertRowid))!;
 }
 
@@ -274,13 +274,13 @@ export function setEnrollment(id: number, patch: Partial<{ state: EnrollmentStat
 export function exitEnrollment(id: number, reason: string) {
   setEnrollment(id, { state: "exited", exit_reason: reason, next_run_at: null });
   const e = getEnrollmentById(id);
-  if (e) logSeqActivity(e.dealership_id, "sequence", `Exited motion: ${reason}`);
+  if (e) logSeqActivity(e.dealership_id, "sequence", `Outreach stopped: ${reason}`);
 }
 
 export function completeEnrollment(id: number) {
   setEnrollment(id, { state: "completed", exit_reason: "completed", next_run_at: null });
   const e = getEnrollmentById(id);
-  if (e) logSeqActivity(e.dealership_id, "sequence", "Motion completed");
+  if (e) logSeqActivity(e.dealership_id, "sequence", "Outreach complete");
 }
 
 export function pauseEnrollment(id: number) {

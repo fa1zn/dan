@@ -50,13 +50,13 @@ export default function TodayPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Today</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          What needs you. Dan runs the motion in the background and surfaces the conversations worth your time.
+          What needs you. Pam works the rest in the background and surfaces the conversations worth your time.
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Metric label="Hot leads" value={counts.hot} hint="responded — need you" />
-        <Metric label="In motion" value={counts.active} hint="active sequences" />
+        <Metric label="In outreach" value={counts.active} hint="Pam working" />
         <Metric label="Due soon" value={counts.dueSoon} hint="next 24h" />
         <Metric label="Autopilot" value={autopilot ? "On" : "Off"} hint={autopilot ? "running" : "start with watch"} />
       </div>

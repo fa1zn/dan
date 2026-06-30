@@ -61,8 +61,8 @@ export function MotionStepper({ steps }: { steps: MotionStepView[] }) {
 }
 
 function nextActionText(m: MotionView): string {
-  if (m.state === "completed") return "Motion completed";
-  if (m.state === "exited") return `Exited — ${m.exitReason ?? "stopped"}`;
+  if (m.state === "completed") return "Outreach done";
+  if (m.state === "exited") return `Stopped — ${m.exitReason ?? "stopped"}`;
   if (m.state === "paused") return "Paused";
   const step = m.steps[m.currentStep];
   if (!step) return "—";
@@ -71,7 +71,7 @@ function nextActionText(m: MotionView): string {
   return `Next: ${label.toLowerCase()} · ${when}`;
 }
 
-const RUN_LABEL: Record<Channel, string> = { call: "Place call now", sms: "Send text now", gift: "Send gift now" };
+const RUN_LABEL: Record<Channel, string> = { call: "Call now", sms: "Text now", gift: "Send gift" };
 
 /** The per-rooftop motion card for the account detail page. */
 export function SequenceCard({ motion, dealershipId }: { motion: MotionView | null; dealershipId: number }) {
@@ -80,17 +80,17 @@ export function SequenceCard({ motion, dealershipId }: { motion: MotionView | nu
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
-            <Workflow className="h-4 w-4 text-brand" /> Sales motion
+            <Workflow className="h-4 w-4 text-brand" /> Outreach
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Not enrolled. Start the call → text → edible motion for this rooftop.
+            Pam hasn&rsquo;t reached out yet. Start with a call, then follow-ups once they say yes.
           </p>
           <form action={enrollAndRunAction}>
             <input type="hidden" name="dealershipId" value={dealershipId} />
             <Button type="submit" variant="brand" size="sm">
-              <Play className="h-4 w-4" /> Enroll &amp; place first call
+              <Play className="h-4 w-4" /> Have Pam call
             </Button>
           </form>
         </CardContent>
@@ -104,14 +104,14 @@ export function SequenceCard({ motion, dealershipId }: { motion: MotionView | nu
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
         <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
-          <Workflow className="h-4 w-4 text-brand" /> Sales motion
+          <Workflow className="h-4 w-4 text-brand" /> Outreach
         </CardTitle>
         <TemperaturePill temp={motion.temperature} />
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-xs uppercase tracking-wide text-muted-foreground">
-            {motion.sequenceName} · step {Math.min(motion.currentStep + 1, motion.steps.length)} of {motion.steps.length}
+            Step {Math.min(motion.currentStep + 1, motion.steps.length)} of {motion.steps.length}
           </span>
           <span className="text-xs text-muted-foreground">{sentCount} sent</span>
         </div>
@@ -130,11 +130,11 @@ export function SequenceCard({ motion, dealershipId }: { motion: MotionView | nu
 
         <div className="flex flex-wrap gap-x-6 gap-y-1 border-t pt-3 text-sm">
           <div>
-            <span className="text-muted-foreground">State</span>{" "}
-            <span className="font-medium capitalize">{motion.state}</span>
+            <span className="text-muted-foreground">Outreach</span>{" "}
+            <span className="font-medium capitalize">{motion.state === "active" ? "in progress" : motion.state}</span>
           </div>
           <div>
-            <span className="text-muted-foreground">CRM</span>{" "}
+            <span className="text-muted-foreground">Stage</span>{" "}
             <span className="font-medium capitalize">{motion.crmStatus}</span>
           </div>
           {motion.steps.some((s) => s.channel === "gift" && s.costCents) && (
@@ -167,7 +167,7 @@ export function SequenceCard({ motion, dealershipId }: { motion: MotionView | nu
             <form action={enrollAndRunAction}>
               <input type="hidden" name="dealershipId" value={dealershipId} />
               <Button type="submit" variant="outline" size="sm">
-                <Play className="h-4 w-4" /> Re-enroll &amp; run
+                <Play className="h-4 w-4" /> Reach out again
               </Button>
             </form>
           </div>
