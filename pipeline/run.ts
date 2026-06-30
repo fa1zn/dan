@@ -26,6 +26,7 @@ import { runTier } from "./steps/tier";
 import { runExport } from "./steps/export";
 import { runReport } from "./steps/report";
 import { runProvenance } from "./steps/provenance";
+import { runResolve } from "./steps/resolve";
 import { runBenchmark } from "./steps/benchmark";
 import { runGooglePlaces } from "./integrations/google-places";
 import { runHubspot } from "./integrations/hubspot";
@@ -94,6 +95,11 @@ async function places(): Promise<void> {
   await runGooglePlaces();
 }
 
+function resolve(): void {
+  banner("ENTITY RESOLUTION");
+  runResolve();
+}
+
 function provenance(): void {
   banner("PROVENANCE / TRUST TIERS");
   const { tiers } = runProvenance();
@@ -123,6 +129,7 @@ async function all(): Promise<void> {
   dedupe();
   await validate();
   await places(); // cross-confirm (no-op without GOOGLE_PLACES_API_KEY)
+  resolve(); // entity resolution across all sources
   provenance(); // sources[] + confirmation_count + trust_tier
   tier();
   exportCsv();
@@ -143,6 +150,7 @@ async function main() {
     case "validate": await validate(); break;
     case "enrich": await enrich(); break;
     case "places": await places(); break;
+    case "resolve": resolve(); break;
     case "provenance": provenance(); break;
     case "tier": tier(); break;
     case "export": exportCsv(); break;

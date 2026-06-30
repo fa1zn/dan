@@ -4,9 +4,13 @@ import { cacheKey, readCache, writeCache } from "./cache";
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// Optional proxy so bot-blocked OEM locators work from a non-blocked IP.
-const proxyDispatcher = CONFIG.http.proxyUrl ? new ProxyAgent(CONFIG.http.proxyUrl) : undefined;
-if (proxyDispatcher) console.log(`[http] routing requests through proxy ${new URL(CONFIG.http.proxyUrl).host}`);
+// Optional proxy so bot-blocked OEM locators work from a non-blocked IP. Scraping
+// proxies (ScraperAPI etc.) intercept HTTPS with their own cert, so don't verify the
+// tunnelled TLS — we're fetching public data through a trusted unblocking service.
+const proxyDispatcher = CONFIG.http.proxyUrl
+  ? new ProxyAgent({ uri: CONFIG.http.proxyUrl, requestTls: { rejectUnauthorized: false } })
+  : undefined;
+if (proxyDispatcher) console.log(`[http] routing OEM requests through proxy ${new URL(CONFIG.http.proxyUrl).host}`);
 
 /** Per-host timestamp of last request, used to honour minDelayMs politeness. */
 const lastHit = new Map<string, number>();
