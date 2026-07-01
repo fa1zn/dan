@@ -45,19 +45,20 @@ export function findDealerArray(json: unknown, candidateKeys: string[]): Record<
 /** Build a RawRecord from a flat dealer object using common field-name variants. */
 export function dealerToRecord(d: Record<string, unknown>): RawRecord {
   const street =
-    pick(d, ["address1", "streetAddress", "address", "addressLine1", "street", "dealerAddress"]) ?? undefined;
+    pick(d, ["address1", "streetAddress", "address", "addressLine1", "street", "dealerAddress", "dealerAddress1"]) ??
+    undefined;
   return {
     source: "oem",
     name: pick(d, ["name", "dealerName", "displayName", "Name"]) ?? "Unknown Dealer",
-    website: pick(d, ["url", "website", "websiteUrl", "dealerWebAddress", "webAddress", "siteUrl"]),
-    phone: pick(d, ["phone", "phoneNumber", "generalPhone", "primaryPhone", "salesPhone", "Phone"]),
-    email: pick(d, ["email", "emailAddress"]),
+    website: pick(d, ["url", "website", "websiteUrl", "dealerWebAddress", "webAddress", "WebAddress", "siteUrl"]),
+    phone: pick(d, ["phone", "phoneNumber", "generalPhone", "primaryPhone", "salesPhone", "Phone", "dayPhone"]),
+    email: pick(d, ["email", "emailAddress", "demail"]),
     address_street: street,
     city: pick(d, ["city", "City", "dealerCity"]),
-    state_province: pick(d, ["state", "stateProvince", "region", "State"]),
-    postal_code: pick(d, ["zip", "zipCode", "postalCode", "postcode", "ZipCode"]),
-    lat: pickNum(d, ["latitude", "lat", "Latitude"]),
-    lng: pickNum(d, ["longitude", "lng", "lon", "Longitude"]),
-    raw: { dealerId: pick(d, ["code", "dealerId", "dealerNumber", "id", "DealerNumber"]), ...d },
+    state_province: pick(d, ["state", "stateProvince", "region", "State", "dealerState"]),
+    postal_code: pick(d, ["zip", "zipCode", "postalCode", "postcode", "ZipCode", "dealerZipCode"]),
+    lat: pickNum(d, ["latitude", "lat", "Latitude", "dealerShowroomLatitude"]),
+    lng: pickNum(d, ["longitude", "lng", "lon", "long", "Longitude", "dealerShowroomLongitude"]),
+    raw: { dealerId: pick(d, ["code", "dealerId", "dealerNumber", "id", "DealerNumber", "dealerCode", "PACode"]), ...d },
   };
 }

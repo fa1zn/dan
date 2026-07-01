@@ -26,6 +26,7 @@ import { runTier } from "./steps/tier";
 import { runExport } from "./steps/export";
 import { runReport } from "./steps/report";
 import { runProvenance } from "./steps/provenance";
+import { runFranchiseGate } from "./steps/franchise-gate";
 import { runResolve } from "./steps/resolve";
 import { runBenchmark } from "./steps/benchmark";
 import { runGooglePlaces } from "./integrations/google-places";
@@ -142,7 +143,9 @@ async function all(): Promise<void> {
   console.log(`✓ pipeline:all complete in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 }
 
-const HELP = `Usage: tsx pipeline/run.ts <ingest|normalize|dedupe|validate|enrich|places|provenance|tier|export|report|benchmark|all>`;
+const HELP = `Usage: tsx pipeline/run.ts <ingest|normalize|dedupe|validate|enrich|places|provenance|gate|tier|export|report|benchmark|all>
+  gate --state AZ            flag franchise_confirmed / noise for a bounded sample (never national)
+  gate --brand Ford         scope by OEM instead of state`;
 
 async function main() {
   const cmd = (process.argv[2] ?? "all").toLowerCase();
@@ -158,6 +161,7 @@ async function main() {
     case "meta": await runMetaAds(); break;
     case "resolve": resolve(); break;
     case "provenance": provenance(); break;
+    case "gate": await runFranchiseGate(); break;
     case "tier": tier(); break;
     case "export": exportCsv(); break;
     case "report": runReport(); break;

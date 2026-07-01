@@ -49,14 +49,20 @@ const GM = (brand: string, makeCode: string) =>
     { arrayKeys: ["dealers", "data", "results"] }
   );
 
-// Stellantis brands — shared dealer-locator backend (BLM); brandCode per make.
+// Stellantis brands — VERIFIED WORKING through the proxy (July 2026). The jeep.com
+// bdlws host serves ALL CDJR rooftops; func=byLatLng returns dealers near a point.
+// Response: { dealer: [{ dealerCode, dealerName, dealerAddress1, dealerCity,
+// dealerState, dealerZipCode, dealerShowroomLatitude, dealerShowroomLongitude,
+// phoneNumber, website, brands:["C","D","J","R"] }] }. brandCode just seeds the
+// search; the brands[] letters on each rooftop are authoritative. The zip-driven
+// live fetcher (locators-live.ts) tags each marque; this grid adapter uses byLatLng.
 const STELLANTIS = (brand: string, brandCode: string) =>
   locator(
     brand,
     (p, r) =>
-      `https://www.${brand.toLowerCase().replace(/\s+/g, "")}.com/hostd/dealerLocator/getDealersByLatLng.json` +
-      `?brandCode=${brandCode}&latitude=${p.lat}&longitude=${p.lng}&radius=${r}&maxResults=25`,
-    { arrayKeys: ["dealers", "dealerList", "data"] }
+      `https://www.jeep.com/bdlws/DealerLocator` +
+      `?brandCode=${brandCode}&func=byLatLng&latitude=${p.lat}&longitude=${p.lng}&radius=${r}&resultsPerPage=200`,
+    { arrayKeys: ["dealer", "dealers", "dealerList"] }
   );
 
 // Honda platform (Honda already wired); Acura = productDivisionCode B.
@@ -89,9 +95,11 @@ export const OEM_CONFIGS: OemLocatorConfig[] = [
   // Nissan
   locator("Nissan", (p, r) => `https://www.nissanusa.com/bin/dealers?lat=${p.lat}&lng=${p.lng}&radius=${r}&max=25`),
   locator("Infiniti", (p, r) => `https://www.infinitiusa.com/bin/dealers?lat=${p.lat}&lng=${p.lng}&radius=${r}`),
-  // Independents
-  locator("Subaru", (p, r) => `https://www.subaru.com/services/dealers/by/distance?lat=${p.lat}&long=${p.lng}&count=25&radius=${r}`),
-  locator("Mazda", (p, r) => `https://www.mazdausa.com/api/v1/dealers?latitude=${p.lat}&longitude=${p.lng}&radius=${r}&max=25`),
+  // Independents — Mazda VERIFIED WORKING through proxy (lat/long accepted).
+  // Subaru's live endpoint is ZIP-keyed (services/dealers/distances/by/zipcode) and
+  // is wired zip-first in locators-live.ts; the by/distance geo variant is unstable.
+  locator("Subaru", (p, r) => `https://www.subaru.com/services/dealers/distances/by/geo?latitude=${p.lat}&longitude=${p.lng}&count=25&type=Active&radius=${r}`, { arrayKeys: ["dealer", "dealers"] }),
+  locator("Mazda", (p, r) => `https://www.mazdausa.com/handlers/dealer.ajax?lat=${p.lat}&long=${p.lng}&maxDistance=${r}&p=1&accolades=`, { arrayKeys: ["results", "dealers"] }),
   locator("Mitsubishi", (p, r) => `https://www.mitsubishicars.com/api/dealers?lat=${p.lat}&lng=${p.lng}&radius=${r}`),
   // Volkswagen Group
   locator("Volkswagen", (p, r) => `https://www.vw.com/api/dealers?latitude=${p.lat}&longitude=${p.lng}&radius=${r}&maxResults=25`),
