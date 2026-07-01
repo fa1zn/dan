@@ -105,9 +105,11 @@ async function main() {
       `SELECT id, name, city, state_province, oem, contacts
        FROM dealerships
        WHERE state_province IN (${ph})
+         AND brand_confirmed=1
          AND (contacts IS NULL OR contacts NOT LIKE '%zoominfo%')
          AND oem NOT IN ('Tesla','Rivian','Lucid') AND name NOT LIKE '%Tesla%'
-       ORDER BY (tier='A') DESC, COALESCE(confirmation_count,0) DESC, (phone IS NOT NULL) DESC, name`
+       ORDER BY CAST(COALESCE(json_extract(enrichment,'$.reviewCount'),0) AS INTEGER) DESC,
+                (tier='A') DESC, (phone IS NOT NULL) DESC, name`
     )
     .all(...REGIONS);
   if (MAX > 0) rows = rows.slice(0, MAX);
