@@ -8,7 +8,10 @@ import { getAccount } from "@/lib/queries";
 import { getCrm, getActivity } from "@/lib/crm";
 import { computeIntel } from "@/lib/intel";
 import { computePamFit } from "@/lib/pamfit";
-import { SourceTag, contactSource, osmLink, sourceLabel } from "@/components/source-tag";
+import { SourceTag, contactSource, osmLink, sourceLabel, sourceVerifyHref } from "@/components/source-tag";
+import { DataConfidence } from "@/components/data-confidence";
+import { detectGroup } from "@/lib/groups";
+import { DncCall } from "@/components/dnc-call";
 import { EXPLAIN } from "@/lib/explain";
 
 interface Contact {
@@ -16,6 +19,9 @@ interface Contact {
   title?: string;
   email?: string;
   phone?: string;
+  mobile?: string;
+  phoneDnc?: boolean;
+  mobileDnc?: boolean;
   source?: string;
 }
 
@@ -118,6 +124,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
   const lat = a.latitude ?? 0;
   const lng = a.longitude ?? 0;
   const sources = a.source.split("+");
+  const placeId = (a as unknown as { place_id?: string | null }).place_id ?? null;
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
@@ -133,14 +140,44 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
             {a.tier === "A" ? <Badge variant="brand">Tier A</Badge> : a.tier ? <Badge variant="muted">Tier {a.tier}</Badge> : null}
             <InfoTip label="Tier">{EXPLAIN.tier}</InfoTip>
             {trustTier ? (
-              <Badge
-                variant={trustVariant as "success" | "default" | "muted" | "danger"}
-                title={`${confCount} independent source${confCount === 1 ? "" : "s"} confirmed this rooftop`}
-              >
-                {trustTier} · {confCount} source{confCount === 1 ? "" : "s"}
-              </Badge>
+              <span className="inline-flex items-center gap-1">
+                <Badge variant={trustVariant as "success" | "default" | "muted" | "danger"}>
+                  {trustTier} · {confCount} source{confCount === 1 ? "" : "s"}
+                </Badge>
+                <InfoTip label="Sources">
+                  <div className="space-y-1.5">
+                    <p className="font-medium">
+                      {confCount === 0
+                        ? "No independent source on file"
+                        : `Confirmed by ${confCount} independent source${confCount === 1 ? "" : "s"}:`}
+                    </p>
+                    <ul className="space-y-1">
+                      {sources.map((s) => {
+                        const href = sourceVerifyHref(s, { lat: a.latitude, lng: a.longitude, placeId, website: a.website });
+                        return (
+                          <li key={s} className="flex items-center gap-1.5">
+                            <span>{sourceLabel(s)}</span>
+                            {href ? (
+                              <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 underline underline-offset-2">
+                                verify <ExternalLink className="h-3 w-3" />
+                              </a>
+                            ) : null}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                </InfoTip>
+              </span>
             ) : null}
             {a.hs_in_crm ? <Badge variant="success">In HubSpot</Badge> : null}
+            {detectGroup(a.name) ? (
+              <Link href={`/groups`}>
+                <Badge variant="brand" title="Owned by a dealer group — sell to the group, not just this store">
+                  {detectGroup(a.name)} group
+                </Badge>
+              </Link>
+            ) : null}
           </div>
           <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5" /> {addr || "Address unknown"}
@@ -163,6 +200,22 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
           )}
         </div>
       </div>
+
+      <DataConfidence
+        source={a.source}
+        confirmationCount={confCount}
+        trustTier={trustTier ?? null}
+        brandConfirmed={a.brand_confirmed === 1}
+        placeId={placeId}
+        website={a.website}
+        websiteValid={a.website_valid}
+        phone={a.phone}
+        phoneValid={a.phone_valid}
+        contacts={a.contacts}
+        lat={a.latitude}
+        lng={a.longitude}
+        updatedAt={a.updated_at}
+      />
 
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
@@ -194,11 +247,11 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                   {intel.champion.title} · {intel.champion.reason}
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-3 text-sm">
-                  {(intel.champion.phone ?? a.phone) && (
-                    <a href={`tel:${(intel.champion.phone ?? a.phone)!.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1 text-brand hover:underline">
-                      <Phone className="h-3.5 w-3.5" /> {intel.champion.phone ?? a.phone}
-                    </a>
-                  )}
+                  {intel.champion.phone ? (
+                    <DncCall number={intel.champion.phone} dnc={intel.champion.phoneDnc} />
+                  ) : a.phone ? (
+                    <DncCall number={a.phone} dnc={false} />
+                  ) : null}
                   {intel.champion.email && (
                     <a href={`mailto:${intel.champion.email}`} className="inline-flex items-center gap-1 text-brand hover:underline">
                       <Mail className="h-3.5 w-3.5" /> {intel.champion.email}
@@ -365,7 +418,10 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                         {c.email}
                       </a>
                     )}
-                    {c.phone && <div className="text-xs text-muted-foreground">{c.phone}</div>}
+                    <div className="mt-0.5 flex flex-col gap-0.5">
+                      {c.phone && <DncCall number={c.phone} dnc={c.phoneDnc} size="xs" />}
+                      {c.mobile && <DncCall number={`${c.mobile} (mobile)`} dnc={c.mobileDnc} size="xs" />}
+                    </div>
                     {c.source && (
                       <div className="mt-1">
                         <SourceTag {...contactSource(c.source, a.website)} />

@@ -89,6 +89,8 @@ export function getSqlite(): Database.Database {
   if (!cols.has("hs_last_activity")) db.exec("ALTER TABLE dealerships ADD COLUMN hs_last_activity TEXT");
   // Extra scraped signals (rating, hours, socials, email pattern) as flexible JSON.
   if (!cols.has("enrichment")) db.exec("ALTER TABLE dealerships ADD COLUMN enrichment TEXT");
+  // Google Places canonical id (dedup + idempotency for the coverage enumerator).
+  if (!cols.has("place_id")) db.exec("ALTER TABLE dealerships ADD COLUMN place_id TEXT");
   // Cross-source provenance / trust.
   if (!cols.has("sources")) db.exec("ALTER TABLE dealerships ADD COLUMN sources TEXT DEFAULT '[]'");
   if (!cols.has("confirmation_count")) db.exec("ALTER TABLE dealerships ADD COLUMN confirmation_count INTEGER NOT NULL DEFAULT 0");

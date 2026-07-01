@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Phone, User, ArrowRight } from "lucide-react";
+import { MapPin, Phone, User, ArrowRight, Star, Zap } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
 import { StateTabs } from "@/components/state-tabs";
 import { StatusBadge } from "@/components/crm-panel";
@@ -64,6 +64,12 @@ export default async function WorklistPage({ searchParams }: { searchParams: Pro
                     </Link>
                     {it.oem && <Badge variant="muted">{it.oem}</Badge>}
                     {it.tier === "A" && <Badge variant="brand">Tier A</Badge>}
+                    {it.rating != null && (
+                      <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground" title={`${it.reviewCount ?? 0} Google reviews`}>
+                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {it.rating}
+                        {it.reviewCount ? <span className="text-muted-foreground/70"> ({it.reviewCount})</span> : null}
+                      </span>
+                    )}
                     <StatusBadge status={it.status as Status} />
                     {it.hs_in_crm ? <Badge variant="success">In HubSpot</Badge> : null}
                   </div>
@@ -82,6 +88,26 @@ export default async function WorklistPage({ searchParams }: { searchParams: Pro
                     </div>
                   ) : (
                     <div className="mt-2 text-sm text-muted-foreground">No named contact yet — call the main line.</div>
+                  )}
+
+                  {it.whyNow.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {it.whyNow.map((w, i) => (
+                        <span
+                          key={i}
+                          className={
+                            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium " +
+                            (w.tone === "hot"
+                              ? "bg-brand/10 text-brand"
+                              : w.tone === "warn"
+                                ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400"
+                                : "bg-muted text-muted-foreground")
+                          }
+                        >
+                          <Zap className="h-3 w-3" /> {w.label}
+                        </span>
+                      ))}
+                    </div>
                   )}
 
                   <div className="mt-2 rounded-md bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground">

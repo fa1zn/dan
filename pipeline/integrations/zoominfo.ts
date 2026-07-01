@@ -15,9 +15,11 @@ import type { Contact } from "../../lib/types";
 const ZI = "https://api.zoominfo.com";
 
 async function authenticate(): Promise<string> {
+  // A directly-supplied bearer token (OAuth access token / PAT) wins — no auth round-trip.
+  if (CONFIG.zoominfo.token) return CONFIG.zoominfo.token;
   const { username, password } = CONFIG.zoominfo;
   if (!username || !password) {
-    throw new Error("ZOOMINFO_USERNAME / ZOOMINFO_PASSWORD not set (see docs/zoominfo-setup.md).");
+    throw new Error("ZOOMINFO_TOKEN or ZOOMINFO_USERNAME/PASSWORD not set (see docs/zoominfo-setup.md).");
   }
   const res = await fetch(`${ZI}/authenticate`, {
     method: "POST",

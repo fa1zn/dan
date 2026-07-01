@@ -10,6 +10,11 @@ export interface Contact {
   title?: string;
   email?: string;
   phone?: string;
+  mobile?: string;
+  /** Do-Not-Call flags from the data vendor — enforced at the call action. */
+  phoneDnc?: boolean;
+  mobileDnc?: boolean;
+  accuracy?: number;
   source?: string;
 }
 

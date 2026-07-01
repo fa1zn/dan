@@ -87,6 +87,8 @@ export const CONFIG = {
   zoominfo: {
     username: process.env.ZOOMINFO_USERNAME ?? "",
     password: process.env.ZOOMINFO_PASSWORD ?? "",
+    /** Direct bearer token (e.g. OAuth access token) — skips username/password auth when set. */
+    token: process.env.ZOOMINFO_TOKEN ?? "",
     /** Optional PKI auth (more secure) instead of username/password. */
     clientId: process.env.ZOOMINFO_CLIENT_ID ?? "",
     privateKey: process.env.ZOOMINFO_PRIVATE_KEY ?? "",

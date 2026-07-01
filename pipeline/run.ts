@@ -29,6 +29,8 @@ import { runProvenance } from "./steps/provenance";
 import { runResolve } from "./steps/resolve";
 import { runBenchmark } from "./steps/benchmark";
 import { runGooglePlaces } from "./integrations/google-places";
+import { runPlacesDiscover } from "./integrations/places-discover";
+import { runPlacesDetails } from "./integrations/places-details";
 import { runMetaAds } from "./integrations/meta-ads";
 import { runHubspot } from "./integrations/hubspot";
 import { runZoomInfo } from "./integrations/zoominfo";
@@ -151,6 +153,8 @@ async function main() {
     case "validate": await validate(); break;
     case "enrich": await enrich(); break;
     case "places": await places(); break;
+    case "discover": await runPlacesDiscover(); break;
+    case "details": await runPlacesDetails(); break;
     case "meta": await runMetaAds(); break;
     case "resolve": resolve(); break;
     case "provenance": provenance(); break;

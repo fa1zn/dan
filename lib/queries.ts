@@ -1,5 +1,6 @@
 import { getSqlite } from "./db";
 import { computePamFit } from "./pamfit";
+import { detectGroup } from "./groups";
 
 /* These run only in Server Components / route handlers (better-sqlite3 is native). */
 
@@ -246,6 +247,8 @@ export interface FullAccount extends AccountRow {
   email: string | null;
   group_size: number | null;
   tools_used: string | null;
+  contacts: string | null;
+  place_id: string | null;
   source: string;
   dedup_key: string;
   created_at: string;
@@ -285,7 +288,29 @@ export interface CallListItem {
   hs_owner: string | null;
   primary: Person | null;
   people: Person[];
+  rating: number | null;
+  reviewCount: number | null;
   pamfit: { score: number; band: "Hot" | "Warm" | "Cool"; talkTrack: string };
+  whyNow: { label: string; tone: "hot" | "info" | "warn" }[];
+}
+
+// Tech a dealer runs that Pam can displace or sits adjacent to (chat / AI / call-handling).
+const DISPLACE_TECH = /(gubagoo|activengage|podium|livile|conversica|car ?now|driftrock|callrail|invoca|dealersocket|cdk|vinsolutions|autofi|roadster|digital ?retail)/i;
+
+/** Concrete "why call them now" triggers synthesized from the signals we actually have. */
+function whyNowReasons(args: {
+  rating: number | null; reviewCount: number | null; tools: string[]; people: Person[];
+  metaAds?: { active?: boolean; count?: number }; hasDirect: boolean;
+}): { label: string; tone: "hot" | "info" | "warn" }[] {
+  const out: { label: string; tone: "hot" | "info" | "warn" }[] = [];
+  if (args.metaAds?.active) out.push({ label: `Running Meta ads${args.metaAds.count ? ` (${args.metaAds.count})` : ""} — active lead-gen spend`, tone: "hot" });
+  if (args.rating != null && args.rating < 4.0) out.push({ label: `Reviews ${args.rating}★${args.reviewCount ? ` (${args.reviewCount})` : ""} — service-recovery opener`, tone: "warn" });
+  if (args.rating != null && args.rating >= 4.5 && (args.reviewCount ?? 0) >= 500) out.push({ label: `High-volume store (${args.rating}★, ${args.reviewCount} reviews)`, tone: "info" });
+  const tech = args.tools.find((t) => DISPLACE_TECH.test(t));
+  if (tech) out.push({ label: `Runs ${tech} — displacement angle`, tone: "info" });
+  if (args.hasDirect) out.push({ label: "Direct line on file", tone: "hot" });
+  if (args.people.length >= 3) out.push({ label: `${args.people.length} decision-makers mapped`, tone: "info" });
+  return out.slice(0, 3);
 }
 
 // Who a rep most wants to reach, in priority order.
@@ -342,13 +367,16 @@ export function getCallList(state: string, limit = 200): CallListItem[] {
     }
     people.sort((a, b) => rankPerson(a) - rankPerson(b));
     let tools: string[] = [];
-    let signals: { rating?: number; reviewCount?: number; hours?: string } = {};
+    let signals: { rating?: number; googleRating?: number; reviewCount?: number; hours?: string; metaAds?: { active?: boolean; count?: number } } = {};
     try {
       tools = JSON.parse((r.tools_used as string) ?? "[]");
     } catch {}
     try {
       signals = JSON.parse((r.enrichment as string) ?? "{}");
     } catch {}
+    const rating = signals.googleRating ?? signals.rating ?? null;
+    const reviewCount = signals.reviewCount ?? null;
+    const hasDirect = people.some((p) => p.source === "zoominfo" && p.phone);
     const fit = computePamFit({
       contacts: people,
       tools,
@@ -377,12 +405,154 @@ export function getCallList(state: string, limit = 200): CallListItem[] {
       hs_owner: (r.hs_owner as string) ?? null,
       primary: people[0] ?? null,
       people,
+      rating,
+      reviewCount,
+      whyNow: whyNowReasons({ rating, reviewCount, tools, people, metaAds: signals.metaAds, hasDirect }),
     };
   });
 
   // Hottest accounts first — reps work the list top-down.
   items.sort((a, b) => b.pamfit.score - a.pamfit.score);
   return items;
+}
+
+/* ---------- Accounts browse, chunked by work-readiness (DoorDash-calm) ---------- */
+
+export interface BucketItem {
+  id: number;
+  name: string;
+  oem: string | null;
+  city: string | null;
+  state_province: string | null;
+  phone: string | null;
+  status: string;
+  sources: number;
+  trustTier: string | null;
+  primaryName: string | null;
+  primaryTitle: string | null;
+  hsInCrm: boolean;
+  hsOwner: string | null;
+}
+
+export type CrmFilter = "all" | "netnew" | "incrm";
+export type QualityFilter = "trusted" | "manufacturer" | "all";
+
+export interface Bucket {
+  key: "ready" | "callable" | "research";
+  total: number;
+  items: BucketItem[]; // capped for render; `total` is the true count
+}
+
+/**
+ * Group rooftops into the three states a rep actually works in, so a big book
+ * never lands as one wall of rows:
+ *   ready    — has a phone AND a named decision-maker → "call this person"
+ *   callable — has a phone, no named contact yet      → "call the main line"
+ *   research — no phone yet (skeleton)                → "enrich first"
+ * Within each, the independently-verified (2+ source) rooftops sort first.
+ */
+export function getAccountBuckets(states: string[], crm: CrmFilter = "all", quality: QualityFilter = "trusted", cap = 24): { buckets: Bucket[]; total: number } {
+  const db = getSqlite();
+  const ph = states.map(() => "?").join(",");
+  const crmWhere = crm === "netnew" ? "AND d.hs_in_crm = 0" : crm === "incrm" ? "AND d.hs_in_crm = 1" : "";
+  // Quality-as-control: never show flagged noise in working views; default to multi-source-trusted.
+  const qualWhere =
+    quality === "trusted" ? "AND d.trust_tier IN ('platinum','gold')"
+    : quality === "manufacturer" ? "AND d.brand_confirmed = 1"
+    : "AND (d.trust_tier IS NULL OR d.trust_tier != 'flagged')";
+  const rows = db
+    .prepare(
+      `SELECT d.id, d.name, d.oem, d.city, d.state_province, d.phone, d.contacts,
+              COALESCE(d.confirmation_count,0) AS sources, d.trust_tier, d.hs_in_crm, d.hs_owner,
+              COALESCE(c.status,'new') AS status
+       FROM dealerships d LEFT JOIN account_crm c ON c.dealership_id = d.id
+       WHERE d.state_province IN (${ph}) ${crmWhere} ${qualWhere}
+       ORDER BY COALESCE(d.confirmation_count,0) DESC, d.name`
+    )
+    .all(...states.map((s) => s.toUpperCase())) as (Record<string, unknown> & { contacts: string | null })[];
+
+  const ready: BucketItem[] = [], callable: BucketItem[] = [], research: BucketItem[] = [];
+  for (const r of rows) {
+    let people: Person[] = [];
+    try {
+      people = (JSON.parse(r.contacts ?? "[]") as Person[]).filter((p) => p.name);
+    } catch {}
+    people.sort((a, b) => rankPerson(a) - rankPerson(b));
+    const primary = people[0] ?? null;
+    const item: BucketItem = {
+      id: r.id as number,
+      name: r.name as string,
+      oem: (r.oem as string) ?? null,
+      city: (r.city as string) ?? null,
+      state_province: (r.state_province as string) ?? null,
+      phone: (r.phone as string) ?? null,
+      status: r.status as string,
+      sources: (r.sources as number) ?? 0,
+      trustTier: (r.trust_tier as string) ?? null,
+      primaryName: primary?.name ?? null,
+      primaryTitle: primary?.title ?? null,
+      hsInCrm: (r.hs_in_crm as number) === 1,
+      hsOwner: (r.hs_owner as string) ?? null,
+    };
+    if (item.phone && primary) ready.push(item);
+    else if (item.phone) callable.push(item);
+    else research.push(item);
+  }
+
+  const mk = (key: Bucket["key"], items: BucketItem[]): Bucket => ({ key, total: items.length, items: items.slice(0, cap) });
+  return {
+    buckets: [mk("ready", ready), mk("callable", callable), mk("research", research)],
+    total: rows.length,
+  };
+}
+
+/* ---------- Dealer groups (sell to the group, not the rooftop) ---------- */
+
+export interface DealerGroup {
+  name: string;
+  rooftops: number;
+  verified: number;
+  inHubspot: number;
+  withContacts: number;
+  brands: string[];
+  states: string[];
+  topRooftopId: number;
+}
+
+export function getDealerGroups(states: string[]): { groups: DealerGroup[]; groupedRooftops: number; total: number } {
+  const db = getSqlite();
+  const ph = states.map(() => "?").join(",");
+  const rows = db
+    .prepare(
+      `SELECT id, name, oem, state_province, trust_tier, hs_in_crm, contacts
+       FROM dealerships WHERE state_province IN (${ph})`
+    )
+    .all(...states.map((s) => s.toUpperCase())) as {
+    id: number; name: string; oem: string | null; state_province: string | null; trust_tier: string | null; hs_in_crm: number; contacts: string | null;
+  }[];
+
+  const map = new Map<string, DealerGroup & { _brands: Set<string>; _states: Set<string> }>();
+  let grouped = 0;
+  for (const r of rows) {
+    const g = detectGroup(r.name);
+    if (!g) continue;
+    grouped++;
+    let e = map.get(g);
+    if (!e) {
+      e = { name: g, rooftops: 0, verified: 0, inHubspot: 0, withContacts: 0, brands: [], states: [], topRooftopId: r.id, _brands: new Set(), _states: new Set() };
+      map.set(g, e);
+    }
+    e.rooftops++;
+    if (r.trust_tier === "platinum" || r.trust_tier === "gold") e.verified++;
+    if (r.hs_in_crm === 1) e.inHubspot++;
+    if (r.contacts && r.contacts.includes("zoominfo")) e.withContacts++;
+    if (r.oem) e._brands.add(r.oem);
+    if (r.state_province) e._states.add(r.state_province);
+  }
+  const groups = [...map.values()]
+    .map((e) => ({ ...e, brands: [...e._brands].sort(), states: [...e._states].sort() }))
+    .sort((a, b) => b.rooftops - a.rooftops);
+  return { groups, groupedRooftops: grouped, total: rows.length };
 }
 
 export function getAccount(id: number): FullAccount | null {

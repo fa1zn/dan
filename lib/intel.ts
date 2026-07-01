@@ -7,6 +7,9 @@ export interface IntelContact {
   title?: string;
   email?: string;
   phone?: string;
+  mobile?: string;
+  phoneDnc?: boolean;
+  mobileDnc?: boolean;
   source?: string;
 }
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Building2, KanbanSquare, PhoneCall, Plug } from "lucide-react";
+import { LayoutDashboard, Building2, KanbanSquare, PhoneCall, Plug, Building, ShieldCheck } from "lucide-react";
 import { NavLink, ThemeToggle } from "./chrome";
 
 /** Persistent app chrome: branded sidebar + top bar. */
@@ -26,6 +26,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <NavLink href="/accounts" icon={<Building2 className="h-4 w-4" />}>
             Accounts
           </NavLink>
+          <NavLink href="/groups" icon={<Building className="h-4 w-4" />}>
+            Groups
+          </NavLink>
           <NavLink href="/pipeline" icon={<KanbanSquare className="h-4 w-4" />}>
             Pipeline
           </NavLink>
@@ -34,9 +37,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </NavLink>
         </nav>
         <div className="mt-auto px-5 py-4 text-xs text-muted-foreground">
-          Book of business
-          <br />
-          North American franchise rooftops
+          <Link href="/methodology" className="inline-flex items-center gap-1 font-medium text-foreground underline underline-offset-2 hover:text-brand">
+            <ShieldCheck className="h-3.5 w-3.5" /> How your data is sourced &amp; verified
+          </Link>
+          <div className="mt-2">Book of business · North American franchise rooftops</div>
         </div>
       </aside>
 
