@@ -422,6 +422,8 @@ export interface BucketItem {
   id: number;
   name: string;
   oem: string | null;
+  brands: string[]; // all franchise brands at this physical rooftop (CDJR etc.)
+  rooftopCount: number; // how many franchise rows collapsed into this card
   city: string | null;
   state_province: string | null;
   phone: string | null;
@@ -462,7 +464,7 @@ export function getAccountBuckets(states: string[], crm: CrmFilter = "all", qual
     : "AND (d.trust_tier IS NULL OR d.trust_tier != 'flagged')";
   const rows = db
     .prepare(
-      `SELECT d.id, d.name, d.oem, d.city, d.state_province, d.phone, d.contacts,
+      `SELECT d.id, d.name, d.oem, d.city, d.state_province, d.phone, d.latitude, d.longitude, d.contacts,
               COALESCE(d.confirmation_count,0) AS sources, d.trust_tier, d.hs_in_crm, d.hs_owner,
               COALESCE(c.status,'new') AS status
        FROM dealerships d LEFT JOIN account_crm c ON c.dealership_id = d.id
@@ -471,28 +473,59 @@ export function getAccountBuckets(states: string[], crm: CrmFilter = "all", qual
     )
     .all(...states.map((s) => s.toUpperCase())) as (Record<string, unknown> & { contacts: string | null })[];
 
-  const ready: BucketItem[] = [], callable: BucketItem[] = [], research: BucketItem[] = [];
+  // A physical rooftop can hold several franchises (Jeep+Ram+Dodge+Chrysler = 4 rows, one
+  // building the rep calls once). Collapse co-located franchises into one card, keyed by the
+  // "call once" signal — the shared phone line, else geo, else the row's own id (no grouping).
+  const phDigits = (p: string | null) => (p ?? "").replace(/\D/g, "").slice(-10);
+  const tierRank = (t: string | null) => (t === "platinum" ? 3 : t === "gold" ? 2 : t === "silver" ? 1 : 0);
+  const roofKey = (r: Record<string, unknown>) => {
+    const d = phDigits(r.phone as string | null);
+    if (d.length === 10) return `p:${d}`;
+    const la = r.latitude as number | null, ln = r.longitude as number | null;
+    if (la != null && ln != null) return `g:${la.toFixed(3)},${ln.toFixed(3)}`;
+    return `id:${r.id}`;
+  };
+
+  const groups = new Map<string, (Record<string, unknown> & { _people: Person[] })[]>();
   for (const r of rows) {
     let people: Person[] = [];
     try {
-      people = (JSON.parse(r.contacts ?? "[]") as Person[]).filter((p) => p.name);
+      people = (JSON.parse((r.contacts as string) ?? "[]") as Person[]).filter((p) => p.name);
     } catch {}
     people.sort((a, b) => rankPerson(a) - rankPerson(b));
-    const primary = people[0] ?? null;
+    const k = roofKey(r);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k)!.push({ ...r, _people: people });
+  }
+
+  const ready: BucketItem[] = [], callable: BucketItem[] = [], research: BucketItem[] = [];
+  for (const g of groups.values()) {
+    // Representative row = the one a rep would open: has a named contact, then most sources, then best tier.
+    const rep = [...g].sort((a, b) => {
+      const ap = a._people.length ? 1 : 0, bp = b._people.length ? 1 : 0;
+      if (ap !== bp) return bp - ap;
+      if ((b.sources as number) !== (a.sources as number)) return (b.sources as number) - (a.sources as number);
+      return tierRank(b.trust_tier as string | null) - tierRank(a.trust_tier as string | null);
+    })[0];
+    const brands = [...new Set(g.map((r) => r.oem as string).filter(Boolean))].sort();
+    const primary = rep._people[0] ?? null;
+    const bestTier = g.reduce((best, r) => (tierRank(r.trust_tier as string | null) > tierRank(best) ? (r.trust_tier as string | null) : best), null as string | null);
     const item: BucketItem = {
-      id: r.id as number,
-      name: r.name as string,
-      oem: (r.oem as string) ?? null,
-      city: (r.city as string) ?? null,
-      state_province: (r.state_province as string) ?? null,
-      phone: (r.phone as string) ?? null,
-      status: r.status as string,
-      sources: (r.sources as number) ?? 0,
-      trustTier: (r.trust_tier as string) ?? null,
+      id: rep.id as number,
+      name: rep.name as string,
+      oem: (rep.oem as string) ?? null,
+      brands,
+      rooftopCount: g.length,
+      city: (rep.city as string) ?? null,
+      state_province: (rep.state_province as string) ?? null,
+      phone: (rep.phone as string) ?? null,
+      status: rep.status as string,
+      sources: Math.max(...g.map((r) => (r.sources as number) ?? 0)),
+      trustTier: bestTier,
       primaryName: primary?.name ?? null,
       primaryTitle: primary?.title ?? null,
-      hsInCrm: (r.hs_in_crm as number) === 1,
-      hsOwner: (r.hs_owner as string) ?? null,
+      hsInCrm: g.some((r) => (r.hs_in_crm as number) === 1),
+      hsOwner: (g.find((r) => r.hs_owner)?.hs_owner as string) ?? null,
     };
     if (item.phone && primary) ready.push(item);
     else if (item.phone) callable.push(item);
@@ -502,7 +535,7 @@ export function getAccountBuckets(states: string[], crm: CrmFilter = "all", qual
   const mk = (key: Bucket["key"], items: BucketItem[]): Bucket => ({ key, total: items.length, items: items.slice(0, cap) });
   return {
     buckets: [mk("ready", ready), mk("callable", callable), mk("research", research)],
-    total: rows.length,
+    total: ready.length + callable.length + research.length,
   };
 }
 
