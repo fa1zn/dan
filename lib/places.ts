@@ -121,7 +121,20 @@ const FIELD_MASK = [
   "places.rating",
   "places.userRatingCount",
   "places.businessStatus",
+  "places.location",
 ].join(",");
+
+// Reject a Google match this far from the rooftop's known coords — it's a
+// different dealer of the same brand, and a wrong phone is worse than none.
+const MAX_MATCH_KM = 12;
+function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371,
+    r = Math.PI / 180;
+  const dLat = (bLat - aLat) * r,
+    dLng = (bLng - aLng) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(aLat * r) * Math.cos(bLat * r) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
 
 async function fetchFromGoogle(key: string, query: string, bias?: { lat: number; lng: number }): Promise<PlacesVerify | null> {
   const body: Record<string, unknown> = { textQuery: query, maxResultCount: 1 };
@@ -150,10 +163,15 @@ async function fetchFromGoogle(key: string, query: string, bias?: { lat: number;
       rating?: number;
       userRatingCount?: number;
       businessStatus?: string;
+      location?: { latitude: number; longitude: number };
     }>;
   };
   const p = json.places?.[0];
   if (!p) return null;
+  // Distance gate: a far match is a different rooftop of the same brand — reject it.
+  if (bias && p.location && haversineKm(bias.lat, bias.lng, p.location.latitude, p.location.longitude) > MAX_MATCH_KM) {
+    return null;
+  }
   return {
     placeId: p.id ?? "",
     displayName: p.displayName?.text ?? null,
