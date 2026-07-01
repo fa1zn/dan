@@ -64,3 +64,74 @@ export function detectTools(html: string): string[] {
   }
   return out;
 }
+
+/* ---------------------------------------------------------------------------
+ * DMS / CRM fingerprinting.
+ *
+ * The dealer's back-office DMS (CDK, Reynolds, Tekion, Dealertrack, Auto/Mate) and
+ * front-office CRM / website platform (DealerSocket, VinSolutions, Elead, Dealer.com,
+ * DealerOn, Dealer Inspire, Sincro) are the systems an AI sales agent must integrate
+ * with or displace — the single highest-value tech signal for the sales conversation.
+ *
+ * We infer them from markers that leak into the public homepage: script src hosts,
+ * asset CDNs, tracking beacons, form endpoints, and integration snippets. This is a
+ * best-effort read of the CLIENT side only — the DMS in particular is a back-office
+ * system that frequently leaves NO homepage trace, so absence is not evidence of
+ * absence. Each detection carries the literal matched string as evidence.
+ * --------------------------------------------------------------------------- */
+
+interface VendorSig {
+  vendor: string;
+  /** Ordered most-specific first; the first hit's matched text becomes the evidence. */
+  patterns: RegExp[];
+}
+
+// DMS = Dealer Management System (back-office: inventory, F&I, accounting, service).
+// NOTE: DMS names leak into the homepage far less than CRMs, and when they do it's often
+// a widget class name, not the real back-office system. Patterns are restricted to host /
+// script / asset markers (e.g. `dealertrack.com`) and NOT bare product words, because a
+// plain /dealertrack/ hit is usually a Dealer.com payment-calculator CSS class
+// (".calculator-payment-dealertrack-conditional-incentives"), not the dealer's DMS.
+const DMS_SIGS: VendorSig[] = [
+  { vendor: "CDK Global", patterns: [/cdk\.com/i, /cdkglobal/i, /fortellis/i, /\bcdkdealer/i] },
+  { vendor: "Reynolds & Reynolds", patterns: [/reyrey\.com/i, /reynoldsandreynolds/i] },
+  { vendor: "Dealertrack", patterns: [/dealertrack\.com/i, /dealertrack\.net/i, /dtdms/i] },
+  { vendor: "Tekion", patterns: [/tekion\.com/i] },
+  { vendor: "Auto/Mate", patterns: [/automate\.net/i, /auto-mate\.com/i] },
+];
+
+// CRM / website platform (front-office: lead capture, marketing, the site itself).
+const CRM_SIGS: VendorSig[] = [
+  { vendor: "VinSolutions", patterns: [/vinsolutions\.com/i, /vinsolutions/i] },
+  { vendor: "DealerSocket", patterns: [/dealersocket/i] },
+  { vendor: "Elead CRM", patterns: [/eleadcrm/i, /elead-?crm/i, /\belead\b/i] },
+  { vendor: "Dealer.com", patterns: [/static\.dealer\.com/i, /\bdealer\.com\b/i, /\bddc-/i] },
+  { vendor: "DealerOn", patterns: [/dealeron\.com/i, /dealeron/i] },
+  { vendor: "Dealer Inspire", patterns: [/dealerinspire/i, /di-cdn/i, /\bdi-uploads\b/i] },
+  { vendor: "Sincro", patterns: [/sincrods/i, /sincro\.com/i, /cobalt\.com/i] },
+];
+
+export interface VendorDetection {
+  vendor: string | null;
+  evidence: string | null;
+}
+
+function firstVendor(html: string, sigs: VendorSig[]): VendorDetection {
+  for (const sig of sigs) {
+    for (const p of sig.patterns) {
+      const m = html.match(p);
+      if (m) return { vendor: sig.vendor, evidence: m[0] };
+    }
+  }
+  return { vendor: null, evidence: null };
+}
+
+/** Detect the dealer's DMS vendor from homepage HTML (best-effort; often absent). */
+export function detectDms(html: string): VendorDetection {
+  return firstVendor(html, DMS_SIGS);
+}
+
+/** Detect the dealer's CRM / website-platform vendor from homepage HTML. */
+export function detectCrm(html: string): VendorDetection {
+  return firstVendor(html, CRM_SIGS);
+}

@@ -95,6 +95,15 @@ export function getSqlite(): Database.Database {
   if (!cols.has("sources")) db.exec("ALTER TABLE dealerships ADD COLUMN sources TEXT DEFAULT '[]'");
   if (!cols.has("confirmation_count")) db.exec("ALTER TABLE dealerships ADD COLUMN confirmation_count INTEGER NOT NULL DEFAULT 0");
   if (!cols.has("trust_tier")) db.exec("ALTER TABLE dealerships ADD COLUMN trust_tier TEXT");
+  // Dealer-GROUP ownership (curated seed-map + domain clustering). group_name/group_size
+  // above is a sparse legacy field; these are the enrichment-derived parent + confidence.
+  if (!cols.has("group_parent")) db.exec("ALTER TABLE dealerships ADD COLUMN group_parent TEXT");
+  if (!cols.has("group_confidence")) db.exec("ALTER TABLE dealerships ADD COLUMN group_confidence TEXT");
+  // DMS / CRM tech stack fingerprinted from the homepage, each with matched evidence.
+  if (!cols.has("dms_vendor")) db.exec("ALTER TABLE dealerships ADD COLUMN dms_vendor TEXT");
+  if (!cols.has("dms_evidence")) db.exec("ALTER TABLE dealerships ADD COLUMN dms_evidence TEXT");
+  if (!cols.has("crm_vendor")) db.exec("ALTER TABLE dealerships ADD COLUMN crm_vendor TEXT");
+  if (!cols.has("crm_evidence")) db.exec("ALTER TABLE dealerships ADD COLUMN crm_evidence TEXT");
 
   _sqlite = db;
   return db;

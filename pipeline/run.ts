@@ -89,8 +89,9 @@ async function validate(): Promise<void> {
 
 async function enrich(): Promise<void> {
   banner("ENRICH");
-  const { attempted, withContacts, totalContacts, withTools } = await runEnrich();
+  const { attempted, withContacts, totalContacts, withTools, withGroup, withDms, withCrm } = await runEnrich();
   console.log(`  enriched ${withContacts}/${attempted} accounts · ${totalContacts} contacts · ${withTools} tech stacks`);
+  console.log(`  group-owned ${withGroup}/${attempted} · DMS ${withDms} · CRM ${withCrm}`);
 }
 
 async function places(): Promise<void> {

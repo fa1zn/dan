@@ -1,9 +1,18 @@
 import { ENABLED_ENRICHERS } from "../enrich/types";
-import { detectTools } from "../enrich/tools";
+import { detectTools, detectDms, detectCrm } from "../enrich/tools";
 import { extractSignals } from "../enrich/signals";
+import { resolveGroups } from "../enrich/groups";
 import { fetchText } from "../lib/http";
 import type { Contact } from "../../lib/types";
-import { loadAll, updateContacts, updateTools, updateEnrichment, backfillPhone } from "./persist";
+import {
+  loadAll,
+  updateContacts,
+  updateTools,
+  updateEnrichment,
+  updateTechStack,
+  updateGroupParent,
+  backfillPhone,
+} from "./persist";
 
 const num = (v: string | undefined, dflt: number) => {
   const n = v == null ? NaN : Number(v);
@@ -32,6 +41,9 @@ export interface EnrichResult {
   withContacts: number;
   totalContacts: number;
   withTools: number;
+  withGroup: number;
+  withDms: number;
+  withCrm: number;
 }
 
 /**
@@ -41,19 +53,35 @@ export interface EnrichResult {
 export async function runEnrich(): Promise<EnrichResult> {
   if (ENABLED_ENRICHERS.length === 0) {
     console.log("  [enrich] no enrichers enabled");
-    return { attempted: 0, withContacts: 0, totalContacts: 0, withTools: 0 };
+    return { attempted: 0, withContacts: 0, totalContacts: 0, withTools: 0, withGroup: 0, withDms: 0, withCrm: 0 };
   }
 
   const cap = num(process.env.ENRICH_MAX_SITES, 50);
   const regions = list(process.env.ENRICH_REGIONS); // restrict to state/province codes
-  let candidates = loadAll().filter((r) => r.website);
+  const all = loadAll();
+  let candidates = all.filter((r) => r.website);
   if (regions) candidates = candidates.filter((r) => r.stateProvince && regions.includes(r.stateProvince.toUpperCase()));
   const slice = cap > 0 ? candidates.slice(0, cap) : candidates;
+
+  // Dealer-GROUP ownership is name/domain-based (no network) — resolve it up front over
+  // the whole table so domain clustering sees all rooftops, then persist for this slice.
+  const groups = resolveGroups(all.map((r) => ({ id: r.id!, name: r.name, domain: r.domain })));
+  let withGroup = 0;
+  for (const r of slice) {
+    const g = r.id != null ? groups.get(r.id) : undefined;
+    if (g?.parent) {
+      updateGroupParent(r.id!, g.parent, g.confidence);
+      withGroup++;
+    }
+  }
+  console.log(`  [enrich] group ownership resolved for ${withGroup}/${slice.length} rooftops in slice`);
   console.log(`  [enrich] ${ENABLED_ENRICHERS.map((e) => e.name).join(", ")} over ${slice.length}/${candidates.length} sited accounts`);
 
   let withContacts = 0;
   let totalContacts = 0;
   let withTools = 0;
+  let withDms = 0;
+  let withCrm = 0;
   let done = 0;
 
   // Process one rooftop. Network fetches dominate, so we run many concurrently.
@@ -84,6 +112,14 @@ export async function runEnrich(): Promise<EnrichResult> {
           updateTools(rec.id, tools);
           withTools++;
         }
+        // DMS/CRM tech stack with matched evidence (client-side markers only).
+        const dms = detectDms(home.text);
+        const crm = detectCrm(home.text);
+        if (dms.vendor || crm.vendor) {
+          updateTechStack(rec.id, dms, crm);
+          if (dms.vendor) withDms++;
+          if (crm.vendor) withCrm++;
+        }
         const signals = extractSignals(
           home.text,
           rec.domain,
@@ -110,5 +146,5 @@ export async function runEnrich(): Promise<EnrichResult> {
     })
   );
 
-  return { attempted: slice.length, withContacts, totalContacts, withTools };
+  return { attempted: slice.length, withContacts, totalContacts, withTools, withGroup, withDms, withCrm };
 }

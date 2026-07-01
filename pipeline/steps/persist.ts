@@ -175,6 +175,26 @@ export function backfillPhone(id: number, phone: string): void {
     .run({ id, p: phone });
 }
 
+/** Persist dealer-group ownership derived by the group matcher. */
+export function updateGroupParent(id: number, parent: string | null, confidence: string | null): void {
+  getSqlite()
+    .prepare("UPDATE dealerships SET group_parent=@p, group_confidence=@c, updated_at=CURRENT_TIMESTAMP WHERE id=@id")
+    .run({ id, p: parent, c: confidence });
+}
+
+/** Persist DMS/CRM vendor detections plus the matched evidence strings. */
+export function updateTechStack(
+  id: number,
+  dms: { vendor: string | null; evidence: string | null },
+  crm: { vendor: string | null; evidence: string | null }
+): void {
+  getSqlite()
+    .prepare(
+      "UPDATE dealerships SET dms_vendor=@dv, dms_evidence=@de, crm_vendor=@cv, crm_evidence=@ce, updated_at=CURRENT_TIMESTAMP WHERE id=@id"
+    )
+    .run({ id, dv: dms.vendor, de: dms.evidence, cv: crm.vendor, ce: crm.evidence });
+}
+
 export function updateTier(id: number, tier: Tier, groupName: string | null, groupSize: number | null): void {
   getSqlite()
     .prepare(
