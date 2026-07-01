@@ -17,11 +17,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </span>
         </Link>
         <nav className="flex flex-col gap-1 px-3 py-2">
+          <NavLink href="/worklist" icon={<PhoneCall className="h-4 w-4" />}>
+            Today
+          </NavLink>
           <NavLink href="/" icon={<LayoutDashboard className="h-4 w-4" />}>
             Overview
-          </NavLink>
-          <NavLink href="/worklist" icon={<PhoneCall className="h-4 w-4" />}>
-            Call list
           </NavLink>
           <NavLink href="/accounts" icon={<Building2 className="h-4 w-4" />}>
             Accounts

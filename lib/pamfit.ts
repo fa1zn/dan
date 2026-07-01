@@ -7,6 +7,7 @@ import { computeIntel, type IntelInput } from "./intel";
 
 export interface PamFitInput extends IntelInput {
   tier: string | null;
+  oem?: string | null;
 }
 
 export interface PamFit {
@@ -14,7 +15,27 @@ export interface PamFit {
   band: "Hot" | "Warm" | "Cool";
   factors: { label: string; points: number }[];
   talkTrack: string;
+  opener: string; // a drafted, Pam-shaped cold-call opener the rep can read aloud
+  askFor: string; // who to ask for at the front desk
   champion: ReturnType<typeof computeIntel>["champion"];
+}
+
+// A real spoken opener that names the dealer's specific lead-leak — Pam's exact wound.
+function draftOpener(kind: string | undefined, oem: string | null | undefined): string {
+  const b = oem ? `${oem} ` : "";
+  switch (kind) {
+    case "displace":
+      return `I work with ${b}dealers on where their chat/text tools drop the ball after hours — noticed you're running one and I had a quick idea worth ten minutes.`;
+    case "hours":
+      return `You're closed nights and Sundays, but buyers aren't — we catch the after-hours calls and web leads that go unanswered at ${b}stores. Worth a quick look?`;
+    case "volume":
+      return `With the volume you do, I'd bet a real chunk of calls hit voicemail after close — that's exactly the lead leak we plug for ${b}dealers.`;
+    case "quality":
+      return `Saw a few reviews mention slow callbacks — we make sure no lead sits waiting at ${b}stores. Could I grab ten minutes?`;
+    case "greenfield":
+    default:
+      return `I help ${b}dealers capture the leads that slip after close — do you have anything answering calls and texts after 7pm right now?`;
+  }
 }
 
 export function computePamFit(input: PamFitInput): PamFit {
@@ -44,10 +65,11 @@ export function computePamFit(input: PamFitInput): PamFit {
 
   // Talk track: lead with the strongest reason, end with who to ask for.
   const lead = intel.whyCall[0]?.label.replace(/\.$/, "");
-  const who = intel.champion?.name
-    ? `ask for ${intel.champion.name}${intel.champion.title ? ` (${intel.champion.title})` : ""}`
-    : "ask for the GM";
-  const talkTrack = lead ? `${lead} — ${who}.` : `Reach out and ${who}.`;
+  const askFor = intel.champion?.name
+    ? `${intel.champion.name}${intel.champion.title ? ` (${intel.champion.title})` : ""}`
+    : "the GM or whoever owns internet leads";
+  const talkTrack = lead ? `${lead} — ask for ${askFor}.` : `Reach out and ask for ${askFor}.`;
+  const opener = draftOpener(intel.whyCall[0]?.kind, input.oem);
 
-  return { score, band, factors, talkTrack, champion: intel.champion };
+  return { score, band, factors, talkTrack, opener, askFor, champion: intel.champion };
 }

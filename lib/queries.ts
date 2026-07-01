@@ -269,6 +269,9 @@ export interface Person {
   title?: string;
   email?: string;
   phone?: string;
+  mobile?: string;
+  phoneDnc?: boolean;
+  mobileDnc?: boolean;
   source?: string;
 }
 
@@ -290,7 +293,7 @@ export interface CallListItem {
   people: Person[];
   rating: number | null;
   reviewCount: number | null;
-  pamfit: { score: number; band: "Hot" | "Warm" | "Cool"; talkTrack: string };
+  pamfit: { score: number; band: "Hot" | "Warm" | "Cool"; talkTrack: string; opener: string; askFor: string };
   whyNow: { label: string; tone: "hot" | "info" | "warn" }[];
 }
 
@@ -387,6 +390,7 @@ export function getCallList(state: string, limit = 200): CallListItem[] {
       websiteValid: r.website_valid == null ? null : r.website_valid === 1,
       brandConfirmed: r.brand_confirmed === 1,
       tier: (r.tier as string) ?? null,
+      oem: (r.oem as string) ?? null,
     });
     return {
       id: r.id as number,
@@ -400,7 +404,7 @@ export function getCallList(state: string, limit = 200): CallListItem[] {
       postal_code: (r.postal_code as string) ?? null,
       country: (r.country as string) ?? null,
       phone: (r.phone as string) ?? null,
-      pamfit: { score: fit.score, band: fit.band, talkTrack: fit.talkTrack },
+      pamfit: { score: fit.score, band: fit.band, talkTrack: fit.talkTrack, opener: fit.opener, askFor: fit.askFor },
       hs_in_crm: (r.hs_in_crm as number) ?? 0,
       hs_owner: (r.hs_owner as string) ?? null,
       primary: people[0] ?? null,
