@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Moon, Sun, Inbox, Rocket, Building2, KeyRound } from "lucide-react";
+import { Moon, Sun, Inbox, Rocket, Building2, KeyRound, MapPin } from "lucide-react";
 import { cn } from "@/lib/ui";
 
 export function NavLink({
@@ -37,6 +37,7 @@ export function MobileNav() {
   const tabs = [
     { href: "/today", label: "Today", icon: <Inbox className="h-5 w-5" /> },
     { href: "/sequences", label: "Prospect", icon: <Rocket className="h-5 w-5" /> },
+    { href: "/territory", label: "Territory", icon: <MapPin className="h-5 w-5" /> },
     { href: "/accounts", label: "Book", icon: <Building2 className="h-5 w-5" /> },
     { href: "/connections", label: "Setup", icon: <KeyRound className="h-5 w-5" /> },
   ];

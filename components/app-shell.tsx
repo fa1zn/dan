@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, Plug, KeyRound, Inbox, Rocket } from "lucide-react";
+import { Building2, Plug, KeyRound, Inbox, Rocket, MapPin } from "lucide-react";
 import { NavLink, ThemeToggle, MobileNav } from "./chrome";
 import { Toaster } from "./toast";
 import { repEnv } from "@/lib/connections";
@@ -64,6 +64,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </NavLink>
           <NavLink href="/sequences" icon={<Rocket className="h-4 w-4" />}>
             Prospect
+          </NavLink>
+          <NavLink href="/territory" icon={<MapPin className="h-4 w-4" />}>
+            Territory
           </NavLink>
           <NavLink href="/accounts" icon={<Building2 className="h-4 w-4" />}>
             Book
