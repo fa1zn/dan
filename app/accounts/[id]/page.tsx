@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, MapPin, Phone, Globe, Mail, Layers, Sparkles, Target } from "lucide-react";
+import { ArrowLeft, ExternalLink, MapPin, Phone, Globe, Mail, Layers, Sparkles, Target, Star, BadgeCheck, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "@/components/ui";
 import { CrmPanel, StatusBadge } from "@/components/crm-panel";
 import { SequenceCard, TemperaturePill } from "@/components/sequence-card";
 import { getMotionForDealership } from "@/lib/sequence-ui";
 import { InfoTip } from "@/components/info-tip";
 import { getAccount } from "@/lib/queries";
+import { verifyRooftop, type PlacesVerify } from "@/lib/places";
 import { getCrm, getActivity } from "@/lib/crm";
 import { computeIntel } from "@/lib/intel";
 import { computePamFit } from "@/lib/pamfit";
@@ -41,6 +42,60 @@ function Inferred({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** A value pulled live from Google Places — labelled so it never looks made up. */
+function FromGoogle({ children }: { children: React.ReactNode }) {
+  return (
+    <span>
+      {children} <span className="text-xs text-muted-foreground">· Google</span>
+    </span>
+  );
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+/** Live Google-verified facts shown on the briefing hero. Real data, nothing inferred. */
+function VerifiedStrip({ v }: { v: PlacesVerify }) {
+  const closed = v.businessStatus === "CLOSED_PERMANENTLY" || v.businessStatus === "CLOSED_TEMPORARILY";
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
+      {v.rating != null && (
+        <span className="inline-flex items-center gap-1 font-medium">
+          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+          {v.rating}
+          {v.reviewCount != null && (
+            <span className="font-normal text-muted-foreground">({v.reviewCount.toLocaleString()} reviews)</span>
+          )}
+        </span>
+      )}
+      {v.businessStatus &&
+        (closed ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-700 dark:text-red-400">
+            <AlertTriangle className="h-3 w-3" />
+            {v.businessStatus === "CLOSED_PERMANENTLY" ? "Permanently closed" : "Temporarily closed"}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+            <BadgeCheck className="h-3 w-3" /> Open
+          </span>
+        ))}
+      {v.phone && (
+        <a href={`tel:${v.phone.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+          <Phone className="h-3.5 w-3.5" /> {v.phone}
+        </a>
+      )}
+      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+        <BadgeCheck className="h-3 w-3 text-brand" /> Verified on Google
+      </span>
+    </div>
+  );
+}
+
 function Flag({ label, state }: { label: string; state: boolean | null }) {
   const v = state == null ? "muted" : state ? "success" : "danger";
   const text = state == null ? "Unknown" : state ? "Valid" : "Invalid";
@@ -60,6 +115,17 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
   const crm = getCrm(accountId);
   const activity = getActivity(accountId);
   const motion = getMotionForDealership(accountId);
+  const verified = await verifyRooftop({
+    id: accountId,
+    name: a.name,
+    city: a.city,
+    state: a.state_province,
+    lat: a.latitude,
+    lng: a.longitude,
+  });
+  // 80% of rooftops have no phone on file — Google fills it in. Track the source honestly.
+  const effectivePhone = a.phone || verified?.phone || null;
+  const phoneFromGoogle = !a.phone && !!verified?.phone;
   let contacts: Contact[] = [];
   try {
     contacts = JSON.parse((a as unknown as { contacts?: string }).contacts ?? "[]");
@@ -169,8 +235,8 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
               </Button>
             </Link>
           )}
-          {a.phone && (
-            <a href={`tel:${a.phone}`}>
+          {effectivePhone && (
+            <a href={`tel:${effectivePhone.replace(/[^\d+]/g, "")}`}>
               <Button variant="brand" size="sm">
                 <Phone className="h-4 w-4" /> Call
               </Button>
@@ -179,21 +245,35 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
-      {a.phone && (
+      {verified?.businessStatus === "CLOSED_PERMANENTLY" && (
+        <div className="flex items-start gap-2 rounded-lg border border-red-500/40 bg-red-500/5 p-3 text-sm text-red-800 dark:text-red-300">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            Google lists this rooftop as <span className="font-semibold">permanently closed</span>. Confirm before
+            driving out or spending outreach on it.
+          </span>
+        </div>
+      )}
+
+      {(effectivePhone || verified) && (
         <div className="rounded-lg border bg-card p-4 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="text-xs uppercase tracking-wide text-muted-foreground">Why call</div>
               <p className="mt-1 text-base">{whyCall}</p>
+              {verified && <VerifiedStrip v={verified} />}
             </div>
             {motion?.temperature && <TemperaturePill temp={motion.temperature} />}
           </div>
-          <a
-            href={`tel:${a.phone.replace(/[^\d+]/g, "")}`}
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90 sm:w-auto"
-          >
-            <Phone className="h-4 w-4" /> Call {a.phone}
-          </a>
+          {effectivePhone && (
+            <a
+              href={`tel:${effectivePhone.replace(/[^\d+]/g, "")}`}
+              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90 sm:w-auto"
+            >
+              <Phone className="h-4 w-4" /> Call {effectivePhone}
+              {phoneFromGoogle && <span className="text-xs font-normal opacity-80">· found on Google</span>}
+            </a>
+          )}
         </div>
       )}
 
@@ -293,9 +373,17 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                   <a href={a.website} target="_blank" rel="noreferrer" className="text-primary hover:underline">
                     {a.domain ?? a.website}
                   </a>
+                ) : verified?.website ? (
+                  <FromGoogle>
+                    <a href={verified.website} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                      {hostOf(verified.website)}
+                    </a>
+                  </FromGoogle>
                 ) : null}
               </Field>
-              <Field label="Phone">{a.phone}</Field>
+              <Field label="Phone">
+                {a.phone ? a.phone : phoneFromGoogle && effectivePhone ? <FromGoogle>{effectivePhone}</FromGoogle> : null}
+              </Field>
               <Field label="Email">
                 {a.email ? (
                   <a href={`mailto:${a.email}`} className="inline-flex items-center gap-1 text-primary hover:underline">
@@ -316,6 +404,14 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
             <Flag label="Website" state={a.website ? (a.website_valid == null ? null : a.website_valid === 1) : null} />
             <Flag label="Phone" state={a.phone ? a.phone_valid === 1 : null} />
             <Flag label="Brand confirmed" state={a.brand_confirmed === 1} />
+            {verified && (
+              <div className="flex items-center justify-between border-b py-2 last:border-0">
+                <span className="text-sm text-muted-foreground">Google listing</span>
+                <Badge variant={verified.businessStatus === "OPERATIONAL" ? "success" : "muted"}>
+                  {verified.businessStatus === "OPERATIONAL" ? "Live · operating" : "Found"}
+                </Badge>
+              </div>
+            )}
             <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t pt-3">
               <span className="text-xs text-muted-foreground">Sources:</span>
               {sources.map((s) => (
