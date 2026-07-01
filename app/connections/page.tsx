@@ -1,6 +1,7 @@
 import { KeyRound, Check } from "lucide-react";
-import { connectionStatus, getCallProvider, CALL_PROVIDERS } from "@/lib/connections";
+import { connectionStatus, getCallProvider, CALL_PROVIDERS, getConnection } from "@/lib/connections";
 import { ConnectionsClient } from "@/components/connections-client";
+import { HubspotConnect } from "@/components/hubspot-connect";
 import { setCallProviderAction } from "./actions";
 import { cn } from "@/lib/ui";
 
@@ -52,6 +53,17 @@ export default function ConnectionsPage() {
             );
           })}
         </div>
+      </section>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-sm font-medium">Your CRM</h2>
+          <p className="text-xs text-muted-foreground">
+            Bring your HubSpot pipeline in. Dan matches your accounts to our rooftops and shows your deal stage and owner
+            right on the record — so your book and ours are one view.
+          </p>
+        </div>
+        <HubspotConnect connected={!!getConnection("HUBSPOT_TOKEN")} />
       </section>
 
       <ConnectionsClient providers={providers} activeCallProvider={active} />
