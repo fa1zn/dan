@@ -1,13 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { addNote, setNextStep, setOwner, setStatus } from "@/lib/crm";
+import { addNote, logActivity, setNextStep, setOwner, setStatus } from "@/lib/crm";
 import { isStatus } from "@/lib/crm-constants";
 
 function revalidate(id: number) {
   revalidatePath(`/accounts/${id}`);
   revalidatePath("/accounts");
   revalidatePath("/pipeline");
+  revalidatePath("/worklist");
   revalidatePath("/");
 }
 
@@ -29,5 +30,12 @@ export async function updateNextStepAction(id: number, nextStep: string) {
 
 export async function addNoteAction(id: number, body: string) {
   addNote(id, body);
+  revalidate(id);
+}
+
+/** Log a call outcome from the worklist: records a call activity + advances the account's status. */
+export async function logCallAction(id: number, status: string, note: string) {
+  logActivity(id, "call", note);
+  if (isStatus(status)) setStatus(id, status);
   revalidate(id);
 }

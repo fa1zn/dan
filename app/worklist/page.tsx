@@ -4,6 +4,7 @@ import { Card, Badge } from "@/components/ui";
 import { StateTabs } from "@/components/state-tabs";
 import { StatusBadge } from "@/components/crm-panel";
 import { DncCall } from "@/components/dnc-call";
+import { LogCall } from "@/components/log-call";
 import { getCallList, getCallListStates } from "@/lib/queries";
 import { type Status } from "@/lib/crm-constants";
 import { fmt } from "@/lib/format";
@@ -24,7 +25,9 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
   const state = (one(sp.state) ?? fallback).toUpperCase();
 
   const all = getCallList(state);
-  const callable = all.filter((i) => i.primary?.phone || i.primary?.mobile || i.phone);
+  // Today = fresh, callable accounts not yet worked. Logging a call advances the status,
+  // so it drops off the list — the rep clears their day instead of re-seeing worked rooftops.
+  const callable = all.filter((i) => (i.primary?.phone || i.primary?.mobile || i.phone) && i.status === "new");
   const today = callable.slice(0, TODAY_CAP);
   const hot = today.filter((i) => i.pamfit.band === "Hot").length;
 
@@ -124,6 +127,10 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                     <Link href={`/accounts/${it.id}`} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                       Full brief <ArrowRight className="h-3 w-3" />
                     </Link>
+                  </div>
+                  {/* work it — log the call outcome, advances the account */}
+                  <div className="mt-2 border-t pt-2">
+                    <LogCall id={it.id} />
                   </div>
                 </div>
               </div>
