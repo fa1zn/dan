@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, Database, Layers, CircleCheck, CircleAlert, Search, PhoneOff } from "lucide-react";
+import { ShieldCheck, Database, Layers, CircleCheck, CircleAlert, Search, PhoneOff, Globe, Check, Ban } from "lucide-react";
 import { getKpis } from "@/lib/queries";
 import { getSqlite } from "@/lib/db";
 import { fmt } from "@/lib/format";
@@ -14,6 +14,8 @@ function counts() {
     total: q(`SELECT COUNT(*) n FROM dealerships WHERE ${W}`),
     platinum: q(`SELECT COUNT(*) n FROM dealerships WHERE ${W} AND trust_tier='platinum'`),
     verified: q(`SELECT COUNT(*) n FROM dealerships WHERE ${W} AND trust_tier IN ('platinum','gold')`),
+    usConfirmed: q(`SELECT COUNT(*) n FROM dealerships WHERE country='US' AND brand_confirmed=1`),
+    usStates: q(`SELECT COUNT(DISTINCT state_province) n FROM dealerships WHERE country='US' AND brand_confirmed=1`),
   };
 }
 
@@ -55,6 +57,34 @@ export default async function MethodologyPage() {
             <div className="text-xs text-muted-foreground">{k}</div>
           </div>
         ))}
+      </section>
+
+      <section>
+        <h2 className="flex items-center gap-2 text-lg font-semibold"><Globe className="h-4 w-4 text-brand" /> What&rsquo;s in this book &mdash; and what isn&rsquo;t</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          This is a <strong>new-car franchise</strong> system of record, built from each manufacturer&rsquo;s own dealer list &mdash;
+          not a scrape of everything that sells a car. Currently <strong>{fmt(c.usConfirmed)}</strong> US rooftops are
+          manufacturer-confirmed across <strong>{c.usStates}</strong> states, and growing as the national rollout completes.
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-lg border bg-card px-4 py-3">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400"><Check className="h-4 w-4" /> In scope</div>
+            <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+              <li>Franchised new-car rooftops from ~27 manufacturers&rsquo; official dealer locators</li>
+              <li>All 50 US states (CA, TX &amp; FL complete; the rest confirming now)</li>
+              <li>Every record cross-checked against Google, OpenStreetMap &amp; the dealer&rsquo;s own site</li>
+            </ul>
+          </div>
+          <div className="rounded-lg border bg-card px-4 py-3">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground"><Ban className="h-4 w-4" /> Deliberately excluded</div>
+            <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+              <li>Used-car lots, independent (non-franchise) dealers &amp; powersports &mdash; flagged as noise, hidden</li>
+              <li>Tesla &amp; Rivian &mdash; direct-sale, no franchises</li>
+              <li>Mexican border dealers &mdash; quarantined so they never pose as US rooftops</li>
+              <li>Canada is mapped but not yet manufacturer-confirmed &mdash; a planned next pass</li>
+            </ul>
+          </div>
+        </div>
       </section>
 
       <section>
