@@ -15,10 +15,18 @@ const CANON = new URL("data/dealerships.sqlite", import.meta.url).pathname;
 const db = new Database(CANON);
 db.pragma("wal_checkpoint(TRUNCATE)"); // fold WAL into the main file so matching sees everything
 const digits = (p) => (p || "").replace(/\D/g, "").slice(-10);
-const ALLOW = new Set(["CA", "TX", "FL"]);
-const REGION = { CA: "US-West", TX: "US-South", FL: "US-South" };
-// Only brands the parallel shells cracked (skip baseline Toyota/Honda/Ford/etc already canonical).
-const WORKER_BRANDS = new Set(["Chevrolet","GMC","Buick","Cadillac","Jeep","Chrysler","Dodge","Ram","Fiat","Alfa Romeo","Nissan","Kia","Infiniti","Mercedes-Benz","BMW","Mini","Lincoln","Acura","Mitsubishi","Lexus","Land Rover","Genesis","Jaguar"]);
+// National: accept net-new inserts for any US state/DC. Territory by Census region.
+const CENSUS = {
+  Northeast: ["CT","ME","MA","NH","RI","VT","NJ","NY","PA"],
+  Midwest: ["IL","IN","MI","OH","WI","IA","KS","MN","MO","NE","ND","SD"],
+  South: ["DE","FL","GA","MD","NC","SC","VA","DC","WV","AL","KY","MS","TN","AR","LA","OK","TX"],
+  West: ["AZ","CO","ID","MT","NV","NM","UT","WY","AK","CA","HI","OR","WA"],
+};
+const REGION = {};
+const ALLOW = new Set();
+for (const [reg, sts] of Object.entries(CENSUS)) for (const s of sts) { REGION[s] = `US-${reg}`; ALLOW.add(s); }
+// Every crawlable OEM brand (national confirm now spans all 50 states, not just CA/TX/FL).
+const WORKER_BRANDS = new Set(["Toyota","Honda","Ford","Hyundai","Subaru","Mazda","Volkswagen","Chevrolet","GMC","Buick","Cadillac","Jeep","Chrysler","Dodge","Ram","Fiat","Alfa Romeo","Nissan","Kia","Infiniti","Mercedes-Benz","BMW","Mini","Lincoln","Acura","Mitsubishi","Lexus","Land Rover","Genesis","Jaguar"]);
 
 const desktop = `${homedir()}/Desktop`;
 const worktrees = readdirSync(desktop).filter((d) => d.startsWith("dan-shell-")).map((d) => `${desktop}/${d}/data/dealerships.sqlite`).filter(existsSync);
