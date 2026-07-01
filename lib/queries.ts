@@ -370,7 +370,7 @@ export function getCallList(state: string, limit = 200): CallListItem[] {
     }
     people.sort((a, b) => rankPerson(a) - rankPerson(b));
     let tools: string[] = [];
-    let signals: { rating?: number; googleRating?: number; reviewCount?: number; hours?: string; metaAds?: { active?: boolean; count?: number } } = {};
+    let signals: { rating?: number; googleRating?: number; reviewCount?: number; hours?: string; closedSunday?: boolean; metaAds?: { active?: boolean; count?: number } } = {};
     try {
       tools = JSON.parse((r.tools_used as string) ?? "[]");
     } catch {}
@@ -383,7 +383,8 @@ export function getCallList(state: string, limit = 200): CallListItem[] {
     const fit = computePamFit({
       contacts: people,
       tools,
-      signals,
+      // Normalize enrichment field names → what the intel engine expects (googleRating → rating).
+      signals: { rating: rating ?? undefined, reviewCount: reviewCount ?? undefined, closedSunday: signals.closedSunday },
       phone: (r.phone as string) ?? null,
       phoneValid: r.phone_valid === 1,
       website: (r.website as string) ?? null,

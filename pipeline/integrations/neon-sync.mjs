@@ -23,7 +23,9 @@ const COLS = [
   "id", "name", "oem", "dealer_code", "brand_confirmed", "trust_tier", "confirmation_count",
   "address_street", "city", "state_province", "postal_code", "country", "territory",
   "latitude", "longitude", "phone", "website", "domain", "source", "place_id",
-  "hs_in_crm", "hs_owner", "hs_lifecycle_stage", "created_at", "updated_at",
+  "hs_in_crm", "hs_owner", "hs_lifecycle_stage",
+  "enrichment", "contacts", "tools_used", // signals + decision-makers (the copilot fuel)
+  "created_at", "updated_at",
 ];
 const DDL = `CREATE TABLE IF NOT EXISTS dealerships (
   id integer PRIMARY KEY,
@@ -34,6 +36,7 @@ const DDL = `CREATE TABLE IF NOT EXISTS dealerships (
   latitude double precision, longitude double precision,
   phone text, website text, domain text, source text, place_id text,
   hs_in_crm boolean, hs_owner text, hs_lifecycle_stage text,
+  enrichment text, contacts text, tools_used text,
   created_at text, updated_at text
 )`;
 
@@ -46,6 +49,7 @@ async function main() {
   await client.connect();
   console.log("connected to Neon");
 
+  await client.query("DROP TABLE IF EXISTS dealerships"); // full-replace mirror — recreate with current schema
   await client.query(DDL);
   await client.query("CREATE INDEX IF NOT EXISTS dealerships_oem_idx ON dealerships(oem)");
   await client.query("CREATE INDEX IF NOT EXISTS dealerships_state_idx ON dealerships(country, state_province)");
