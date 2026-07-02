@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "@/compo
 import type { Channel } from "@/lib/sequence-constants";
 import type { MotionStepView, MotionView } from "@/lib/sequence-ui";
 import { TEMPERATURE_LABEL } from "@/lib/sequence-ui";
+import { STATUS_META, type Status } from "@/lib/crm-constants";
 import { cn } from "@/lib/ui";
 import { enrollAndRunAction, runStepAction, stopAction } from "@/app/motion-actions";
 import { ToastForm } from "@/components/toast";
@@ -13,7 +14,7 @@ const CHANNEL_ICON: Record<Channel, React.ComponentType<{ className?: string }>>
   gift: Gift,
 };
 
-const CHANNEL_LABEL: Record<Channel, string> = { call: "Call", sms: "Text", gift: "Edible" };
+const CHANNEL_LABEL: Record<Channel, string> = { call: "Call", sms: "Text", gift: "Treat" };
 
 const TEMP_CLASS: Record<MotionView["temperature"], string> = {
   hot: "bg-red-500/10 text-red-600 dark:text-red-400",
@@ -71,8 +72,8 @@ export function MotionStepper({ steps, labeled = false }: { steps: MotionStepVie
 }
 
 function nextActionText(m: MotionView): string {
-  if (m.state === "completed") return "Outreach done";
-  if (m.state === "exited") return `Stopped — ${m.exitReason ?? "stopped"}`;
+  if (m.state === "completed") return "Done — no reply yet";
+  if (m.state === "exited") return "Stopped";
   if (m.state === "paused") return "Paused";
   const step = m.steps[m.currentStep];
   if (!step) return "—";
@@ -83,7 +84,7 @@ function nextActionText(m: MotionView): string {
   return `Next: ${label.toLowerCase()} · ${when}`;
 }
 
-const RUN_LABEL: Record<Channel, string> = { call: "Call now", sms: "Text now", gift: "Send gift" };
+const RUN_LABEL: Record<Channel, string> = { call: "Call now", sms: "Text now", gift: "Send a treat" };
 
 /** The per-rooftop motion card for the account detail page. */
 export function SequenceCard({ motion, dealershipId }: { motion: MotionView | null; dealershipId: number }) {
@@ -92,17 +93,17 @@ export function SequenceCard({ motion, dealershipId }: { motion: MotionView | nu
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
-            <Workflow className="h-4 w-4 text-brand" /> Outreach
+            <Workflow className="h-4 w-4 text-brand" /> Dan’s plan
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Pam hasn&rsquo;t reached out yet. Start with a call, then follow-ups once they say yes.
+            Dan hasn&rsquo;t reached out yet. Start with a call, then follow-ups once they say yes.
           </p>
-          <ToastForm action={enrollAndRunAction} toastMsg="Pam is placing the call…" toastKind="call">
+          <ToastForm action={enrollAndRunAction} toastMsg="Dan is placing the call…" toastKind="call">
             <input type="hidden" name="dealershipId" value={dealershipId} />
             <Button type="submit" variant="brand" size="sm">
-              <Play className="h-4 w-4" /> Have Pam call
+              <Play className="h-4 w-4" /> Have Dan call
             </Button>
           </ToastForm>
         </CardContent>
@@ -123,9 +124,8 @@ export function SequenceCard({ motion, dealershipId }: { motion: MotionView | nu
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-xs uppercase tracking-wide text-muted-foreground">
-            Step {Math.min(motion.currentStep + 1, motion.steps.length)} of {motion.steps.length}
+            {sentCount} of {motion.steps.length} touches done
           </span>
-          <span className="text-xs text-muted-foreground">{sentCount} sent</span>
         </div>
 
         <MotionStepper steps={motion.steps} labeled />
@@ -137,17 +137,21 @@ export function SequenceCard({ motion, dealershipId }: { motion: MotionView | nu
 
         <div className="flex items-start gap-2 text-xs text-muted-foreground">
           <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          Compliance-first: Pam opens with a disclosed, no-sell inquiry. Text &amp; gift are held until consent.
+          Dan always says he&rsquo;s an AI and never sells on the first call. Texts and treats wait until they&rsquo;re interested.
         </div>
 
         <div className="flex flex-wrap gap-x-6 gap-y-1 border-t pt-3 text-sm">
           <div>
-            <span className="text-muted-foreground">Outreach</span>{" "}
-            <span className="font-medium capitalize">{motion.state === "active" ? "in progress" : motion.state}</span>
+            <span className="text-muted-foreground">Pam&rsquo;s plan</span>{" "}
+            <span className="font-medium">
+              {motion.state === "active" ? "in progress" : motion.state === "completed" ? "done" : motion.state}
+            </span>
           </div>
           <div>
-            <span className="text-muted-foreground">Stage</span>{" "}
-            <span className="font-medium capitalize">{motion.crmStatus}</span>
+            <span className="text-muted-foreground">This dealer</span>{" "}
+            <span className="font-medium">
+              {STATUS_META[motion.crmStatus as Status]?.label ?? motion.crmStatus}
+            </span>
           </div>
           {motion.steps.some((s) => s.channel === "gift" && s.costCents) && (
             <div>
@@ -166,7 +170,7 @@ export function SequenceCard({ motion, dealershipId }: { motion: MotionView | nu
               toastKind={nextStep.channel === "call" ? "call" : "default"}
               toastMsg={
                 nextStep.channel === "call"
-                  ? "Pam is calling…"
+                  ? "Dan is calling…"
                   : nextStep.channel === "sms"
                     ? "Sending the text…"
                     : "Sending the gift…"
@@ -177,7 +181,7 @@ export function SequenceCard({ motion, dealershipId }: { motion: MotionView | nu
                 <Play className="h-4 w-4" /> {RUN_LABEL[nextStep.channel]}
               </Button>
             </ToastForm>
-            <ToastForm action={stopAction} toastMsg="Outreach stopped.">
+            <ToastForm action={stopAction} toastMsg="Stopped.">
               <input type="hidden" name="dealershipId" value={dealershipId} />
               <Button type="submit" variant="outline" size="sm">
                 Stop

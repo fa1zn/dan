@@ -3,6 +3,9 @@ import { MapPin, CircleCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui";
 import { topCities, areaView, type AreaDealer } from "@/lib/territory";
 import { CitySelect } from "@/components/city-select";
+import { TerritoryMap, type MapPinData, type MapAppointment } from "@/components/territory-map";
+import { CalendarPanel } from "@/components/calendar-panel";
+import { isCalendarConnected, eventsForDay } from "@/lib/calendar";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +57,28 @@ export default async function TerritoryPage({
   const sel = sp.city && sp.state ? { city: sp.city, state: sp.state } : { city: cities[0].city, state: cities[0].state };
   const view = areaView(sel.city, sel.state);
 
+  const pins: MapPinData[] = [
+    ...view.inPipeline.map((d, i) => ({ id: d.id, name: d.name, oem: d.oem, lat: d.lat, lng: d.lng, inPipeline: true, order: i + 1 })),
+    ...view.untouched.map((d, i) => ({ id: d.id, name: d.name, oem: d.oem, lat: d.lat, lng: d.lng, inPipeline: false, order: i + 1 })),
+  ];
+
+  const today = new Date();
+  const calConnected = isCalendarConnected();
+  const calEvents = calConnected ? eventsForDay(today.toISOString().slice(0, 10)) : [];
+  const calSetup = sp.calendar === "setup" ? sp.provider : undefined;
+  const dateLabel = today.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  const appointments: MapAppointment[] = calEvents
+    .filter((e) => e.lat != null && e.lng != null)
+    .map((e) => ({
+      title: e.title,
+      time: new Date(e.start_ts.includes("T") ? e.start_ts : e.start_ts.replace(" ", "T") + "Z").toLocaleTimeString(
+        undefined,
+        { hour: "numeric", minute: "2-digit" },
+      ),
+      lat: e.lat as number,
+      lng: e.lng as number,
+    }));
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
@@ -61,7 +86,7 @@ export default async function TerritoryPage({
           <MapPin className="h-6 w-6 text-brand" /> Territory
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Where are you today? Dan clusters your dealers by area so you can see everyone in one trip — in an efficient
+          Where are you today? Dan clusters your dealers by area so you can see everyone in one trip, in an efficient
           order.
         </p>
       </div>
@@ -73,15 +98,19 @@ export default async function TerritoryPage({
         {view.inPipeline.length} in your pipeline · {view.untouched.length} not yet contacted
       </p>
 
+      <TerritoryMap pins={pins} appointments={appointments} />
+
+      <CalendarPanel connected={calConnected} events={calEvents} dateLabel={dateLabel} setupProvider={calSetup} />
+
       <section className="space-y-3">
         <h2 className="flex items-center gap-1.5 text-sm font-medium">
-          <CircleCheck className="h-4 w-4 text-brand" /> In your pipeline — check in while you&rsquo;re here
+          <CircleCheck className="h-4 w-4 text-brand" /> In your pipeline · check in while you&rsquo;re here
         </h2>
-        <AreaList dealers={view.inPipeline} empty="None here in your pipeline yet — the whole area is open below." />
+        <AreaList dealers={view.inPipeline} empty="None here in your pipeline yet. The whole area is open below." />
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground">Not yet contacted — worth a stop</h2>
+        <h2 className="text-sm font-medium text-muted-foreground">Not yet contacted · worth a stop</h2>
         <AreaList dealers={view.untouched} empty="You&rsquo;ve reached everyone in this area." cap={20} />
       </section>
     </div>

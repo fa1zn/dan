@@ -40,13 +40,13 @@ export function SegmentLauncher({ oems, states }: { oems: string[]; states: stri
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
-          <Rocket className="h-4 w-4 text-brand" /> Launch a segment
+          <Rocket className="h-4 w-4 text-brand" /> Put Dan on a market
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form
           action={launchSegmentAction}
-          onSubmit={() => toast("Launching outreach — Pam's on it.", "call")}
+          onSubmit={() => toast("Dan's starting on these. He'll call them.", "call")}
           className="flex flex-wrap items-end gap-4"
         >
           <input type="hidden" name="oem" value={oem} />
@@ -109,8 +109,8 @@ export function SegmentLauncher({ oems, states }: { oems: string[]; states: stri
           </span>
         </form>
         <p className="mt-3 text-xs text-muted-foreground">
-          Paced 2 minutes apart (never a blast). Each dealer gets Pam&rsquo;s disclosed inquiry first; sales follow-ups
-          wait for consent.
+          Dan calls one every couple of minutes, never all at once. He says he&rsquo;s an AI and never sells on the
+          first call.
         </p>
       </CardContent>
     </Card>

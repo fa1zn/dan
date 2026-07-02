@@ -11,12 +11,12 @@ export const dynamic = "force-dynamic";
 const TEMP_ORDER: Record<MotionView["temperature"], number> = { hot: 0, warm: 1, cold: 2, stalled: 3 };
 
 function nextAction(m: MotionView): string {
-  if (m.state === "completed") return "Motion completed";
-  if (m.state === "exited") return `Exited — ${m.exitReason ?? "stopped"}`;
+  if (m.state === "completed") return "Done — no reply, cooling off";
+  if (m.state === "exited") return "Stopped";
   if (m.state === "paused") return "Paused";
   const step = m.steps[m.currentStep];
   if (!step) return "—";
-  const label = step.channel === "call" ? "Call" : step.channel === "sms" ? "Text" : "Edible";
+  const label = step.channel === "call" ? "Call" : step.channel === "sms" ? "Text" : "Treat";
   const when = m.nextRunAt ? new Date(m.nextRunAt).toLocaleDateString() : "now";
   return `Next: ${label.toLowerCase()} · ${when}`;
 }
@@ -50,24 +50,23 @@ export default function SequencesPage() {
           <Workflow className="h-6 w-6 text-brand" /> Prospect
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Pick a brand and area, and Pam works each dealer for you — a call first, follow-ups once they say yes. The ones
-          who respond rise to the top.
+          Pick a brand and area. Dan works each dealer for you: a call first, then follow-ups once they say yes.
         </p>
       </div>
 
       <SegmentLauncher oems={oems} states={states} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Metric label="In outreach" value={counts.total} />
+        <Metric label="Dan’s working" value={counts.total} />
         <Metric label="Hot" value={counts.hot} />
         <Metric label="Warm" value={counts.warm} />
-        <Metric label="Stalled" value={counts.stalled} />
+        <Metric label="Gone quiet" value={counts.stalled} />
       </div>
 
       {motions.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center text-sm text-muted-foreground">
-            No dealers in outreach yet. Pick a brand and area above and launch — Pam takes it from there.
+            No dealers in play yet. Pick a brand and area above and launch — Pam takes it from there.
           </CardContent>
         </Card>
       ) : (

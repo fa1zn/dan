@@ -136,6 +136,8 @@ export interface AccountRow {
   website_valid: number | null;
   phone_valid: number | null;
   brand_confirmed: number;
+  source: string;
+  updated_at: string;
   status: string;
   owner: string | null;
   hs_in_crm: number;
@@ -145,7 +147,7 @@ export interface AccountRow {
 
 const FROM = "FROM dealerships d LEFT JOIN account_crm c ON c.dealership_id = d.id";
 const SELECT_COLS = `d.id, d.name, d.oem, d.group_name, d.tier, d.city, d.state_province, d.country, d.territory,
-  d.website, d.domain, d.phone, d.website_valid, d.phone_valid, d.brand_confirmed,
+  d.website, d.domain, d.phone, d.website_valid, d.phone_valid, d.brand_confirmed, d.source, d.updated_at,
   d.hs_in_crm, d.hs_lifecycle_stage, d.hs_owner,
   COALESCE(c.status,'new') AS status, c.owner AS owner`;
 

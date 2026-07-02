@@ -24,3 +24,11 @@ next-env.d.ts
 *.pem
 .env*
 !.env.example
+
+# DB snapshots / backups (never commit large binaries)
+/data/*.sqlite
+/data/*.sqlite.bak
+/data/dealerships.backup.*
+/data/dealerships.pre-cleanup.*
+# local editor / launch config (machine-specific absolute paths)
+.claude/
