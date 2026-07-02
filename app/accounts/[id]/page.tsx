@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, MapPin, Phone, Globe, Mail, Layers, Sparkles, Target, Star, BadgeCheck, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "@/components/ui";
 import { CrmPanel, StatusBadge } from "@/components/crm-panel";
+import { LogTouch } from "@/components/log-touch";
 import { SequenceCard, TemperaturePill } from "@/components/sequence-card";
 import { getMotionForDealership } from "@/lib/sequence-ui";
 import { InfoTip } from "@/components/info-tip";
@@ -443,7 +444,8 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="space-y-4 lg:col-span-2">
+          <LogTouch id={accountId} />
           <CrmPanel
             id={accountId}
             status={crm.status}

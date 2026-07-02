@@ -17,5 +17,5 @@ export function isStatus(v: unknown): v is Status {
   return typeof v === "string" && (STATUSES as readonly string[]).includes(v);
 }
 
-export const ACTIVITY_KINDS = ["note", "status_change", "owner_change", "call", "email"] as const;
+export const ACTIVITY_KINDS = ["note", "status_change", "owner_change", "call", "text", "gift", "email", "sequence"] as const;
 export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
