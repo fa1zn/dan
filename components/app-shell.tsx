@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Building2, Plug, KeyRound, Inbox, Rocket, MapPin } from "lucide-react";
 import { NavLink, ThemeToggle, MobileNav } from "./chrome";
+import { DataViewToggle } from "./data-view-toggle";
 import { Toaster } from "./toast";
 import { repEnv } from "@/lib/connections";
 import { autopilotActive } from "@/lib/meta";
@@ -15,7 +16,7 @@ function StatusBar() {
     <div className="hidden items-center gap-3 text-xs md:flex">
       {manualCalls && (
         <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
-          calls: click-to-call
+          You tap to call
         </span>
       )}
       <span
@@ -26,7 +27,7 @@ function StatusBar() {
         }
       >
         <span className={live ? "h-1.5 w-1.5 rounded-full bg-brand" : "h-1.5 w-1.5 rounded-full bg-muted-foreground"} />
-        {live ? "Live" : "Dry run"}
+        {live ? "Calling for real" : "Practice mode"}
       </span>
       {testTo && (
         <span
@@ -38,7 +39,7 @@ function StatusBar() {
       )}
       <span className="inline-flex items-center gap-1.5 text-muted-foreground">
         <span className={autopilot ? "h-1.5 w-1.5 rounded-full bg-emerald-500" : "h-1.5 w-1.5 rounded-full bg-muted-foreground"} />
-        Autopilot {autopilot ? "on" : "off"}
+        {autopilot ? "Dan’s working" : "Dan’s paused"}
       </span>
     </div>
   );
@@ -95,6 +96,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="hidden lg:block" />
           <div className="flex items-center gap-4">
             <StatusBar />
+            <DataViewToggle />
             <ThemeToggle />
           </div>
         </header>

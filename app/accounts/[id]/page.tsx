@@ -4,7 +4,6 @@ import { ArrowLeft, ExternalLink, MapPin, Phone, Globe, Mail, Layers, Sparkles, 
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "@/components/ui";
 import { CrmPanel, StatusBadge } from "@/components/crm-panel";
 import { LogTouch } from "@/components/log-touch";
-import { DataViewToggle } from "@/components/data-view-toggle";
 import { SequenceCard, TemperaturePill } from "@/components/sequence-card";
 import { getMotionForDealership } from "@/lib/sequence-ui";
 import { InfoTip } from "@/components/info-tip";
@@ -206,12 +205,9 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
-      <div className="flex items-center justify-between gap-3">
-        <Link href="/accounts" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back to accounts
-        </Link>
-        <DataViewToggle />
-      </div>
+      <Link href="/accounts" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" /> Back to accounts
+      </Link>
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -284,7 +280,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
           {effectivePhone && (
             <a
               href={`tel:${effectivePhone.replace(/[^\d+]/g, "")}`}
-              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90 sm:w-auto"
+              className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90 sm:w-auto${phoneFromGoogle ? " enriched-only" : ""}`}
             >
               <Phone className="h-4 w-4" /> Call {effectivePhone}
               {phoneFromGoogle && <span className="text-xs font-normal opacity-80">· found on Google</span>}
