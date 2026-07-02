@@ -1,12 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui";
 
 /**
- * Wraps a value so hovering it reveals exactly where the value came from and when.
- * Trust comes from "here's the source" not "trust us". The caller passes only a source
- * it can actually defend (Google-live, on-file as-of a date, estimated), so the tooltip
- * never invents provenance.
+ * Wraps a value so it reveals exactly where the value came from and when. Trust comes
+ * from "here's the source" not "trust us". On desktop the source shows on hover; on
+ * touch (no hover) it shows on tap. If the value is also a link, the first tap reveals
+ * the source (navigation blocked) and a second tap follows the link. The caller passes
+ * only a source it can actually defend, so the tooltip never invents provenance.
  */
 export function Provenance({
   source,
@@ -21,10 +23,31 @@ export function Provenance({
   href?: string | null; // optional verify link
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
   return (
-    <Tooltip>
+    <Tooltip open={open} onOpenChange={setOpen}>
       <TooltipTrigger asChild>
-        <span className="cursor-help underline decoration-dotted decoration-muted-foreground/40 underline-offset-2">
+        <span
+          role="button"
+          tabIndex={0}
+          aria-label={`Source: ${source}`}
+          className="cursor-help underline decoration-dotted decoration-muted-foreground/40 underline-offset-2"
+          onClick={(e) => {
+            // Touch devices have no hover. First tap reveals the source (and blocks a
+            // link so the rep always sees provenance); a second tap follows the link.
+            if (!open) {
+              e.preventDefault();
+              e.stopPropagation();
+              setOpen(true);
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setOpen((o) => !o);
+            }
+          }}
+        >
           {children}
         </span>
       </TooltipTrigger>

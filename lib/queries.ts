@@ -83,27 +83,39 @@ export function getByTier(): Tally[] {
     .all() as Tally[];
 }
 
+export interface CountedOption {
+  value: string;
+  count: number;
+}
 export interface FilterOptions {
-  oems: string[];
-  countries: string[];
-  territories: string[];
-  states: string[];
-  tiers: string[];
+  oems: CountedOption[];
+  countries: CountedOption[];
+  territories: CountedOption[];
+  states: CountedOption[];
+  tiers: CountedOption[];
 }
 
 // Filter options are static per book (the pipeline writes; the app only reads), so compute
-// the four DISTINCT scans once per process instead of on every /accounts render.
+// them once per process. Each option carries its rooftop count, is sorted alphabetically,
+// and only appears when it has rooftops (GROUP BY ... HAVING COUNT(*) > 0) — so a dropdown
+// never offers a value that filters to nothing.
 let _filterOptions: FilterOptions | null = null;
 export function getFilterOptions(): FilterOptions {
   if (_filterOptions) return _filterOptions;
   const db = getSqlite();
-  const col = (sql: string) => (db.prepare(sql).all() as { v: string }[]).map((r) => r.v).filter(Boolean);
+  const counted = (col: string) =>
+    db
+      .prepare(
+        `SELECT ${col} AS value, COUNT(*) AS count FROM dealerships
+         WHERE ${col} IS NOT NULL AND ${col} <> '' GROUP BY ${col} HAVING COUNT(*) > 0 ORDER BY ${col} ASC`
+      )
+      .all() as CountedOption[];
   _filterOptions = {
-    oems: col("SELECT DISTINCT oem AS v FROM dealerships WHERE oem IS NOT NULL ORDER BY oem"),
-    countries: col("SELECT DISTINCT country AS v FROM dealerships WHERE country IS NOT NULL ORDER BY country"),
-    territories: col("SELECT DISTINCT territory AS v FROM dealerships WHERE territory IS NOT NULL ORDER BY territory"),
-    states: col("SELECT DISTINCT state_province AS v FROM dealerships WHERE state_province IS NOT NULL ORDER BY state_province"),
-    tiers: col("SELECT DISTINCT tier AS v FROM dealerships WHERE tier IS NOT NULL ORDER BY tier"),
+    oems: counted("oem"),
+    countries: counted("country"),
+    territories: counted("territory"),
+    states: counted("state_province"),
+    tiers: counted("tier"),
   };
   return _filterOptions;
 }

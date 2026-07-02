@@ -91,20 +91,35 @@ export function AccountFilters({ options }: { options: FilterOptions }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           {options.oems.map((o) => (
-            <DropdownMenuCheckboxItem key={o} checked={oems.includes(o)} onCheckedChange={() => toggleOem(o)}>
-              {o}
+            <DropdownMenuCheckboxItem key={o.value} checked={oems.includes(o.value)} onCheckedChange={() => toggleOem(o.value)}>
+              {o.value} <span className="ml-1 text-xs text-muted-foreground">({o.count.toLocaleString()})</span>
             </DropdownMenuCheckboxItem>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <FilterSelect label="Country" value={sp.get("country")} options={options.countries} onChange={(v) => setParams({ country: v })} />
-      <FilterSelect label="State" value={sp.get("state")} options={options.states} onChange={(v) => setParams({ state: v })} />
-      <FilterSelect label="Territory" value={sp.get("territory")} options={options.territories} onChange={(v) => setParams({ territory: v })} />
+      <FilterSelect
+        label="Country"
+        value={sp.get("country")}
+        options={options.countries.map((c) => ({ value: c.value, label: `${c.value} (${c.count.toLocaleString()})` }))}
+        onChange={(v) => setParams({ country: v })}
+      />
+      <FilterSelect
+        label="State"
+        value={sp.get("state")}
+        options={options.states.map((s) => ({ value: s.value, label: `${s.value} (${s.count.toLocaleString()})` }))}
+        onChange={(v) => setParams({ state: v })}
+      />
+      <FilterSelect
+        label="Territory"
+        value={sp.get("territory")}
+        options={options.territories.map((t) => ({ value: t.value, label: `${t.value} (${t.count.toLocaleString()})` }))}
+        onChange={(v) => setParams({ territory: v })}
+      />
       <FilterSelect
         label="Tier"
         value={sp.get("tier")}
-        options={options.tiers.map((t) => ({ value: t, label: `Tier ${t}` }))}
+        options={options.tiers.map((t) => ({ value: t.value, label: `Tier ${t.value} (${t.count.toLocaleString()})` }))}
         onChange={(v) => setParams({ tier: v })}
       />
       <FilterSelect
