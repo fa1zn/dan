@@ -7,6 +7,22 @@ const money = (n: number) => "$" + Math.round(n).toLocaleString();
 export function GoalCard({ g }: { g: GoalView }) {
   const pct = g.goal > 0 ? Math.min(100, (g.closed / g.goal) * 100) : 0;
 
+  // Nothing worked yet — don't parade a fabricated goal/pipeline. Say so plainly.
+  if (g.openDeals === 0 && g.booked === 0 && g.closed === 0) {
+    return (
+      <Card>
+        <CardContent className="p-5 sm:p-6">
+          <div className="flex items-center gap-1.5 text-sm font-medium">
+            <Target className="h-4 w-4 text-brand" /> Your month
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            No open deals yet. As you work your book, your pipeline and progress show up here.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardContent className="space-y-4 p-5 sm:p-6">
