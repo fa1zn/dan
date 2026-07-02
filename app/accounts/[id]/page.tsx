@@ -232,8 +232,20 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
             {a.hs_in_crm ? <Badge variant="success">In HubSpot</Badge> : null}
           </div>
           <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5" /> {addr || "Address unknown"}
+            <MapPin className="h-3.5 w-3.5" />
+            {addr ? (
+              <Provenance
+                source="OpenStreetMap / dealer record"
+                when={asOf(a.updated_at)}
+                detail={verified?.verifiedAddress ? `Google confirms: ${verified.verifiedAddress}` : undefined}
+              >
+                {addr}
+              </Provenance>
+            ) : (
+              "Address unknown"
+            )}
           </p>
+          <p className="mt-1 text-xs text-muted-foreground/70">Hover any underlined value to see its source.</p>
         </div>
         <div className="flex gap-2">
           {a.website && (
