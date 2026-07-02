@@ -10,7 +10,7 @@ export const EXPLAIN = {
   phoneValid:
     "Of rooftops that have a phone number, the share that pass libphonenumber validation as a real US/CA number.",
   brandConfirmed:
-    "TRUE only when the rooftop came from an official OEM dealer locator. OSM-sourced rooftops carry a brand tag but aren't OEM-confirmed, so this reads 0% until the OEM adapters run from a non-blocked network.",
+    "TRUE when the rooftop was confirmed against an official OEM dealer locator (not just an OpenStreetMap brand tag). Most of the book is OEM-confirmed; the rest carry a brand tag pending confirmation.",
   status:
     "Where the account sits in Dan's pipeline: New → Working → Engaged → Won/Lost. Set it on the rooftop page; changes are logged to the activity timeline.",
   tools:

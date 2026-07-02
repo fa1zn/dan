@@ -256,7 +256,10 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
             </Link>
           )}
           {effectivePhone && (
-            <a href={`tel:${effectivePhone.replace(/[^\d+]/g, "")}`}>
+            <a
+              href={`tel:${effectivePhone.replace(/[^\d+]/g, "")}`}
+              className={phoneFromGoogle ? "enriched-only" : undefined}
+            >
               <Button variant="brand" size="sm">
                 <Phone className="h-4 w-4" /> Call
               </Button>
@@ -266,7 +269,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
       </div>
 
       {verified?.businessStatus === "CLOSED_PERMANENTLY" && (
-        <div className="flex items-start gap-2 rounded-lg border border-red-500/40 bg-red-500/5 p-3 text-sm text-red-800 dark:text-red-300">
+        <div className="enriched-only flex items-start gap-2 rounded-lg border border-red-500/40 bg-red-500/5 p-3 text-sm text-red-800 dark:text-red-300">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
             Google lists this rooftop as <span className="font-semibold">permanently closed</span>. Confirm before
@@ -447,7 +450,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
             <Flag label="Phone" state={a.phone ? a.phone_valid === 1 : null} />
             <Flag label="Brand confirmed" state={a.brand_confirmed === 1} />
             {verified && (
-              <div className="flex items-center justify-between border-b py-2 last:border-0">
+              <div className="enriched-only flex items-center justify-between border-b py-2 last:border-0">
                 <span className="text-sm text-muted-foreground">Google listing</span>
                 <Badge variant={verified.businessStatus === "OPERATIONAL" ? "success" : "muted"}>
                   {verified.businessStatus === "OPERATIONAL" ? "Live · operating" : "Found"}
