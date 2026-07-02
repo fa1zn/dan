@@ -325,6 +325,25 @@ To give your friend a running start, here are directions that have surfaced and 
 
 Every one of these has a "how hard" and a "what it unlocks," and every one should be pressure-tested against the ethos (mobile, honest, sourced, non-gamified) and, where it changes the rep's flow, against real observation.
 
-## 22. The one-paragraph brief to hand back
+## 22. The reason line, in depth (the 80% problem)
+
+Because the single sentence that tells the rep what to do with an account is where most of the value lives, and because "make it signal-driven, never templated" is easy to say and hard to do, here is a deeper treatment your friend could push on directly.
+
+The failure mode is generic reasons: "engaged, 4 days since last touch." That is technically true and completely useless, because it describes the data model, not the account. It is the sound of a template. The rep reads it and learns nothing they could not have guessed, and worse, they learn that Dan is not actually paying attention, which quietly poisons trust in every other line. A good reason line should feel like a sharp colleague leaning over and telling you the one thing that matters about this store, in a sentence, in plain speech.
+
+To do that you have to draw from the real signals on the account and phrase each in the rep's voice. Some concrete patterns, as a starting palette (the point is not these exact strings, it is the shape):
+
+- **There was a reply, so quote it.** Not "engaged," but: *"texted back 'send me pricing' on Tuesday, never followed up, they're waiting on you."* The literal words the dealer used are the most valuable signal in the entire system, and they should almost always be surfaced verbatim when they exist.
+- **It's group-owned and a sibling store is warm.** *"Part of the Ken Garff group; their Chevy store two towns over is already talking to us, use that as your in."* Group ownership plus another store's state is a genuinely non-obvious insight that a rep would kill for and could never compute in their head across a whole territory.
+- **It's cold and you're physically near it.** *"Never touched, and you're four minutes away, worth a walk-in while you're here."* Proximity plus never-contacted is a specific, actionable combination that only makes sense in the field view.
+- **A prior touch stalled at a known point.** *"You met the GSM in March, he liked it but wanted numbers, you never sent them."* This turns the timeline into a nudge about the specific unfinished thing.
+- **A live signal changed.** *"Their Google rating dropped from 4.5 to 4.1 in the last month, phone handling is exactly the pain you sell against."* Real, checkable, and it hands the rep the opening argument.
+- **A hard stop.** If Google says the store is permanently closed, the line is not a line at all: the account simply does not appear in the field view, because sending a rep to a dead store is the worst thing the tool can do.
+
+The engineering underneath this is a ranked set of signal detectors, each of which, if it fires, produces both a priority contribution and a phrasing. The reason line shown is the highest-value detector that fired, rendered in its own words. The discipline is that if no meaningful detector fires, the honest line is something like "nothing specific yet, worth a first call to see what they're running," not a fabricated urgency. Blank-but-honest beats specific-but-invented.
+
+This is a rich place for prompts and product thinking: what is the full catalog of detectors, how do you rank them against each other (recency versus proximity versus group-warmth versus a live rating drop), how do you keep the phrasing from drifting back into template-speak as the catalog grows, and how do you make sure every line is something the rep could verify if they asked "why are you telling me this," which is the same provenance principle applied to intelligence rather than to data. If your friend wants one problem to obsess over, this is the one that most changes whether the field view is a toy or a tool.
+
+## 23. The one-paragraph brief to hand back
 
 If your friend wants the shortest possible version to hold in their head while brainstorming: Dan is a mobile-first tool for a non-technical car-dealership sales rep who lives in their car, selling an AI-answers-your-phone product (Pam) into 34,000 franchise dealerships. It is a clean, fully-sourced census of those dealerships, plus intelligence that says who to call and why, plus a compliance-first call-text-gift outreach motion the rep can run or automate, all built on the principle that every value shows its source and nothing is faked. It works today, the data and provenance are its moat, the rough edges are contact depth and dataset finishing, and the live design question is making the app land the rep in the right screen (map versus list) based on where they physically are, with a recommended-play line good enough to feel like Dan has been paying attention. The builder values honesty, observation before building, specificity, and craft, because the real audience is sophisticated and the goal is to be trusted. Prompt him toward the field view, contacts, the action loop, and productizing compliance and the dataset, and away from anything fake, generic, or desk-bound.
