@@ -44,10 +44,21 @@ function Inferred({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** A value pulled live from Google Places. Hover shows the source and that it's live. */
-function FromGoogle({ children }: { children: React.ReactNode }) {
+/** "checked live just now" is only honest for a fresh fetch; otherwise show the real date
+ *  Google was last called (the value is served from a 30-day cache). */
+function checkedWhen(iso: string | null | undefined): string {
+  if (!iso) return "from Google Places";
+  const d = new Date(iso.includes("T") ? iso : iso.replace(" ", "T") + "Z");
+  if (isNaN(d.getTime())) return "from Google Places";
+  const ageMin = (Date.now() - d.getTime()) / 60000;
+  if (ageMin < 2) return "checked live just now";
+  return "checked " + d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
+/** A value pulled from Google Places. Hover shows the source and when it was last checked. */
+function FromGoogle({ children, when = "from Google Places" }: { children: React.ReactNode; when?: string }) {
   return (
-    <Provenance source="Google Places" when="checked live just now">
+    <Provenance source="Google Places" when={when}>
       {children}
     </Provenance>
   );
@@ -69,7 +80,7 @@ function VerifiedStrip({ v }: { v: PlacesVerify }) {
       {v.rating != null && (
         <span className="inline-flex items-center gap-1 font-medium">
           <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-          <Provenance source="Google Places" when="checked live just now">
+          <Provenance source="Google Places" when={checkedWhen(v.fetchedAt)}>
             {v.rating}
             {v.reviewCount != null && (
               <span className="font-normal text-muted-foreground"> ({v.reviewCount.toLocaleString()} reviews)</span>
@@ -89,7 +100,7 @@ function VerifiedStrip({ v }: { v: PlacesVerify }) {
           </span>
         ))}
       {v.phone && (
-        <Provenance source="Google Places" when="checked live just now">
+        <Provenance source="Google Places" when={checkedWhen(v.fetchedAt)}>
           <a href={`tel:${v.phone.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
             <Phone className="h-3.5 w-3.5" /> {v.phone}
           </a>
@@ -429,7 +440,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                   </Provenance>
                 ) : verified?.website ? (
                   <span className="enriched-only">
-                    <FromGoogle>
+                    <FromGoogle when={checkedWhen(verified.fetchedAt)}>
                       <a href={verified.website} target="_blank" rel="noreferrer" className="text-primary hover:underline">
                         {hostOf(verified.website)}
                       </a>
@@ -442,7 +453,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                   <Provenance source="On file · OpenStreetMap / OEM record" when={asOf(a.updated_at)}>{a.phone}</Provenance>
                 ) : phoneFromGoogle && effectivePhone ? (
                   <span className="enriched-only">
-                    <FromGoogle>{effectivePhone}</FromGoogle>
+                    <FromGoogle when={verified ? checkedWhen(verified.fetchedAt) : undefined}>{effectivePhone}</FromGoogle>
                   </span>
                 ) : null}
               </Field>

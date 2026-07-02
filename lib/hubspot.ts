@@ -226,17 +226,48 @@ export async function syncHubspotForRep(repId = DEFAULT_REP_ID): Promise<Hubspot
     byDan.set(danId, list);
     contactsAttached++;
   }
+  // Contact-domain gate: a HubSpot contact is trustworthy for THIS rooftop only if its email
+  // matches the rooftop's own domain, or the canonical domain of a dealer group the rooftop
+  // belongs to. Blocks name-collision grafts (a Georgia group's people on an Ontario Toyota)
+  // and vendor/OEM emails from wearing a "verified" badge.
+  const groupPats = (
+    db.prepare("SELECT canonical_domain, name_pattern FROM dealer_groups").all() as { canonical_domain: string; name_pattern: string | null }[]
+  ).map((g) => ({ dom: g.canonical_domain, re: g.name_pattern ? new RegExp(g.name_pattern, "i") : null }));
+  const roofById = new Map(danRows.map((dr) => [dr.id, { domain: dr.domain, name: dr.name }]));
+  const dsld = (h?: string | null) => {
+    if (!h) return null;
+    const s = String(h).toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+    const p = s.split(".");
+    return p.length < 2 ? null : p.slice(-2).join(".");
+  };
   const getC = db.prepare("SELECT contacts FROM dealerships WHERE id=?");
   const setC = db.prepare("UPDATE dealerships SET contacts=@c, updated_at=CURRENT_TIMESTAMP WHERE id=@id");
   db.transaction(() => {
     for (const [danId, hsContacts] of byDan) {
+      const roof = roofById.get(danId);
+      const roofSld = dsld(roof?.domain);
+      const nm = (roof?.name ?? "").toLowerCase();
+      // Which group canonical domains does this rooftop belong to?
+      const member = new Set<string>();
+      for (const g of groupPats) {
+        const byName = g.re ? g.re.test(nm) : false;
+        const byMulti = hsContacts.filter((c) => c.email && dsld(c.email.split("@")[1]) === g.dom).length >= 2;
+        if (byName || byMulti) member.add(g.dom);
+      }
+      const gated = hsContacts.filter((c) => {
+        if (!c.email) return true;
+        const es = dsld(c.email.split("@")[1]);
+        if (es && roofSld && es === roofSld) return true; // exact store domain
+        if (es && member.has(es)) return true; // parent group's canonical domain
+        return false; // wrong-store / vendor / OEM
+      });
       let existing: Array<{ email?: string; name?: string; source?: string }> = [];
       try {
         existing = JSON.parse((getC.get(danId) as { contacts: string } | undefined)?.contacts ?? "[]");
       } catch {}
       const kept = existing.filter((c) => c.source !== "hubspot");
       const seen = new Set(kept.map((c) => (c.email ?? c.name ?? "").toLowerCase()));
-      for (const c of hsContacts) {
+      for (const c of gated) {
         const key = (c.email ?? c.name ?? "").toLowerCase();
         if (key && seen.has(key)) continue;
         seen.add(key);
