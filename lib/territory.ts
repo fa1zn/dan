@@ -79,7 +79,7 @@ export function areaView(city: string, state: string): AreaView {
       `SELECT d.id, d.name, d.oem, d.latitude AS lat, d.longitude AS lng, c.status,
               (c.status IS NOT NULL AND c.status <> 'new') AS crmActive
        FROM dealerships d LEFT JOIN account_crm c ON c.dealership_id = d.id
-       WHERE d.city = ? AND d.state_province = ?`
+       WHERE d.city = ? AND d.state_province = ? AND COALESCE(d.permanently_closed, 0) = 0`
     )
     .all(city, state) as Array<{
     id: number;

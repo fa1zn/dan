@@ -89,9 +89,11 @@ function VerifiedStrip({ v }: { v: PlacesVerify }) {
           </span>
         ))}
       {v.phone && (
-        <a href={`tel:${v.phone.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-          <Phone className="h-3.5 w-3.5" /> {v.phone}
-        </a>
+        <Provenance source="Google Places" when="checked live just now">
+          <a href={`tel:${v.phone.replace(/[^\d+]/g, "")}`} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+            <Phone className="h-3.5 w-3.5" /> {v.phone}
+          </a>
+        </Provenance>
       )}
       <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
         <BadgeCheck className="h-3 w-3 text-brand" /> Verified on Google
@@ -195,14 +197,19 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
   const lng = a.longitude ?? 0;
   const sources = a.source.split("+");
 
-  const whyCall =
-    crm.status === "engaged" || crm.status === "won"
-      ? "They responded. Your turn — give them a call."
-      : motion && motion.touches > 0
-        ? "Dan reached out. No reply yet, worth a personal call."
-        : pamAngles[0]
-          ? pamAngles[0]
-          : "Fresh lead — start with a call.";
+  const permClosed = verified?.businessStatus === "CLOSED_PERMANENTLY";
+  const tempClosed = verified?.businessStatus === "CLOSED_TEMPORARILY";
+  const whyCall = permClosed
+    ? "Google lists this rooftop as permanently closed. Confirm it still exists before spending any outreach on it."
+    : tempClosed
+      ? "Google lists this rooftop as temporarily closed. Confirm it is open before calling."
+      : crm.status === "engaged" || crm.status === "won"
+        ? "They responded. Your turn — give them a call."
+        : motion && motion.touches > 0
+          ? "Dan reached out. No reply yet, worth a personal call."
+          : pamAngles[0]
+            ? pamAngles[0]
+            : "Fresh lead — start with a call.";
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
@@ -213,7 +220,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <h1 className="line-clamp-2 max-w-2xl text-2xl font-semibold tracking-tight">
               <Provenance source={recordSourceSummary(a.source, a.brand_confirmed)} when={asOf(a.updated_at)}>
                 <span className="enriched-only">{a.name}</span>
                 <span className="raw-only">{(a as unknown as { name_original?: string }).name_original ?? a.name}</span>
@@ -227,7 +234,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                 variant={trustVariant as "success" | "default" | "muted" | "danger"}
                 title={`${confCount} independent source${confCount === 1 ? "" : "s"} confirmed this rooftop`}
               >
-                {trustTier} · {confCount} source{confCount === 1 ? "" : "s"}
+                {trustTier} · {confCount} confirmation{confCount === 1 ? "" : "s"}
               </Badge>
             ) : null}
             {a.hs_in_crm ? <Badge variant="success">In HubSpot</Badge> : null}
@@ -269,12 +276,12 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
-      {verified?.businessStatus === "CLOSED_PERMANENTLY" && (
-        <div className="enriched-only flex items-start gap-2 rounded-lg border border-red-500/40 bg-red-500/5 p-3 text-sm text-red-800 dark:text-red-300">
+      {(permClosed || tempClosed) && (
+        <div className="flex items-start gap-2 rounded-lg border border-red-500/40 bg-red-500/5 p-3 text-sm text-red-800 dark:text-red-300">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
-            Google lists this rooftop as <span className="font-semibold">permanently closed</span>. Confirm before
-            driving out or spending outreach on it.
+            Google lists this rooftop as <span className="font-semibold">{permClosed ? "permanently" : "temporarily"} closed</span>.
+            Confirm it {permClosed ? "still exists" : "is open"} before driving out or spending outreach on it.
           </span>
         </div>
       )}
@@ -296,10 +303,14 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
           {effectivePhone && (
             <a
               href={`tel:${effectivePhone.replace(/[^\d+]/g, "")}`}
-              className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90 sm:w-auto${phoneFromGoogle ? " enriched-only" : ""}`}
+              className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-opacity hover:opacity-90 sm:w-auto${phoneFromGoogle ? " enriched-only" : ""} ${
+                permClosed || tempClosed ? "border text-muted-foreground" : "bg-brand text-brand-foreground"
+              }`}
             >
-              <Phone className="h-4 w-4" /> Call {effectivePhone}
-              {phoneFromGoogle && <span className="text-xs font-normal opacity-80">· found on Google</span>}
+              <Phone className="h-4 w-4" /> {permClosed || tempClosed ? "Call to confirm" : "Call"} {effectivePhone}
+              {phoneFromGoogle && !(permClosed || tempClosed) && (
+                <span className="text-xs font-normal opacity-80">· found on Google</span>
+              )}
             </a>
           )}
         </div>
@@ -330,9 +341,20 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
             </div>
             {intel.champion ? (
               <div className="mt-1.5">
-                <div className="font-medium">{intel.champion.name}</div>
+                <div className="font-medium">
+                  {intel.champion.source ? (
+                    <Provenance
+                      source={contactSource(intel.champion.source, a.website).label}
+                      href={contactSource(intel.champion.source, a.website).href}
+                    >
+                      {intel.champion.name}
+                    </Provenance>
+                  ) : (
+                    intel.champion.name
+                  )}
+                </div>
                 <div className="text-sm text-muted-foreground">
-                  {intel.champion.title} · {intel.champion.reason}
+                  {intel.champion.title} · <Inferred>{intel.champion.reason}</Inferred>
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-3 text-sm">
                   {(intel.champion.phone ?? a.phone) && (
@@ -548,7 +570,8 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
           </Card>
         )}
         {a.hs_in_crm ? (
-          <Card className="border-emerald-500/40">
+          // Dan-added: matched from the rep's connected HubSpot, not raw source, so hide in Raw view.
+          <Card className="enriched-only border-emerald-500/40">
             <CardHeader>
               <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
                 <Badge variant="success">In HubSpot</Badge>
@@ -558,11 +581,15 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between gap-3">
                 <span className="text-muted-foreground">Lifecycle</span>
-                <span className="font-medium capitalize">{a.hs_lifecycle_stage ?? "—"}</span>
+                <Provenance source="Your HubSpot" when={asOf(a.hs_last_activity)}>
+                  <span className="font-medium capitalize">{a.hs_lifecycle_stage ?? "—"}</span>
+                </Provenance>
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-muted-foreground">Owner</span>
-                <span className="font-medium">{a.hs_owner ?? "Unassigned"}</span>
+                <Provenance source="Your HubSpot" when={asOf(a.hs_last_activity)}>
+                  <span className="font-medium">{a.hs_owner ?? "Unassigned"}</span>
+                </Provenance>
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-muted-foreground">Last activity</span>

@@ -91,16 +91,21 @@ export interface FilterOptions {
   tiers: string[];
 }
 
+// Filter options are static per book (the pipeline writes; the app only reads), so compute
+// the four DISTINCT scans once per process instead of on every /accounts render.
+let _filterOptions: FilterOptions | null = null;
 export function getFilterOptions(): FilterOptions {
+  if (_filterOptions) return _filterOptions;
   const db = getSqlite();
   const col = (sql: string) => (db.prepare(sql).all() as { v: string }[]).map((r) => r.v).filter(Boolean);
-  return {
+  _filterOptions = {
     oems: col("SELECT DISTINCT oem AS v FROM dealerships WHERE oem IS NOT NULL ORDER BY oem"),
     countries: col("SELECT DISTINCT country AS v FROM dealerships WHERE country IS NOT NULL ORDER BY country"),
     territories: col("SELECT DISTINCT territory AS v FROM dealerships WHERE territory IS NOT NULL ORDER BY territory"),
     states: col("SELECT DISTINCT state_province AS v FROM dealerships WHERE state_province IS NOT NULL ORDER BY state_province"),
     tiers: col("SELECT DISTINCT tier AS v FROM dealerships WHERE tier IS NOT NULL ORDER BY tier"),
   };
+  return _filterOptions;
 }
 
 export interface AccountFilters {

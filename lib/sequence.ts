@@ -180,7 +180,7 @@ export interface SegmentFilter {
 }
 
 function segmentWhere(f: SegmentFilter): { sql: string; params: unknown[] } {
-  const clauses = ["phone IS NOT NULL", "phone <> ''"];
+  const clauses = ["phone IS NOT NULL", "phone <> ''", "COALESCE(permanently_closed, 0) = 0"];
   const params: unknown[] = [];
   if (f.oem) {
     clauses.push("oem = ?");
