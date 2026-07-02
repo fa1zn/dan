@@ -8,33 +8,35 @@ import {
   CardHeader,
   CardTitle,
   Button,
-  Input,
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
 } from "@/components/ui";
+import { GeoCascade } from "@/components/geo-cascade";
+import type { GeoTree } from "@/lib/geo";
 import { previewSegmentAction, launchSegmentAction } from "@/app/sequences/actions";
 import { toast } from "@/components/toast";
 
 const ANY = "__any";
 
-export function SegmentLauncher({ oems, states }: { oems: string[]; states: string[] }) {
+export function SegmentLauncher({ oems, geo }: { oems: string[]; geo: GeoTree }) {
   const [oem, setOem] = useState("");
+  const [country, setCountry] = useState("");
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
   const [count, setCount] = useState<number | null>(null);
   const [pending, start] = useTransition();
 
   useEffect(() => {
-    if (!oem && !state && !city) {
+    if (!oem && !country && !state && !city) {
       setCount(null);
       return;
     }
-    const t = setTimeout(() => start(async () => setCount(await previewSegmentAction({ oem, state, city }))), 250);
+    const t = setTimeout(() => start(async () => setCount(await previewSegmentAction({ oem, country, state, city }))), 250);
     return () => clearTimeout(t);
-  }, [oem, state, city]);
+  }, [oem, country, state, city]);
 
   return (
     <Card>
@@ -50,7 +52,9 @@ export function SegmentLauncher({ oems, states }: { oems: string[]; states: stri
           className="flex flex-wrap items-end gap-4"
         >
           <input type="hidden" name="oem" value={oem} />
+          <input type="hidden" name="country" value={country} />
           <input type="hidden" name="state" value={state} />
+          <input type="hidden" name="city" value={city} />
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-muted-foreground">Brand</label>
@@ -69,33 +73,16 @@ export function SegmentLauncher({ oems, states }: { oems: string[]; states: stri
             </Select>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-muted-foreground">State / province</label>
-            <Select value={state || ANY} onValueChange={(v) => setState(v === ANY ? "" : v)}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ANY}>Any state</SelectItem>
-                {states.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-muted-foreground">City (optional)</label>
-            <Input
-              name="city"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="e.g. Marysville"
-              className="h-9 w-40"
-            />
-          </div>
+          <GeoCascade
+            tree={geo}
+            withLabels
+            value={{ country, state, city }}
+            onChange={(v) => {
+              setCountry(v.country);
+              setState(v.state);
+              setCity(v.city);
+            }}
+          />
 
           <Button type="submit" variant="brand" size="sm" disabled={count === 0}>
             <Rocket className="h-4 w-4" /> Launch{count != null ? ` ${Math.min(count, 100)}` : ""}

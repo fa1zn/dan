@@ -175,6 +175,7 @@ export function enroll(dealershipId: number, sequenceId: number, by = "Dan"): En
 
 export interface SegmentFilter {
   oem?: string;
+  country?: string;
   state?: string;
   city?: string;
 }
@@ -186,13 +187,19 @@ function segmentWhere(f: SegmentFilter): { sql: string; params: unknown[] } {
     clauses.push("oem = ?");
     params.push(f.oem);
   }
+  if (f.country) {
+    clauses.push("country = ?");
+    params.push(f.country);
+  }
   if (f.state) {
     clauses.push("state_province = ?");
     params.push(f.state);
   }
   if (f.city) {
-    clauses.push("city LIKE ?");
-    params.push(`%${f.city}%`);
+    // City now comes from the dependent picker, so it is an exact value, not a search box.
+    // NOCASE so it matches regardless of how the row was cased at ingest ("Akron"/"AKRON").
+    clauses.push("city = ? COLLATE NOCASE");
+    params.push(f.city);
   }
   return { sql: clauses.join(" AND "), params };
 }
@@ -202,19 +209,14 @@ export function countSegment(f: SegmentFilter): number {
   return (sdb().prepare(`SELECT COUNT(*) AS n FROM dealerships WHERE ${sql}`).get(...params) as { n: number }).n;
 }
 
-export function segmentOptions(): { oems: string[]; states: string[] } {
+export function segmentOptions(): { oems: string[] } {
   const db = sdb();
   const oems = (
     db
       .prepare("SELECT oem, COUNT(*) c FROM dealerships WHERE oem IS NOT NULL AND oem <> '' GROUP BY oem ORDER BY c DESC LIMIT 40")
       .all() as { oem: string }[]
   ).map((r) => r.oem);
-  const states = (
-    db
-      .prepare("SELECT DISTINCT state_province AS s FROM dealerships WHERE state_province IS NOT NULL AND state_province <> '' ORDER BY s")
-      .all() as { s: string }[]
-  ).map((r) => r.s);
-  return { oems, states };
+  return { oems };
 }
 
 /** Enroll every rooftop in a segment, paced (staggered next_run_at) and capped. */

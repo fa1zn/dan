@@ -3,6 +3,7 @@ import { Workflow, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui";
 import { listMotions, type MotionView } from "@/lib/sequence-ui";
 import { segmentOptions } from "@/lib/sequence";
+import { getGeoTree } from "@/lib/geo";
 import { MotionStepper, TemperaturePill } from "@/components/sequence-card";
 import { SegmentLauncher } from "@/components/segment-launcher";
 
@@ -31,7 +32,8 @@ function Metric({ label, value }: { label: string; value: number }) {
 }
 
 export default function SequencesPage() {
-  const { oems, states } = segmentOptions();
+  const { oems } = segmentOptions();
+  const geo = getGeoTree();
   const motions = listMotions().sort(
     (a, b) => TEMP_ORDER[a.temperature] - TEMP_ORDER[b.temperature] || a.dealershipName.localeCompare(b.dealershipName)
   );
@@ -54,7 +56,7 @@ export default function SequencesPage() {
         </p>
       </div>
 
-      <SegmentLauncher oems={oems} states={states} />
+      <SegmentLauncher oems={oems} geo={geo} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Metric label="Dan’s working" value={counts.total} />

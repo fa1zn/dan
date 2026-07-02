@@ -126,6 +126,7 @@ export interface AccountFilters {
   country?: string;
   territory?: string;
   state?: string;
+  city?: string;
   tier?: string;
   status?: string;
   hasWebsite?: boolean;
@@ -203,6 +204,10 @@ function whereClause(f: AccountFilters): { sql: string; params: unknown[] } {
   if (f.state) {
     clauses.push("d.state_province = ?");
     params.push(f.state.toUpperCase());
+  }
+  if (f.city) {
+    clauses.push("d.city = ? COLLATE NOCASE");
+    params.push(f.city);
   }
   if (f.tier) {
     clauses.push("d.tier = ?");

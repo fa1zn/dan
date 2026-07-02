@@ -9,6 +9,7 @@ import { InfoTip } from "@/components/info-tip";
 import { Provenance } from "@/components/provenance";
 import { recordSourceSummary, asOf } from "@/components/source-tag";
 import { listAccounts, getFilterOptions, type AccountFilters as Filters } from "@/lib/queries";
+import { getGeoTree } from "@/lib/geo";
 import { type Status } from "@/lib/crm-constants";
 import { EXPLAIN } from "@/lib/explain";
 import { fmt } from "@/lib/format";
@@ -25,6 +26,7 @@ function parseFilters(sp: SP): Filters {
     country: one(sp.country),
     territory: one(sp.territory),
     state: one(sp.state),
+    city: one(sp.city),
     tier: one(sp.tier),
     status: one(sp.status),
     hasWebsite: !!one(sp.hasWebsite),
@@ -46,6 +48,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
   const sp = await searchParams;
   const filters = parseFilters(sp);
   const options = getFilterOptions();
+  const geo = getGeoTree();
   const { rows, total, page, pageCount, pageSize } = listAccounts(filters);
 
   const qs = new URLSearchParams();
@@ -72,7 +75,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
         </Link>
       </div>
 
-      <AccountFilters options={options} />
+      <AccountFilters options={options} geo={geo} />
 
       <Card className="overflow-hidden">
         <Table>
