@@ -72,7 +72,7 @@ export function MotionStepper({ steps, labeled = false }: { steps: MotionStepVie
 }
 
 function nextActionText(m: MotionView): string {
-  if (m.state === "completed") return "Done — no reply yet";
+  if (m.state === "completed") return "Done, no reply yet";
   if (m.state === "exited") return "Stopped";
   if (m.state === "paused") return "Paused";
   const step = m.steps[m.currentStep];

@@ -215,12 +215,12 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
     : tempClosed
       ? "Google lists this rooftop as temporarily closed. Confirm it is open before calling."
       : crm.status === "engaged" || crm.status === "won"
-        ? "They responded. Your turn — give them a call."
+        ? "They responded. Your turn, give them a call."
         : motion && motion.touches > 0
           ? "Dan reached out. No reply yet, worth a personal call."
           : pamAngles[0]
             ? pamAngles[0]
-            : "Fresh lead — start with a call.";
+            : "Fresh lead, start with a call.";
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">

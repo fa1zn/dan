@@ -117,7 +117,7 @@ export interface HubspotSyncResult {
 export async function testHubspotToken(token: string): Promise<{ ok: boolean; message: string }> {
   if (!token) return { ok: false, message: "Paste your HubSpot private-app token first." };
   const r = await hsFetch(token, "/crm/v3/objects/companies?limit=1");
-  if (r.ok) return { ok: true, message: "Token valid — HubSpot connected." };
+  if (r.ok) return { ok: true, message: "Token valid. HubSpot connected." };
   if (r.status === 401) return { ok: false, message: "HubSpot rejected the token (check scopes: crm.objects.companies.read + contacts + owners)." };
   return { ok: false, message: `HubSpot error ${r.status}: ${r.error ?? "unknown"}` };
 }

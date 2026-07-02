@@ -52,21 +52,21 @@ export const DAN_SEQUENCE_STEPS: Step[] = [
     callMode: "inquiry",
     delay: { value: 0, unit: "minutes" },
     template:
-      "Hi, my name is Pam — I'm an AI assistant. I'm calling to ask whether {{name}} is currently hiring for sales or BDC roles, and if so, who's the best person to talk to.",
+      "Hi, my name is Pam, I'm an AI assistant. I'm calling to ask whether {{name}} is currently hiring for sales or BDC roles, and if so, who's the best person to talk to.",
   },
   {
     channel: "sms",
     requiresConsent: true,
     delay: { value: 1, unit: "days" },
     template:
-      "Hi {{contactFirst}}, this is Dan with Pam following up on our call — thanks for the OK to reach out. Worth a 10-min chat this week?",
+      "Hi {{contactFirst}}, this is Dan with Pam following up on our call. Thanks for the OK to reach out. Worth a 10-min chat this week?",
   },
   {
     channel: "gift",
     requiresConsent: true,
     delay: { value: 2, unit: "days" },
     giftKind: "doughnuts",
-    template: "Coffee & doughnuts on us for the {{name}} team — Dan @ Pam.",
+    template: "Coffee & doughnuts on us for the {{name}} team. Dan @ Pam.",
   },
 ];
 

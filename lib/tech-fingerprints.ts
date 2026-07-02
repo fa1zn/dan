@@ -122,7 +122,7 @@ export function pamAngles(dets: Detection[]): PamAngle[] {
   const ai = has("AI / BDC");
   if (ai.length) {
     angles.push({
-      angle: `They already run an AI/BDC tool (${names("AI / BDC").join(", ")}) — this is a head-to-head displacement. Lead with answer rate and booked appointments.`,
+      angle: `They already run an AI/BDC tool (${names("AI / BDC").join(", ")}). This is a head-to-head displacement, so lead with answer rate and booked appointments.`,
       because: ai.map((d) => d.vendor),
     });
   }
@@ -134,7 +134,7 @@ export function pamAngles(dets: Detection[]): PamAngle[] {
       because: chat.map((d) => d.vendor),
     });
   } else {
-    angles.push({ angle: "No chat/messaging detected — inbound likely falls to the front desk. Pam is the lead-capture upgrade, not a replacement.", because: [] });
+    angles.push({ angle: "No chat/messaging detected, so inbound likely falls to the front desk. Pam is the lead-capture upgrade, not a replacement.", because: [] });
   }
 
   const dr = has("Digital retail");
@@ -148,7 +148,7 @@ export function pamAngles(dets: Detection[]): PamAngle[] {
   const call = has("Call tracking");
   if (call.length) {
     angles.push({
-      angle: `They measure calls (${names("Call tracking").join(", ")}) — answer and qualification rate is already a KPI they own. Pam moves that number.`,
+      angle: `They measure calls (${names("Call tracking").join(", ")}), so answer and qualification rate is already a KPI they own. Pam moves that number.`,
       because: call.map((d) => d.vendor),
     });
   }

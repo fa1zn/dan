@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 const TEMP_ORDER: Record<MotionView["temperature"], number> = { hot: 0, warm: 1, cold: 2, stalled: 3 };
 
 function nextAction(m: MotionView): string {
-  if (m.state === "completed") return "Done — no reply, cooling off";
+  if (m.state === "completed") return "Done, no reply, cooling off";
   if (m.state === "exited") return "Stopped";
   if (m.state === "paused") return "Paused";
   const step = m.steps[m.currentStep];

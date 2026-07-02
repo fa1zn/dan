@@ -7,9 +7,9 @@ import { toast } from "@/components/toast";
 import type { ProviderStatus, ProviderSection } from "@/lib/connections";
 
 const SECTION_LABEL: Record<ProviderSection, string> = {
-  voice: "Voice — the call",
+  voice: "Voice (the call)",
   text: "Text",
-  edible: "Gifting — the treat",
+  edible: "Gifting (the treat)",
 };
 
 const SECTION_ORDER: ProviderSection[] = ["voice", "text", "edible"];

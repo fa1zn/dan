@@ -35,7 +35,7 @@ export const MOTION_PROVIDERS: ProviderDef[] = [
   {
     id: "vapi",
     name: "Vapi",
-    blurb: "Composable voice AI for the call — bring your own Vapi number and assistant.",
+    blurb: "Composable voice AI for the call. Bring your own Vapi number and assistant.",
     section: "voice",
     fields: [
       { name: "VAPI_API_KEY", label: "API key", secret: true, help: "In your Vapi dashboard → API Keys. Use the private (server) key." },
@@ -46,7 +46,7 @@ export const MOTION_PROVIDERS: ProviderDef[] = [
   {
     id: "bland",
     name: "Bland.ai",
-    blurb: "Turnkey conversational voice agent — Dan holds a real two-way call.",
+    blurb: "Turnkey conversational voice agent. Dan holds a real two-way call.",
     section: "voice",
     fields: [{ name: "BLAND_API_KEY", label: "API key", secret: true, help: "In your Bland dashboard → API Keys." }],
   },
@@ -57,7 +57,7 @@ export const MOTION_PROVIDERS: ProviderDef[] = [
     section: "text",
     fields: [
       { name: "TWILIO_ACCOUNT_SID", label: "Account SID", placeholder: "AC…", help: "Twilio Console home page → Account Info." },
-      { name: "TWILIO_AUTH_TOKEN", label: "Auth token", secret: true, help: "Right next to the SID — click to reveal it." },
+      { name: "TWILIO_AUTH_TOKEN", label: "Auth token", secret: true, help: "Right next to the SID, click to reveal it." },
       { name: "TWILIO_FROM", label: "From number", placeholder: "+1…", help: "Your Twilio phone number, like +1 415 555 0123." },
     ],
   },
@@ -177,7 +177,7 @@ export async function validateProvider(providerId: string, repId = DEFAULT_REP_I
   const env = repEnv(repId);
   if (providerId === "vapi") {
     if (!env.VAPI_API_KEY) return { ok: false, message: "No API key saved." };
-    if (!env.VAPI_PHONE_NUMBER_ID) return { ok: false, message: "API key saved — add a Phone number ID to place calls." };
+    if (!env.VAPI_PHONE_NUMBER_ID) return { ok: false, message: "API key saved. Add a Phone number ID to place calls." };
     try {
       const r = await fetch("https://api.vapi.ai/phone-number", { headers: { Authorization: `Bearer ${env.VAPI_API_KEY}` } });
       if (r.ok) return { ok: true, message: "Vapi key valid." };

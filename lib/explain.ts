@@ -14,11 +14,11 @@ export const EXPLAIN = {
   status:
     "Where the account sits in Dan's pipeline: New → Working → Engaged → Won/Lost. Set it on the rooftop page; changes are logged to the activity timeline.",
   tools:
-    "Technology detected on the dealer's own website — platform, chat/messaging, digital-retail, trade-in and tracking vendors. Useful competitive intel for what an AI sales agent would sit alongside or replace.",
+    "Technology detected on the dealer's own website: platform, chat/messaging, digital-retail, trade-in and tracking vendors. Useful competitive intel for what an AI sales agent would sit alongside or replace.",
   primaryContact:
     "The decision-maker to call first, scraped from the dealer's staff page and ranked by role (GM → owner → GSM → sales manager …).",
   inHubspot:
-    "Rooftops that matched a company in Pam's HubSpot (pulled read-only). For these, Dan shows the HubSpot lifecycle stage, owner, last activity, and the real CRM contacts — so reps don't re-prospect accounts already being worked.",
+    "Rooftops that matched a company in Pam's HubSpot (pulled read-only). For these, Dan shows the HubSpot lifecycle stage, owner, last activity, and the real CRM contacts, so reps don't re-prospect accounts already being worked.",
 } as const;
 
 export type ExplainKey = keyof typeof EXPLAIN;

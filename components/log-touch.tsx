@@ -9,8 +9,8 @@ type Channel = "call" | "text" | "gift";
 
 const TOUCHES: { channel: Channel; label: string; icon: typeof Phone; placeholder: string }[] = [
   { channel: "call", label: "Log call", icon: Phone, placeholder: "Are they hiring? Who should you talk to? e.g. GM is Jane Ruiz" },
-  { channel: "text", label: "Log text", icon: MessageSquare, placeholder: "What you texted — e.g. Followed up with Jane about the opening" },
-  { channel: "gift", label: "Log gift", icon: Gift, placeholder: "What you sent — e.g. Cake to Jane at the front desk" },
+  { channel: "text", label: "Log text", icon: MessageSquare, placeholder: "What you texted, e.g. Followed up with Jane about the opening" },
+  { channel: "gift", label: "Log gift", icon: Gift, placeholder: "What you sent, e.g. Cake to Jane at the front desk" },
 ];
 
 /** One-tap manual logging of the call → text → gift motion. Every touch lands on the

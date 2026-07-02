@@ -184,10 +184,10 @@ function firstSentence(s: string): string {
  */
 function whyNow(r: HotRow, daysSinceTouch: number | null): string {
   const outcome = r.lastOutcome ? firstSentence(cleanBody(r.lastOutcome) ?? r.lastOutcome) : null;
-  if (daysSinceTouch === null) return outcome ? `${outcome} — no follow-up logged yet` : "Engaged — no follow-up logged yet, reach out";
-  if (daysSinceTouch <= 0) return outcome ? `${outcome} — replied today, strike while it's warm` : "Replied today — strike while it's warm";
+  if (daysSinceTouch === null) return outcome ? `${outcome}. No follow-up logged yet` : "Engaged, no follow-up logged yet. Reach out";
+  if (daysSinceTouch <= 0) return outcome ? `${outcome}. Replied today, strike while it's warm` : "Replied today, strike while it's warm";
   const ago = `${daysSinceTouch}d since last touch`;
-  return outcome ? `${outcome} — ${ago}, follow up before it cools` : `Engaged, ${ago} — follow up before it cools`;
+  return outcome ? `${outcome}. ${ago}, follow up before it cools` : `Engaged, ${ago}, follow up before it cools`;
 }
 
 /**

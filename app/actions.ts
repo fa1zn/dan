@@ -40,7 +40,7 @@ export async function addNoteAction(id: number, body: string) {
  */
 export async function logTouchAction(id: number, channel: "call" | "text" | "gift", note: string) {
   const verb = channel === "call" ? "Called" : channel === "text" ? "Texted" : "Sent a gift";
-  const body = note.trim() ? `${verb} — ${note.trim()}` : verb;
+  const body = note.trim() ? `${verb}: ${note.trim()}` : verb;
   logActivity(id, channel, body, "You");
   if (getCrm(id).status === "new") setStatus(id, "working", "You");
   revalidate(id);
