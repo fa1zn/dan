@@ -6,7 +6,7 @@ export type Status = (typeof STATUSES)[number];
 export const STATUS_META: Record<Status, { label: string; badge: "muted" | "default" | "brand" | "success" | "danger" }> = {
   new: { label: "New", badge: "muted" },
   working: { label: "Working", badge: "default" },
-  engaged: { label: "Engaged", badge: "brand" },
+  engaged: { label: "Replied", badge: "brand" },
   won: { label: "Won", badge: "success" },
   lost: { label: "Lost", badge: "danger" },
 };

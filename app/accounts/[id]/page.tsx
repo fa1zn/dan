@@ -4,6 +4,7 @@ import { ArrowLeft, ExternalLink, MapPin, Phone, Globe, Mail, Layers, Sparkles, 
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "@/components/ui";
 import { CrmPanel, StatusBadge } from "@/components/crm-panel";
 import { LogTouch } from "@/components/log-touch";
+import { DataViewToggle } from "@/components/data-view-toggle";
 import { SequenceCard, TemperaturePill } from "@/components/sequence-card";
 import { getMotionForDealership } from "@/lib/sequence-ui";
 import { InfoTip } from "@/components/info-tip";
@@ -12,7 +13,8 @@ import { verifyRooftop, type PlacesVerify } from "@/lib/places";
 import { getCrm, getActivity } from "@/lib/crm";
 import { computeIntel } from "@/lib/intel";
 import { computePamFit } from "@/lib/pamfit";
-import { SourceTag, contactSource, osmLink, sourceLabel } from "@/components/source-tag";
+import { SourceTag, contactSource, osmLink, sourceLabel, recordSourceSummary, asOf } from "@/components/source-tag";
+import { Provenance } from "@/components/provenance";
 import { EXPLAIN } from "@/lib/explain";
 
 interface Contact {
@@ -34,21 +36,21 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-/** A value Dan computed/inferred (not fetched from a source) — labelled so. */
+/** A value Dan computed/inferred (not fetched from a source). Hover shows exactly that. */
 function Inferred({ children }: { children: React.ReactNode }) {
   return (
-    <span>
-      {children} <span className="text-xs text-muted-foreground">· inferred by Dan</span>
-    </span>
+    <Provenance source="Estimated by Dan" detail="Inferred from other fields, not fetched from a source.">
+      {children}
+    </Provenance>
   );
 }
 
-/** A value pulled live from Google Places — labelled so it never looks made up. */
+/** A value pulled live from Google Places. Hover shows the source and that it's live. */
 function FromGoogle({ children }: { children: React.ReactNode }) {
   return (
-    <span>
-      {children} <span className="text-xs text-muted-foreground">· Google</span>
-    </span>
+    <Provenance source="Google Places" when="checked live just now">
+      {children}
+    </Provenance>
   );
 }
 
@@ -68,10 +70,12 @@ function VerifiedStrip({ v }: { v: PlacesVerify }) {
       {v.rating != null && (
         <span className="inline-flex items-center gap-1 font-medium">
           <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-          {v.rating}
-          {v.reviewCount != null && (
-            <span className="font-normal text-muted-foreground">({v.reviewCount.toLocaleString()} reviews)</span>
-          )}
+          <Provenance source="Google Places" when="checked live just now">
+            {v.rating}
+            {v.reviewCount != null && (
+              <span className="font-normal text-muted-foreground"> ({v.reviewCount.toLocaleString()} reviews)</span>
+            )}
+          </Provenance>
         </span>
       )}
       {v.businessStatus &&
@@ -166,7 +170,6 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
     websiteValid: a.website_valid == null ? null : a.website_valid === 1,
     brandConfirmed: a.brand_confirmed === 1,
   });
-  const confVariant = intel.confidence.label === "High" ? "success" : intel.confidence.label === "Medium" ? "default" : "muted";
   const fit = computePamFit({
     contacts,
     tools,
@@ -196,21 +199,29 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
     crm.status === "engaged" || crm.status === "won"
       ? "They responded. Your turn — give them a call."
       : motion && motion.touches > 0
-        ? "Pam reached out. No reply yet — worth a personal call."
+        ? "Dan reached out. No reply yet, worth a personal call."
         : pamAngles[0]
           ? pamAngles[0]
           : "Fresh lead — start with a call.";
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
-      <Link href="/accounts" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Back to accounts
-      </Link>
+      <div className="flex items-center justify-between gap-3">
+        <Link href="/accounts" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4" /> Back to accounts
+        </Link>
+        <DataViewToggle />
+      </div>
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">{a.name}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              <Provenance source={recordSourceSummary(a.source, a.brand_confirmed)} when={asOf(a.updated_at)}>
+                <span className="enriched-only">{a.name}</span>
+                <span className="raw-only">{(a as unknown as { name_original?: string }).name_original ?? a.name}</span>
+              </Provenance>
+            </h1>
             <StatusBadge status={crm.status} />
             {a.tier === "A" ? <Badge variant="brand">Tier A</Badge> : a.tier ? <Badge variant="muted">Tier {a.tier}</Badge> : null}
             <InfoTip label="Tier">{EXPLAIN.tier}</InfoTip>
@@ -262,7 +273,11 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
             <div className="min-w-0">
               <div className="text-xs uppercase tracking-wide text-muted-foreground">Why call</div>
               <p className="mt-1 text-base">{whyCall}</p>
-              {verified && <VerifiedStrip v={verified} />}
+              {verified && (
+                <div className="enriched-only">
+                  <VerifiedStrip v={verified} />
+                </div>
+              )}
             </div>
             {motion?.temperature && <TemperaturePill temp={motion.temperature} />}
           </div>
@@ -288,16 +303,9 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle className="flex items-center gap-1.5 text-base font-semibold text-foreground">
-            <Sparkles className="h-4 w-4 text-brand" /> Sales intel
+            <Sparkles className="h-4 w-4 text-brand" /> Who to call &amp; why
           </CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge variant={fitVariant as "brand" | "secondary" | "outline"}>
-              Pam-fit {fit.band} · {fit.score}/100
-            </Badge>
-            <Badge variant={confVariant as "success" | "default" | "muted"}>
-              {intel.confidence.label} confidence
-            </Badge>
-          </div>
+          <Badge variant={fitVariant as "brand" | "secondary" | "outline"}>{fit.band} fit</Badge>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="rounded-md border border-brand/30 bg-brand/5 px-3 py-2 text-sm">
@@ -347,7 +355,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
               </ul>
             ) : (
               <div className="mt-1.5 text-sm text-muted-foreground">
-                No standout trigger scraped yet — enrich this rooftop for tech/hours/reviews signals.
+                Nothing jumping out yet — call and find out what they&rsquo;re working with.
               </div>
             )}
           </div>
@@ -363,7 +371,16 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-2 gap-x-8">
-              <Field label="OEM brand">{a.oem ? <Badge variant="muted">{a.oem}</Badge> : null}</Field>
+              <Field label="OEM brand">
+                {a.oem ? (
+                  <Provenance
+                    source={a.brand_confirmed === 1 ? `${a.oem} dealer locator` : "OpenStreetMap tag (unconfirmed)"}
+                    when={asOf(a.updated_at)}
+                  >
+                    <Badge variant="muted">{a.oem}</Badge>
+                  </Provenance>
+                ) : null}
+              </Field>
               <Field label="Dealer group">
                 {a.group_name ? <Inferred>{a.group_name}</Inferred> : null}
               </Field>
@@ -371,19 +388,29 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
               <Field label="Territory">{a.territory ? <Inferred>{a.territory}</Inferred> : null}</Field>
               <Field label="Website">
                 {a.website ? (
-                  <a href={a.website} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-                    {a.domain ?? a.website}
-                  </a>
-                ) : verified?.website ? (
-                  <FromGoogle>
-                    <a href={verified.website} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-                      {hostOf(verified.website)}
+                  <Provenance source="OpenStreetMap / dealer record" when={asOf(a.updated_at)}>
+                    <a href={a.website} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                      {a.domain ?? a.website}
                     </a>
-                  </FromGoogle>
+                  </Provenance>
+                ) : verified?.website ? (
+                  <span className="enriched-only">
+                    <FromGoogle>
+                      <a href={verified.website} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                        {hostOf(verified.website)}
+                      </a>
+                    </FromGoogle>
+                  </span>
                 ) : null}
               </Field>
               <Field label="Phone">
-                {a.phone ? a.phone : phoneFromGoogle && effectivePhone ? <FromGoogle>{effectivePhone}</FromGoogle> : null}
+                {a.phone ? (
+                  <Provenance source="On file · OpenStreetMap / OEM record" when={asOf(a.updated_at)}>{a.phone}</Provenance>
+                ) : phoneFromGoogle && effectivePhone ? (
+                  <span className="enriched-only">
+                    <FromGoogle>{effectivePhone}</FromGoogle>
+                  </span>
+                ) : null}
               </Field>
               <Field label="Email">
                 {a.email ? (
@@ -392,7 +419,13 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                   </a>
                 ) : null}
               </Field>
-              <Field label="Coordinates">{hasGeo ? `${lat.toFixed(5)}, ${lng.toFixed(5)}` : null}</Field>
+              <Field label="Coordinates">
+                {hasGeo ? (
+                  <Provenance source="OpenStreetMap" when={asOf(a.updated_at)}>
+                    {`${lat.toFixed(5)}, ${lng.toFixed(5)}`}
+                  </Provenance>
+                ) : null}
+              </Field>
             </dl>
           </CardContent>
         </Card>
@@ -471,13 +504,18 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
               ))}
               {techSignals.length > 0 && (
                 <div className="border-t pt-3">
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground">Detected · with evidence</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground">Spotted on their site</div>
                   <ul className="mt-1.5 space-y-1.5 text-sm">
                     {techSignals.map((d, i) => (
                       <li key={i} className="flex flex-wrap items-baseline gap-x-2">
-                        <span className="font-medium">{d.vendor}</span>
+                        <Provenance
+                          source="Dealer website"
+                          when={asOf(a.updated_at)}
+                          detail={`Matched on their site: "${d.evidence}"`}
+                        >
+                          <span className="font-medium">{d.vendor}</span>
+                        </Provenance>
                         <span className="text-xs text-muted-foreground">{d.category}</span>
-                        <code className="text-xs text-muted-foreground">&ldquo;{d.evidence}&rdquo;</code>
                       </li>
                     ))}
                   </ul>
@@ -519,8 +557,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
           <CardContent>
             {contacts.length === 0 ? (
               <div className="rounded-md border border-dashed p-5 text-center text-sm text-muted-foreground">
-                No enriched contacts yet. Run <code className="text-foreground">npm run pipeline:enrich</code> to pull
-                contacts from dealer websites.
+                No names yet — call the main line and ask who runs the sales floor.
               </div>
             ) : (
               <ul className="space-y-3">
@@ -583,8 +620,13 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
                 <div className="flex justify-between gap-3">
                   <span className="text-muted-foreground">Rating</span>
                   <span className="font-medium">
-                    ★ {signals.rating}
-                    {signals.reviewCount ? <span className="text-muted-foreground"> ({signals.reviewCount} reviews)</span> : null}
+                    ★{" "}
+                    <Provenance source="Dealer website (schema.org)" when={asOf(a.updated_at)}>
+                      {signals.rating}
+                      {signals.reviewCount ? (
+                        <span className="text-muted-foreground"> ({signals.reviewCount} reviews)</span>
+                      ) : null}
+                    </Provenance>
                   </span>
                 </div>
               ) : null}

@@ -80,8 +80,8 @@ export function LogTouch({ id }: { id: number }) {
         </div>
       )}
       <p className="mt-2.5 text-xs text-muted-foreground">
-        Logs to this dealer&rsquo;s timeline. Pam&rsquo;s automated touches land here too — one history, whether you run it
-        or she does.
+        Logs to this dealer&rsquo;s timeline. Dan&rsquo;s automated touches land here too, one history, whether you run it
+        or he does.
       </p>
     </div>
   );
