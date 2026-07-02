@@ -100,9 +100,10 @@ function VerifiedStrip({ v }: { v: PlacesVerify }) {
   );
 }
 
-function Flag({ label, state }: { label: string; state: boolean | null }) {
+function Flag({ label, state, okText = "Verified" }: { label: string; state: boolean | null; okText?: string }) {
+  // null = not yet verified (neutral, never alarming); true = verified; false = affirmatively wrong.
   const v = state == null ? "muted" : state ? "success" : "danger";
-  const text = state == null ? "Unknown" : state ? "Valid" : "Invalid";
+  const text = state == null ? "Not yet verified" : state ? okText : "Invalid";
   return (
     <div className="flex items-center justify-between border-b py-2 last:border-0">
       <span className="text-sm text-muted-foreground">{label}</span>
@@ -446,9 +447,20 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
             <CardTitle className="text-base font-semibold text-foreground">Validation</CardTitle>
           </CardHeader>
           <CardContent>
-            <Flag label="Website" state={a.website ? (a.website_valid == null ? null : a.website_valid === 1) : null} />
-            <Flag label="Phone" state={a.phone ? a.phone_valid === 1 : null} />
-            <Flag label="Brand confirmed" state={a.brand_confirmed === 1} />
+            <Flag
+              label="Website"
+              okText={!a.website && verified?.website ? "Verified via Google" : "Verified"}
+              state={
+                a.website ? (a.website_valid == null ? null : a.website_valid === 1) : verified?.website ? true : null
+              }
+            />
+            <Flag
+              label="Phone"
+              okText={!a.phone && verified?.phone ? "Verified via Google" : "Verified"}
+              state={a.phone ? (a.phone_valid === 1 ? true : a.phone_valid === 0 ? false : null) : verified?.phone ? true : null}
+            />
+            {/* Brand is confirmed or simply not-yet-confirmed — never a red "Invalid" on a branded store. */}
+            <Flag label="Brand confirmed" okText="Confirmed" state={a.brand_confirmed === 1 ? true : null} />
             {verified && (
               <div className="enriched-only flex items-center justify-between border-b py-2 last:border-0">
                 <span className="text-sm text-muted-foreground">Google listing</span>

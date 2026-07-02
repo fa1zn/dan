@@ -9,7 +9,7 @@ import type { ProviderStatus, ProviderSection } from "@/lib/connections";
 const SECTION_LABEL: Record<ProviderSection, string> = {
   voice: "Voice — the call",
   text: "Text",
-  edible: "Edible",
+  edible: "Gifting — the treat",
 };
 
 const SECTION_ORDER: ProviderSection[] = ["voice", "text", "edible"];

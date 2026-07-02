@@ -36,9 +36,9 @@ export interface Intel {
 
 // Pam's champion owns call handling & lead response, then the economic buyer, then sales.
 const ROLE_RANK: { kind: ChampionKind; re: RegExp; reason: string }[] = [
-  { kind: "comms", re: /\b(bdc|internet|e-?commerce|digital|marketing)\b/i, reason: "owns call handling & lead response" },
-  { kind: "economic", re: /\b(dealer principal|general manager|owner|president|managing partner)\b/i, reason: "economic buyer" },
-  { kind: "sales", re: /\b(general sales manager|sales manager|director of sales)\b/i, reason: "sales decision-maker" },
+  { kind: "comms", re: /\b(bdc|internet|e-?commerce|digital|marketing)\b/i, reason: "likely owns lead response (BDC/internet role)" },
+  { kind: "economic", re: /\b(dealer principal|general manager|owner|president|managing partner)\b/i, reason: "likely the economic buyer" },
+  { kind: "sales", re: /\b(general sales manager|sales manager|director of sales)\b/i, reason: "likely a sales decision-maker" },
 ];
 
 const CHAT_VENDORS = ["Podium", "Gubagoo", "ActivEngage", "CarNow", "LivePerson", "Intercom", "Drift"];
