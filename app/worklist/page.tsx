@@ -81,7 +81,7 @@ export default async function WorklistPage({ searchParams }: { searchParams: Pro
                       )}
                     </div>
                   ) : (
-                    <div className="mt-2 text-sm text-muted-foreground">No named contact yet — call the main line.</div>
+                    <div className="mt-2 text-sm text-muted-foreground">No named contact yet, call the main line.</div>
                   )}
 
                   <div className="mt-2 rounded-md bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground">

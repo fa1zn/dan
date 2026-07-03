@@ -83,24 +83,41 @@ export function getByTier(): Tally[] {
     .all() as Tally[];
 }
 
+export interface CountedOption {
+  value: string;
+  count: number;
+}
 export interface FilterOptions {
-  oems: string[];
-  countries: string[];
-  territories: string[];
-  states: string[];
-  tiers: string[];
+  oems: CountedOption[];
+  countries: CountedOption[];
+  territories: CountedOption[];
+  states: CountedOption[];
+  tiers: CountedOption[];
 }
 
+// Filter options are static per book (the pipeline writes; the app only reads), so compute
+// them once per process. Each option carries its rooftop count, is sorted alphabetically,
+// and only appears when it has rooftops (GROUP BY ... HAVING COUNT(*) > 0) — so a dropdown
+// never offers a value that filters to nothing.
+let _filterOptions: FilterOptions | null = null;
 export function getFilterOptions(): FilterOptions {
+  if (_filterOptions) return _filterOptions;
   const db = getSqlite();
-  const col = (sql: string) => (db.prepare(sql).all() as { v: string }[]).map((r) => r.v).filter(Boolean);
-  return {
-    oems: col("SELECT DISTINCT oem AS v FROM dealerships WHERE oem IS NOT NULL ORDER BY oem"),
-    countries: col("SELECT DISTINCT country AS v FROM dealerships WHERE country IS NOT NULL ORDER BY country"),
-    territories: col("SELECT DISTINCT territory AS v FROM dealerships WHERE territory IS NOT NULL ORDER BY territory"),
-    states: col("SELECT DISTINCT state_province AS v FROM dealerships WHERE state_province IS NOT NULL ORDER BY state_province"),
-    tiers: col("SELECT DISTINCT tier AS v FROM dealerships WHERE tier IS NOT NULL ORDER BY tier"),
+  const counted = (col: string) =>
+    db
+      .prepare(
+        `SELECT ${col} AS value, COUNT(*) AS count FROM dealerships
+         WHERE ${col} IS NOT NULL AND ${col} <> '' GROUP BY ${col} HAVING COUNT(*) > 0 ORDER BY ${col} ASC`
+      )
+      .all() as CountedOption[];
+  _filterOptions = {
+    oems: counted("oem"),
+    countries: counted("country"),
+    territories: counted("territory"),
+    states: counted("state_province"),
+    tiers: counted("tier"),
   };
+  return _filterOptions;
 }
 
 export interface AccountFilters {
@@ -109,6 +126,7 @@ export interface AccountFilters {
   country?: string;
   territory?: string;
   state?: string;
+  city?: string;
   tier?: string;
   status?: string;
   hasWebsite?: boolean;
@@ -136,6 +154,8 @@ export interface AccountRow {
   website_valid: number | null;
   phone_valid: number | null;
   brand_confirmed: number;
+  source: string;
+  updated_at: string;
   status: string;
   owner: string | null;
   hs_in_crm: number;
@@ -145,7 +165,7 @@ export interface AccountRow {
 
 const FROM = "FROM dealerships d LEFT JOIN account_crm c ON c.dealership_id = d.id";
 const SELECT_COLS = `d.id, d.name, d.oem, d.group_name, d.tier, d.city, d.state_province, d.country, d.territory,
-  d.website, d.domain, d.phone, d.website_valid, d.phone_valid, d.brand_confirmed,
+  d.website, d.domain, d.phone, d.website_valid, d.phone_valid, d.brand_confirmed, d.source, d.updated_at,
   d.hs_in_crm, d.hs_lifecycle_stage, d.hs_owner,
   COALESCE(c.status,'new') AS status, c.owner AS owner`;
 
@@ -184,6 +204,10 @@ function whereClause(f: AccountFilters): { sql: string; params: unknown[] } {
   if (f.state) {
     clauses.push("d.state_province = ?");
     params.push(f.state.toUpperCase());
+  }
+  if (f.city) {
+    clauses.push("d.city = ? COLLATE NOCASE");
+    params.push(f.city);
   }
   if (f.tier) {
     clauses.push("d.tier = ?");

@@ -1,0 +1,168 @@
+<title>Ride-along field sheet</title>
+<style>
+  :root{
+    --ink:#241f1a; --soft:#6c6459; --faint:#9a9184; --clay:#b0522f;
+    --paper:#faf8f3; --rule:#dcd6c9; --rule-soft:#e7e1d5;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:"Helvetica Neue",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  .screen{background:#e9e5dc;padding:28px 16px;font-family:var(--sans);color:var(--ink);}
+  /* the page — US Letter, prints to exactly one sheet */
+  .sheet{
+    width:8.5in;min-height:11in;margin:0 auto;background:var(--paper);
+    padding:0.55in 0.55in 0.5in;display:flex;flex-direction:column;
+    box-shadow:0 2px 22px rgba(0,0,0,.14);
+  }
+
+  /* Header */
+  .head{border-bottom:2px solid var(--ink);padding-bottom:9px;}
+  .kicker{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--clay);font-weight:700;}
+  .h-row{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-top:5px;}
+  .title{font-family:var(--serif);font-size:27px;font-weight:600;letter-spacing:-.01em;line-height:1;}
+  .fields{font-size:10px;color:var(--soft);text-align:right;line-height:1.9;white-space:nowrap;}
+  .fields u{display:inline-block;min-width:74px;border-bottom:1px solid var(--rule);
+    text-decoration:none;margin-left:4px;}
+  .ethos{font-size:10px;color:var(--soft);margin-top:7px;line-height:1.45;font-style:italic;}
+  .ethos b{color:var(--ink);font-style:normal;font-weight:600;}
+
+  /* Column headers */
+  .colhead{display:grid;grid-template-columns:0.62in 1fr 2.15in;gap:0;margin-top:12px;
+    font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:700;}
+  .colhead .c-obs{padding-left:8px;}
+  .colhead .c-pred{padding-left:10px;border-left:1px solid var(--rule);}
+
+  /* Six rows fill the middle */
+  .rows{flex:1;display:flex;flex-direction:column;}
+  .row{flex:1;display:grid;grid-template-columns:0.62in 1fr 2.15in;
+    border-top:1px solid var(--rule);}
+  .row:first-child{border-top:1.5px solid var(--ink);}
+
+  /* Time margin */
+  .time{padding:8px 6px 0 0;border-right:1px solid var(--rule-soft);}
+  .time .tlab{font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);font-weight:700;}
+  .time .tslot{font-size:12px;color:var(--faint);margin-top:5px;letter-spacing:.04em;}
+
+  /* Question + observation write space */
+  .q{padding:8px 8px 6px 10px;display:flex;flex-direction:column;}
+  .q .num{font-family:var(--serif);font-size:13px;font-weight:700;color:var(--clay);float:left;
+    margin-right:7px;line-height:1.1;}
+  .q .prompt{font-size:12.5px;font-weight:650;line-height:1.2;}
+  .q .hint{font-size:9.5px;color:var(--soft);margin-top:2px;line-height:1.35;}
+  .q .obs{flex:1;margin-top:7px;background-image:repeating-linear-gradient(
+      to bottom,transparent,transparent 21px,var(--rule-soft) 21px,var(--rule-soft) 22px);
+    min-height:0.5in;}
+
+  /* Prediction column — small type, to pre-fill */
+  .pred{padding:8px 4px 6px 10px;border-left:1px solid var(--rule);display:flex;flex-direction:column;}
+  .pred .plab{font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:700;}
+  .pred .pspace{flex:1;margin-top:6px;background-image:repeating-linear-gradient(
+      to bottom,transparent,transparent 18px,var(--rule-soft) 18px,var(--rule-soft) 19px);}
+
+  /* Bottom third — freeform */
+  .free{margin-top:12px;border-top:2px solid var(--ink);padding-top:8px;height:2.5in;
+    display:flex;flex-direction:column;}
+  .free .flab{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);font-weight:700;}
+  .free .fsub{font-size:9.5px;color:var(--soft);margin-top:1px;font-style:italic;}
+  .free .fspace{flex:1;margin-top:8px;background-image:repeating-linear-gradient(
+      to bottom,transparent,transparent 23px,var(--rule-soft) 23px,var(--rule-soft) 24px);}
+
+  .foot{margin-top:8px;padding-top:6px;border-top:1px solid var(--rule);
+    display:flex;justify-content:space-between;font-size:8.5px;color:var(--faint);letter-spacing:.03em;}
+
+  /* Print: one clean sheet, no chrome */
+  @page{size:letter;margin:0;}
+  @media print{
+    .screen{background:#fff;padding:0;}
+    .sheet{box-shadow:none;background:#fff;width:auto;min-height:auto;height:100vh;
+      padding:0.5in;}
+    :root{--paper:#fff;}
+  }
+</style>
+
+<div class="screen">
+  <div class="sheet">
+
+    <header class="head">
+      <div class="kicker">Dan &middot; observation before build</div>
+      <div class="h-row">
+        <div class="title">Ride-along field sheet</div>
+        <div class="fields">
+          Rep <u></u><br>Date <u></u> &nbsp; Bars of LTE <u></u>
+        </div>
+      </div>
+      <p class="ethos">Watch the rep, not the phone. Write what <b>happened</b>, not what should. Predictions are pre-written on the right &mdash; <b>the gap between prediction and observation is the measurement.</b> Timestamp every line: the gaps between <b>opens app &rarr; taps call &rarr; walks in</b> are the real user model.</p>
+    </header>
+
+    <div class="colhead">
+      <div></div>
+      <div class="c-obs">Observed</div>
+      <div class="c-pred">Predicted (fill before)</div>
+    </div>
+
+    <div class="rows">
+
+      <div class="row">
+        <div class="time"><div class="tlab">Time</div><div class="tslot">__:__</div></div>
+        <div class="q"><div class="prompt"><span class="num">1</span>When &amp; where does he open Dan?</div>
+          <div class="hint">before he leaves &middot; in the lot &middot; after the visit &middot; or not at all</div>
+          <div class="obs"></div></div>
+        <div class="pred"><div class="plab">Prediction</div><div class="pspace"></div></div>
+      </div>
+
+      <div class="row">
+        <div class="time"><div class="tlab">Time</div><div class="tslot">__:__</div></div>
+        <div class="q"><div class="prompt"><span class="num">2</span>First look &mdash; map or list?</div>
+          <div class="hint">and does he trust &ldquo;who&rsquo;s near me,&rdquo; or override it from memory?</div>
+          <div class="obs"></div></div>
+        <div class="pred"><div class="plab">Prediction</div><div class="pspace"></div></div>
+      </div>
+
+      <div class="row">
+        <div class="time"><div class="tlab">Time</div><div class="tslot">__:__</div></div>
+        <div class="q"><div class="prompt"><span class="num">3</span>In his words &mdash; who&rsquo;s he seeing, and why?</div>
+          <div class="hint">write the sentence verbatim. this is the reason line.</div>
+          <div class="obs"></div></div>
+        <div class="pred"><div class="plab">Prediction</div><div class="pspace"></div></div>
+      </div>
+
+      <div class="row">
+        <div class="time"><div class="tlab">Time</div><div class="tslot">__:__</div></div>
+        <div class="q"><div class="prompt"><span class="num">4</span>How many stops does he actually make here?</div>
+          <div class="hint">the number he acts on &mdash; not the number a screen shows</div>
+          <div class="obs"></div></div>
+        <div class="pred"><div class="plab">Prediction</div><div class="pspace"></div></div>
+      </div>
+
+      <div class="row">
+        <div class="time"><div class="tlab">Time</div><div class="tslot">__:__</div></div>
+        <div class="q"><div class="prompt"><span class="num">5</span>Did it load? Did he wait?</div>
+          <div class="hint">seconds to usable &middot; or did he give up and go without it?</div>
+          <div class="obs"></div></div>
+        <div class="pred"><div class="plab">Prediction</div><div class="pspace"></div></div>
+      </div>
+
+      <div class="row">
+        <div class="time"><div class="tlab">Time</div><div class="tslot">__:__</div></div>
+        <div class="q"><div class="prompt"><span class="num">6</span>What does he do instead of Dan?</div>
+          <div class="hint">the real competition &mdash; memory, a text, a paper list, a gut call, nothing</div>
+          <div class="obs"></div></div>
+        <div class="pred"><div class="plab">Prediction</div><div class="pspace"></div></div>
+      </div>
+
+    </div>
+
+    <section class="free">
+      <div class="flab">What I didn&rsquo;t expect</div>
+      <div class="fsub">the thing no question asked for. this is usually where the real insight is.</div>
+      <div class="fspace"></div>
+    </section>
+
+    <footer class="foot">
+      <span>One page. Glance, don&rsquo;t read.</span>
+      <span>Six questions &mdash; no more.</span>
+      <span>Build the PR from what&rsquo;s written here, not from the plan.</span>
+    </footer>
+
+  </div>
+</div>

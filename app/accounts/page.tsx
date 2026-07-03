@@ -4,8 +4,12 @@ import { Card, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Ba
 import { AccountFilters } from "@/components/account-filters";
 import { SortHeader, Pager } from "@/components/account-table-bits";
 import { StatusBadge } from "@/components/crm-panel";
+import { BookTabs } from "@/components/book-tabs";
 import { InfoTip } from "@/components/info-tip";
+import { Provenance } from "@/components/provenance";
+import { recordSourceSummary, asOf } from "@/components/source-tag";
 import { listAccounts, getFilterOptions, type AccountFilters as Filters } from "@/lib/queries";
+import { getGeoTree } from "@/lib/geo";
 import { type Status } from "@/lib/crm-constants";
 import { EXPLAIN } from "@/lib/explain";
 import { fmt } from "@/lib/format";
@@ -22,6 +26,7 @@ function parseFilters(sp: SP): Filters {
     country: one(sp.country),
     territory: one(sp.territory),
     state: one(sp.state),
+    city: one(sp.city),
     tier: one(sp.tier),
     status: one(sp.status),
     hasWebsite: !!one(sp.hasWebsite),
@@ -43,6 +48,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
   const sp = await searchParams;
   const filters = parseFilters(sp);
   const options = getFilterOptions();
+  const geo = getGeoTree();
   const { rows, total, page, pageCount, pageSize } = listAccounts(filters);
 
   const qs = new URLSearchParams();
@@ -56,8 +62,11 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
     <div className="mx-auto max-w-7xl space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Accounts</h1>
-          <p className="text-sm text-muted-foreground">{fmt(total)} matching rooftops</p>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight">Book</h1>
+            <BookTabs current="list" />
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">{fmt(total)} dealers in your territory</p>
         </div>
         <Link href={exportHref}>
           <Button variant="outline" size="sm">
@@ -66,7 +75,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
         </Link>
       </div>
 
-      <AccountFilters options={options} />
+      <AccountFilters options={options} geo={geo} />
 
       <Card className="overflow-hidden">
         <Table>
@@ -105,13 +114,26 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
             {rows.map((r) => (
               <TableRow key={r.id}>
                 <TableCell>
-                  <Link href={`/accounts/${r.id}`} className="font-medium text-foreground hover:text-primary">
-                    {r.name}
-                  </Link>
+                  <Provenance source={recordSourceSummary(r.source, r.brand_confirmed)} when={asOf(r.updated_at)}>
+                    <Link href={`/accounts/${r.id}`} className="font-medium text-foreground hover:text-primary">
+                      {r.name}
+                    </Link>
+                  </Provenance>
                   {r.group_name && <div className="text-xs text-muted-foreground">{r.group_name}</div>}
                 </TableCell>
                 <TableCell><StatusBadge status={(r.status as Status) ?? "new"} /></TableCell>
-                <TableCell>{r.oem ? <Badge variant="muted">{r.oem}</Badge> : <span className="text-muted-foreground">—</span>}</TableCell>
+                <TableCell>
+                  {r.oem ? (
+                    <Provenance
+                      source={r.brand_confirmed === 1 ? `${r.oem} dealer locator` : "OpenStreetMap tag (unconfirmed)"}
+                      when={asOf(r.updated_at)}
+                    >
+                      <Badge variant="muted">{r.oem}</Badge>
+                    </Provenance>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
                 <TableCell>
                   {r.tier === "A" ? (
                     <Badge variant="brand">Tier A</Badge>
@@ -121,10 +143,24 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
                     <span className="text-muted-foreground">—</span>
                   )}
                 </TableCell>
-                <TableCell className="whitespace-nowrap">{r.city ?? "—"}</TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {r.city ? (
+                    <Provenance source="OpenStreetMap / dealer record" when={asOf(r.updated_at)}>{r.city}</Provenance>
+                  ) : (
+                    "—"
+                  )}
+                </TableCell>
                 <TableCell>{r.state_province ?? "—"}</TableCell>
                 <TableCell>{r.country ?? "—"}</TableCell>
-                <TableCell className="whitespace-nowrap text-muted-foreground">{r.territory ?? "—"}</TableCell>
+                <TableCell className="whitespace-nowrap text-muted-foreground">
+                  {r.territory ? (
+                    <Provenance source="Estimated by Dan" detail="Inferred from other fields, not fetched from a source.">
+                      {r.territory}
+                    </Provenance>
+                  ) : (
+                    "—"
+                  )}
+                </TableCell>
                 <TableCell className="text-center">
                   {r.website ? (
                     <a href={r.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1">

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Inbox, Rocket, Building2, KeyRound, MapPin } from "lucide-react";
 import { cn } from "@/lib/ui";
 
 export function NavLink({
@@ -28,6 +28,38 @@ export function NavLink({
       {icon}
       {children}
     </Link>
+  );
+}
+
+/** Native-feeling bottom tab bar for phones (the sidebar is desktop-only). */
+export function MobileNav() {
+  const pathname = usePathname();
+  const tabs = [
+    { href: "/today", label: "Today", icon: <Inbox className="h-5 w-5" /> },
+    { href: "/sequences", label: "Prospect", icon: <Rocket className="h-5 w-5" /> },
+    { href: "/territory", label: "Territory", icon: <MapPin className="h-5 w-5" /> },
+    { href: "/accounts", label: "Book", icon: <Building2 className="h-5 w-5" /> },
+    { href: "/connections", label: "Setup", icon: <KeyRound className="h-5 w-5" /> },
+  ];
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t bg-card/95 backdrop-blur md:hidden">
+      {tabs.map((t) => {
+        const active = pathname.startsWith(t.href);
+        return (
+          <Link
+            key={t.href}
+            href={t.href}
+            className={cn(
+              "flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px]",
+              active ? "text-brand" : "text-muted-foreground"
+            )}
+          >
+            {t.icon}
+            {t.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
 

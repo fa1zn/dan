@@ -23,7 +23,19 @@
     "hubspot:push": "tsx pipeline/run.ts hubspot push",
     "hubspot:pull": "tsx pipeline/run.ts hubspot pull",
     "hubspot:sync": "tsx pipeline/run.ts hubspot sync",
-    "zoominfo:enrich": "tsx pipeline/run.ts zoominfo"
+    "zoominfo:enrich": "tsx pipeline/run.ts zoominfo",
+    "sequence": "tsx pipeline/sequence/run.ts",
+    "sequence:seed": "tsx pipeline/sequence/run.ts seed",
+    "sequence:enroll": "tsx pipeline/sequence/run.ts enroll",
+    "sequence:tick": "tsx pipeline/sequence/run.ts tick",
+    "sequence:status": "tsx pipeline/sequence/run.ts status",
+    "sequence:sync": "tsx pipeline/sequence/run.ts sync",
+    "sequence:watch": "tsx pipeline/sequence/run.ts watch",
+    "enrich:tech": "tsx pipeline/enrich/fingerprint-cli.ts",
+    "telemetry:status": "tsx pipeline/telemetry-admin.ts status",
+    "telemetry:purge": "tsx pipeline/telemetry-admin.ts purge",
+    "telemetry:wipe": "tsx pipeline/telemetry-admin.ts wipe",
+    "telemetry:export": "tsx pipeline/telemetry-admin.ts export"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.18",

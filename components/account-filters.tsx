@@ -20,10 +20,12 @@ import {
 import { cn } from "@/lib/ui";
 import { STATUSES, STATUS_META } from "@/lib/crm-constants";
 import type { FilterOptions } from "@/lib/queries";
+import type { GeoTree } from "@/lib/geo";
+import { GeoCascade } from "./geo-cascade";
 
 const ALL = "__all";
 
-export function AccountFilters({ options }: { options: FilterOptions }) {
+export function AccountFilters({ options, geo }: { options: FilterOptions; geo: GeoTree }) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
@@ -91,20 +93,23 @@ export function AccountFilters({ options }: { options: FilterOptions }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           {options.oems.map((o) => (
-            <DropdownMenuCheckboxItem key={o} checked={oems.includes(o)} onCheckedChange={() => toggleOem(o)}>
-              {o}
+            <DropdownMenuCheckboxItem key={o.value} checked={oems.includes(o.value)} onCheckedChange={() => toggleOem(o.value)}>
+              {o.value} <span className="ml-1 text-xs text-muted-foreground">({o.count.toLocaleString()})</span>
             </DropdownMenuCheckboxItem>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <FilterSelect label="Country" value={sp.get("country")} options={options.countries} onChange={(v) => setParams({ country: v })} />
-      <FilterSelect label="State" value={sp.get("state")} options={options.states} onChange={(v) => setParams({ state: v })} />
-      <FilterSelect label="Territory" value={sp.get("territory")} options={options.territories} onChange={(v) => setParams({ territory: v })} />
+      <GeoCascade
+        tree={geo}
+        value={{ country: sp.get("country") ?? "", state: sp.get("state") ?? "", city: sp.get("city") ?? "" }}
+        onChange={(v) => setParams({ country: v.country || null, state: v.state || null, city: v.city || null })}
+      />
+
       <FilterSelect
         label="Tier"
         value={sp.get("tier")}
-        options={options.tiers.map((t) => ({ value: t, label: `Tier ${t}` }))}
+        options={options.tiers.map((t) => ({ value: t.value, label: `Tier ${t.value} (${t.count.toLocaleString()})` }))}
         onChange={(v) => setParams({ tier: v })}
       />
       <FilterSelect

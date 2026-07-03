@@ -29,14 +29,14 @@ export function computePamFit(input: PamFitInput): PamFit {
   if (input.website && input.websiteValid) add("Live website", 5);
 
   // Fit / pain — does Pam solve a problem they visibly have?
-  if (kinds.has("greenfield")) add("Greenfield — no chat/messaging vendor", 20);
+  if (kinds.has("greenfield")) add("Greenfield, no chat/messaging vendor", 20);
   else if (kinds.has("displace")) add("Competitor chat installed (displace)", 15);
   if (kinds.has("hours")) add("After-hours coverage gap", 10);
   if (kinds.has("volume")) add("High call volume (busy rooftop)", 10);
   if (kinds.has("quality")) add("Reputation/response gap", 5);
 
   // Size / value
-  if (input.tier === "A") add("Tier A — group / multi-store", 10);
+  if (input.tier === "A") add("Tier A, group / multi-store", 10);
   if (input.brandConfirmed) add("Brand confirmed", 5);
 
   const score = Math.min(100, factors.reduce((s, f) => s + f.points, 0));
@@ -47,7 +47,8 @@ export function computePamFit(input: PamFitInput): PamFit {
   const who = intel.champion?.name
     ? `ask for ${intel.champion.name}${intel.champion.title ? ` (${intel.champion.title})` : ""}`
     : "ask for the GM";
-  const talkTrack = lead ? `${lead} — ${who}.` : `Reach out and ${who}.`;
+  const whoCap = who.charAt(0).toUpperCase() + who.slice(1);
+  const talkTrack = lead ? `${lead}. ${whoCap}.` : `Reach out and ${who}.`;
 
   return { score, band, factors, talkTrack, champion: intel.champion };
 }

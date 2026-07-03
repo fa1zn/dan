@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { MessageSquare, ArrowRightLeft, UserCog, Loader2 } from "lucide-react";
+import { MessageSquare, ArrowRightLeft, UserCog, Loader2, Phone, Gift, Workflow } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Input } from "./ui";
 import { cn } from "@/lib/ui";
 import { STATUSES, STATUS_META, type Status } from "@/lib/crm-constants";
@@ -125,7 +125,19 @@ export function CrmPanel({
             <ul className="space-y-3">
               {activity.map((a) => {
                 const Icon =
-                  a.kind === "note" ? MessageSquare : a.kind === "owner_change" ? UserCog : ArrowRightLeft;
+                  a.kind === "call"
+                    ? Phone
+                    : a.kind === "text"
+                      ? MessageSquare
+                      : a.kind === "gift"
+                        ? Gift
+                        : a.kind === "sequence"
+                          ? Workflow
+                          : a.kind === "note"
+                            ? MessageSquare
+                            : a.kind === "owner_change"
+                              ? UserCog
+                              : ArrowRightLeft;
                 return (
                   <li key={a.id} className="flex gap-2.5">
                     <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">

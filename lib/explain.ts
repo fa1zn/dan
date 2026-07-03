@@ -10,15 +10,15 @@ export const EXPLAIN = {
   phoneValid:
     "Of rooftops that have a phone number, the share that pass libphonenumber validation as a real US/CA number.",
   brandConfirmed:
-    "TRUE only when the rooftop came from an official OEM dealer locator. OSM-sourced rooftops carry a brand tag but aren't OEM-confirmed, so this reads 0% until the OEM adapters run from a non-blocked network.",
+    "TRUE when the rooftop was confirmed against an official OEM dealer locator (not just an OpenStreetMap brand tag). Most of the book is OEM-confirmed; the rest carry a brand tag pending confirmation.",
   status:
     "Where the account sits in Dan's pipeline: New → Working → Engaged → Won/Lost. Set it on the rooftop page; changes are logged to the activity timeline.",
   tools:
-    "Technology detected on the dealer's own website — platform, chat/messaging, digital-retail, trade-in and tracking vendors. Useful competitive intel for what an AI sales agent would sit alongside or replace.",
+    "Technology detected on the dealer's own website: platform, chat/messaging, digital-retail, trade-in and tracking vendors. Useful competitive intel for what an AI sales agent would sit alongside or replace.",
   primaryContact:
     "The decision-maker to call first, scraped from the dealer's staff page and ranked by role (GM → owner → GSM → sales manager …).",
   inHubspot:
-    "Rooftops that matched a company in Pam's HubSpot (pulled read-only). For these, Dan shows the HubSpot lifecycle stage, owner, last activity, and the real CRM contacts — so reps don't re-prospect accounts already being worked.",
+    "Rooftops that matched a company in Pam's HubSpot (pulled read-only). For these, Dan shows the HubSpot lifecycle stage, owner, last activity, and the real CRM contacts, so reps don't re-prospect accounts already being worked.",
 } as const;
 
 export type ExplainKey = keyof typeof EXPLAIN;

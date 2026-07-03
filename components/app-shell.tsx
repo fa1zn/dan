@@ -1,6 +1,49 @@
 import Link from "next/link";
-import { LayoutDashboard, Building2, KanbanSquare, PhoneCall, Plug } from "lucide-react";
-import { NavLink, ThemeToggle } from "./chrome";
+import { Building2, Plug, KeyRound, Inbox, Rocket, MapPin } from "lucide-react";
+import { NavLink, ThemeToggle, MobileNav } from "./chrome";
+import { DataViewToggle } from "./data-view-toggle";
+import { Toaster } from "./toast";
+import { repEnv } from "@/lib/connections";
+import { autopilotActive } from "@/lib/meta";
+
+function StatusBar() {
+  const env = repEnv();
+  const live = env.SEQUENCE_APPLY === "1";
+  const testTo = env.SEQ_TEST_TO;
+  const autopilot = autopilotActive();
+  const manualCalls = live && !testTo && env.SEQ_AUTONOMOUS_CALLS !== "1";
+  return (
+    <div className="hidden items-center gap-3 text-xs md:flex">
+      {manualCalls && (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
+          You tap to call
+        </span>
+      )}
+      <span
+        className={
+          live
+            ? "inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-2.5 py-1 font-medium text-brand"
+            : "inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-muted-foreground"
+        }
+      >
+        <span className={live ? "h-1.5 w-1.5 rounded-full bg-brand" : "h-1.5 w-1.5 rounded-full bg-muted-foreground"} />
+        {live ? "Calling for real" : "Practice mode"}
+      </span>
+      {testTo && (
+        <span
+          className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 font-medium text-amber-700 dark:text-amber-400"
+          title={`Calls and texts go to ${testTo} while in test mode`}
+        >
+          Test mode
+        </span>
+      )}
+      <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+        <span className={autopilot ? "h-1.5 w-1.5 rounded-full bg-emerald-500" : "h-1.5 w-1.5 rounded-full bg-muted-foreground"} />
+        {autopilot ? "Dan’s working" : "Dan’s paused"}
+      </span>
+    </div>
+  );
+}
 
 /** Persistent app chrome: branded sidebar + top bar. */
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -12,22 +55,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             D
           </span>
           <span className="leading-tight">
-            <span className="block text-sm font-semibold tracking-tight">Dan</span>
+            <span className="block font-serif text-base font-medium tracking-tight">Dan</span>
             <span className="block text-xs text-muted-foreground">Pam&rsquo;s sales guy</span>
           </span>
         </Link>
         <nav className="flex flex-col gap-1 px-3 py-2">
-          <NavLink href="/" icon={<LayoutDashboard className="h-4 w-4" />}>
-            Overview
+          <NavLink href="/today" icon={<Inbox className="h-4 w-4" />}>
+            Today
           </NavLink>
-          <NavLink href="/worklist" icon={<PhoneCall className="h-4 w-4" />}>
-            Call list
+          <NavLink href="/sequences" icon={<Rocket className="h-4 w-4" />}>
+            Prospect
+          </NavLink>
+          <NavLink href="/territory" icon={<MapPin className="h-4 w-4" />}>
+            Territory
           </NavLink>
           <NavLink href="/accounts" icon={<Building2 className="h-4 w-4" />}>
-            Accounts
+            Book
           </NavLink>
-          <NavLink href="/pipeline" icon={<KanbanSquare className="h-4 w-4" />}>
-            Pipeline
+
+          <div className="mt-5 px-3 pb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
+            Setup
+          </div>
+          <NavLink href="/connections" icon={<KeyRound className="h-4 w-4" />}>
+            Connections
           </NavLink>
           <NavLink href="/integrations" icon={<Plug className="h-4 w-4" />}>
             Integrations
@@ -42,14 +92,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center justify-between border-b bg-card/60 px-5 backdrop-blur">
-          <div className="text-sm text-muted-foreground md:hidden">Dan</div>
-          <div className="hidden text-sm text-muted-foreground md:block">
-            System of record · US + Canada franchise dealerships
+          <div className="text-sm font-medium md:hidden">Dan</div>
+          <div className="hidden lg:block" />
+          <div className="flex items-center gap-4">
+            <StatusBar />
+            <DataViewToggle />
+            <ThemeToggle />
           </div>
-          <ThemeToggle />
         </header>
-        <main className="flex-1 p-5 md:p-8">{children}</main>
+        <main className="flex-1 p-5 pb-24 md:p-8 md:pb-8">{children}</main>
       </div>
+      <MobileNav />
+      <Toaster />
     </div>
   );
 }

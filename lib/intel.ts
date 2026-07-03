@@ -36,9 +36,9 @@ export interface Intel {
 
 // Pam's champion owns call handling & lead response, then the economic buyer, then sales.
 const ROLE_RANK: { kind: ChampionKind; re: RegExp; reason: string }[] = [
-  { kind: "comms", re: /\b(bdc|internet|e-?commerce|digital|marketing)\b/i, reason: "owns call handling & lead response" },
-  { kind: "economic", re: /\b(dealer principal|general manager|owner|president|managing partner)\b/i, reason: "economic buyer" },
-  { kind: "sales", re: /\b(general sales manager|sales manager|director of sales)\b/i, reason: "sales decision-maker" },
+  { kind: "comms", re: /\b(bdc|internet|e-?commerce|digital|marketing)\b/i, reason: "likely owns lead response (BDC/internet role)" },
+  { kind: "economic", re: /\b(dealer principal|general manager|owner|president|managing partner)\b/i, reason: "likely the economic buyer" },
+  { kind: "sales", re: /\b(general sales manager|sales manager|director of sales)\b/i, reason: "likely a sales decision-maker" },
 ];
 
 const CHAT_VENDORS = ["Podium", "Gubagoo", "ActivEngage", "CarNow", "LivePerson", "Intercom", "Drift"];
@@ -61,22 +61,22 @@ export function computeIntel(input: IntelInput): Intel {
   const whyCall: WhyCall[] = [];
   const chat = CHAT_VENDORS.filter((v) => input.tools.some((t) => t.includes(v)));
   if (chat.length) {
-    whyCall.push({ kind: "displace", label: `Runs ${chat.join(" + ")} for chat/text — a Pam displacement target.` });
+    whyCall.push({ kind: "displace", label: `Runs ${chat.join(" + ")} for chat/text, a Pam displacement target.` });
   } else if (input.tools.length > 0) {
-    whyCall.push({ kind: "greenfield", label: "No chat/messaging vendor detected — greenfield for Pam." });
+    whyCall.push({ kind: "greenfield", label: "No chat/messaging vendor detected, so it's greenfield for Pam." });
   }
 
   if (input.signals.hours && !/sun/i.test(input.signals.hours)) {
-    whyCall.push({ kind: "hours", label: "Appears closed Sundays — after-hours calls go unanswered." });
+    whyCall.push({ kind: "hours", label: "Appears closed Sundays, so after-hours calls go unanswered." });
   }
   if (input.signals.reviewCount && input.signals.reviewCount >= 400) {
     whyCall.push({
       kind: "volume",
-      label: `High inbound volume (~${input.signals.reviewCount.toLocaleString()} reviews) — lots of calls to catch.`,
+      label: `High inbound volume (~${input.signals.reviewCount.toLocaleString()} reviews), lots of calls to catch.`,
     });
   }
   if (input.signals.rating && input.signals.rating < 4.0) {
-    whyCall.push({ kind: "quality", label: `Below-average rating (${input.signals.rating}★) — response/service gaps to fix.` });
+    whyCall.push({ kind: "quality", label: `Below-average rating (${input.signals.rating}★), response/service gaps to fix.` });
   }
 
   // Confidence — how much of this we can stand behind.
