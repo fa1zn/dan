@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { KpiCard, BarList } from "@/components/dashboard-bits";
 import { getKpis, getByOem, getByTerritory, getByTier } from "@/lib/queries";
 import { getPipelineCounts } from "@/lib/crm";
+import { getMonthlyPerformance } from "@/lib/quota";
+import { QuotaPanel } from "@/components/quota-panel";
 import { STATUSES, STATUS_META } from "@/lib/crm-constants";
 import { fmt, pct } from "@/lib/format";
 import { EXPLAIN } from "@/lib/explain";
@@ -16,15 +18,18 @@ export default function OverviewPage() {
   const byTerritory = getByTerritory();
   const byTier = getByTier();
   const pipeline = getPipelineCounts();
+  const perf = getMonthlyPerformance();
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
+        <h1 className="font-serif text-3xl font-medium tracking-tight">Overview</h1>
         <p className="text-sm text-muted-foreground">
-          Dan&rsquo;s book of business — {fmt(k.total)} franchise rooftops across the US and Canada.
+          The team&rsquo;s month against quota, then Dan&rsquo;s book of business, {fmt(k.total)} franchise rooftops across the US and Canada.
         </p>
       </div>
+
+      <QuotaPanel perf={perf} />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <KpiCard title="Total rooftops" value={fmt(k.total)} sub={`${fmt(k.us)} US · ${fmt(k.ca)} Canada`} />

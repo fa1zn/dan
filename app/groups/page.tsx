@@ -21,9 +21,9 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Dealer groups</h1>
+        <h1 className="font-serif text-3xl font-medium tracking-tight">Dealer groups</h1>
         <p className="text-sm text-muted-foreground">
-          One decision, many rooftops — sell to the group, not the store. {fmt(groupedRooftops)} rooftops roll up into {groups.length} known groups.
+          One decision, many rooftops, sell to the group, not the store. {fmt(groupedRooftops)} rooftops roll up into {groups.length} known groups.
         </p>
       </div>
 
@@ -40,11 +40,11 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
               {g.inHubspot > 0 ? <Badge variant="success">In Pam&apos;s CRM</Badge> : <Badge variant="outline">Net-new</Badge>}
             </div>
 
-            {/* Deal size — the number that matters when you sell to a group. */}
+            {/* Deal size, the number that matters when you sell to a group. */}
             <div className="mt-3 flex items-baseline gap-1">
               <span className="text-2xl font-semibold">{g.rooftops}</span>
               <span className="text-sm text-muted-foreground">rooftops</span>
-              <span className="ml-2 inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+              <span className="ml-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
                 <BadgeCheck className="h-3 w-3" /> {g.verified} verified
               </span>
             </div>

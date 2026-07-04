@@ -2,7 +2,7 @@ import type { Country } from "../types";
 
 /**
  * Bounding box in Overpass order: [south, west, north, east] (lat, lng, lat, lng).
- * Boxes are approximate state/province envelopes — they intentionally over-cover
+ * Boxes are approximate state/province envelopes, they intentionally over-cover
  * so no dealer is missed; cross-border bleed is removed downstream by the
  * state_province tag on each record.
  */

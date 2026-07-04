@@ -15,7 +15,7 @@ export default function PipelinePage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Pipeline</h1>
+        <h1 className="font-serif text-3xl font-medium tracking-tight">Pipeline</h1>
         <p className="text-sm text-muted-foreground">
           Dan&rsquo;s accounts by stage. Open a rooftop to move it, log notes, or set the next step.
         </p>
@@ -24,7 +24,7 @@ export default function PipelinePage() {
       <div className="flex gap-4 overflow-x-auto pb-4">
         {STATUSES.map((s) => {
           const total = counts[s];
-          // "New" is the whole untouched book — show a count + link rather than thousands of cards.
+          // "New" is the whole untouched book, show a count + link rather than thousands of cards.
           const rows = s === "new" ? [] : listAccounts({ status: s, pageSize: COLUMN_CAP, sort: "name" }).rows;
           return (
             <div key={s} className="flex w-72 shrink-0 flex-col rounded-lg border bg-card">

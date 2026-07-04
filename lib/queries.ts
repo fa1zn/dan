@@ -230,7 +230,7 @@ export function listAccounts(f: AccountFilters): AccountPage {
   return { rows, total, page, pageSize, pageCount };
 }
 
-/** All matching rows (no pagination) — used by CSV export of the filtered view. */
+/** All matching rows (no pagination), used by CSV export of the filtered view. */
 export function listAllAccounts(f: AccountFilters): AccountRow[] {
   const db = getSqlite();
   const { sql: where, params } = whereClause(f);
@@ -306,11 +306,11 @@ function whyNowReasons(args: {
   metaAds?: { active?: boolean; count?: number }; hasDirect: boolean;
 }): { label: string; tone: "hot" | "info" | "warn" }[] {
   const out: { label: string; tone: "hot" | "info" | "warn" }[] = [];
-  if (args.metaAds?.active) out.push({ label: `Running Meta ads${args.metaAds.count ? ` (${args.metaAds.count})` : ""} — active lead-gen spend`, tone: "hot" });
-  if (args.rating != null && args.rating < 4.0) out.push({ label: `Reviews ${args.rating}★${args.reviewCount ? ` (${args.reviewCount})` : ""} — service-recovery opener`, tone: "warn" });
+  if (args.metaAds?.active) out.push({ label: `Running Meta ads${args.metaAds.count ? ` (${args.metaAds.count})` : ""}, active lead-gen spend`, tone: "hot" });
+  if (args.rating != null && args.rating < 4.0) out.push({ label: `Reviews ${args.rating}★${args.reviewCount ? ` (${args.reviewCount})` : ""}, service-recovery opener`, tone: "warn" });
   if (args.rating != null && args.rating >= 4.5 && (args.reviewCount ?? 0) >= 500) out.push({ label: `High-volume store (${args.rating}★, ${args.reviewCount} reviews)`, tone: "info" });
   const tech = args.tools.find((t) => DISPLACE_TECH.test(t));
-  if (tech) out.push({ label: `Runs ${tech} — displacement angle`, tone: "info" });
+  if (tech) out.push({ label: `Runs ${tech}, displacement angle`, tone: "info" });
   if (args.hasDirect) out.push({ label: "Direct line on file", tone: "hot" });
   if (args.people.length >= 3) out.push({ label: `${args.people.length} decision-makers mapped`, tone: "info" });
   return out.slice(0, 3);
@@ -416,7 +416,7 @@ export function getCallList(state: string, limit = 200): CallListItem[] {
     };
   });
 
-  // Hottest accounts first — reps work the list top-down.
+  // Hottest accounts first, reps work the list top-down.
   items.sort((a, b) => b.pamfit.score - a.pamfit.score);
   return items;
 }
@@ -453,9 +453,9 @@ export interface Bucket {
 /**
  * Group rooftops into the three states a rep actually works in, so a big book
  * never lands as one wall of rows:
- *   ready    — has a phone AND a named decision-maker → "call this person"
- *   callable — has a phone, no named contact yet      → "call the main line"
- *   research — no phone yet (skeleton)                → "enrich first"
+ *   ready   , has a phone AND a named decision-maker → "call this person"
+ *   callable, has a phone, no named contact yet      → "call the main line"
+ *   research, no phone yet (skeleton)                → "enrich first"
  * Within each, the independently-verified (2+ source) rooftops sort first.
  */
 export function getAccountBuckets(states: string[], crm: CrmFilter = "all", quality: QualityFilter = "trusted", cap = 24): { buckets: Bucket[]; total: number } {
@@ -480,7 +480,7 @@ export function getAccountBuckets(states: string[], crm: CrmFilter = "all", qual
 
   // A physical rooftop can hold several franchises (Jeep+Ram+Dodge+Chrysler = 4 rows, one
   // building the rep calls once). Collapse co-located franchises into one card, keyed by the
-  // "call once" signal — the shared phone line, else geo, else the row's own id (no grouping).
+  // "call once" signal, the shared phone line, else geo, else the row's own id (no grouping).
   const phDigits = (p: string | null) => (p ?? "").replace(/\D/g, "").slice(-10);
   const tierRank = (t: string | null) => (t === "platinum" ? 3 : t === "gold" ? 2 : t === "silver" ? 1 : 0);
   const roofKey = (r: Record<string, unknown>) => {

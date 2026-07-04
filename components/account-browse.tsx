@@ -10,18 +10,18 @@ import { fmt } from "@/lib/format";
 
 /** Plain-language framing for each work-readiness bucket (the rep, seeing it cold). */
 const BUCKET_META: Record<Bucket["key"], { title: string; blurb: string }> = {
-  ready: { title: "Ready to call", blurb: "Has a phone number and a named decision-maker — call this person now." },
-  callable: { title: "Has a number", blurb: "Has a phone number but no named contact yet — call the main line and ask for the GM." },
-  research: { title: "Needs research", blurb: "No phone number yet — enrich the rooftop before working it." },
+  ready: { title: "Ready to call", blurb: "Has a phone number and a named decision-maker, call this person now." },
+  callable: { title: "Has a number", blurb: "Has a phone number but no named contact yet, call the main line and ask for the GM." },
+  research: { title: "Needs research", blurb: "No phone number yet, enrich the rooftop before working it." },
 };
 
-// Quality at a glance — the rep should know if they can trust the row before they act.
+// Quality at a glance, the rep should know if they can trust the row before they act.
 // Platinum (manufacturer-confirmed) is the norm now; everything below it is called out
 // LOUDLY as "not manufacturer-confirmed" so the rare unconfirmed rows never hide in the list.
 const TIER_PILL: Record<string, { label: string; cls: string }> = {
   platinum: { label: "✓ Manufacturer-verified", cls: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300" },
   gold: { label: "⚠ Not mfr-confirmed", cls: "bg-amber-100 text-amber-800 ring-1 ring-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:ring-amber-800" },
-  silver: { label: "⚠ Single source — verify", cls: "bg-amber-100 text-amber-800 ring-1 ring-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:ring-amber-800" },
+  silver: { label: "⚠ Single source, verify", cls: "bg-amber-100 text-amber-800 ring-1 ring-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:ring-amber-800" },
   flagged: { label: "⚠ Flagged", cls: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300" },
 };
 
@@ -80,7 +80,7 @@ function DealerCard({ d }: { d: BucketItem }) {
             In CRM{d.hsOwner ? ` · ${d.hsOwner}` : ""}
           </Badge>
         ) : (
-          <Badge variant="outline" title="Not in Pam's HubSpot — net-new whitespace">Net-new</Badge>
+          <Badge variant="outline" title="Not in Pam's HubSpot, net-new whitespace">Net-new</Badge>
         )}
       </div>
 
@@ -96,7 +96,7 @@ function DealerCard({ d }: { d: BucketItem }) {
   );
 }
 
-/** A labeled, chunked section — a finite, digestible set with a "see all" escape hatch. */
+/** A labeled, chunked section, a finite, digestible set with a "see all" escape hatch. */
 export function BucketSection({ bucket, seeAllHref }: { bucket: Bucket; seeAllHref: string }) {
   const meta = BUCKET_META[bucket.key];
   if (bucket.total === 0) return null;

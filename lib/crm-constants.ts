@@ -1,4 +1,4 @@
-// Shared CRM vocabulary — safe to import from both client and server components.
+// Shared CRM vocabulary, safe to import from both client and server components.
 
 export const STATUSES = ["new", "working", "engaged", "won", "lost"] as const;
 export type Status = (typeof STATUSES)[number];

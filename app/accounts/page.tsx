@@ -44,7 +44,7 @@ function StatusDot({ state, title }: { state: boolean | null; title: string }) {
   return <span className={`inline-block h-2 w-2 rounded-full ${color}`} title={`${title}: ${state == null ? "unknown" : state ? "valid" : "invalid"}`} />;
 }
 
-/** State scope chips — calm way to narrow a big book to one territory. */
+/** State scope chips, calm way to narrow a big book to one territory. */
 function StateChips({ active, view }: { active: string | null; view: "cards" | "table" }) {
   const base = "rounded-full border px-3 py-1 text-sm transition-colors";
   const on = "border-foreground bg-foreground text-background";
@@ -79,8 +79,8 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
     <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Accounts</h1>
-          <p className="text-sm text-muted-foreground">{scopeLabel} — grouped by what to do next.</p>
+          <h1 className="font-serif text-3xl font-medium tracking-tight">Accounts</h1>
+          <p className="text-sm text-muted-foreground">{scopeLabel}, grouped by what to do next.</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex rounded-lg border p-0.5">
@@ -110,7 +110,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
   );
 }
 
-/* Quality chips — make trust an active control: working views hide noise, default to verified. */
+/* Quality chips, make trust an active control: working views hide noise, default to verified. */
 function QualityChips({ active, stateParam, crm }: { active: QualityFilter; stateParam: string | null; crm: CrmFilter }) {
   const base = "rounded-full border px-3 py-1 text-sm transition-colors";
   const on = "border-foreground bg-foreground text-background";
@@ -134,7 +134,7 @@ function QualityChips({ active, stateParam, crm }: { active: QualityFilter; stat
   );
 }
 
-/* Coverage chips — split the book by Pam's existing CRM footprint. */
+/* Coverage chips, split the book by Pam's existing CRM footprint. */
 function CoverageChips({ active, stateParam }: { active: CrmFilter; stateParam: string | null }) {
   const base = "rounded-full border px-3 py-1 text-sm transition-colors";
   const on = "border-foreground bg-foreground text-background";

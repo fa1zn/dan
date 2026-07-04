@@ -1,5 +1,5 @@
 /**
- * Dealer GROUPS — the car-industry primitive. ~35% of franchise rooftops are owned by a
+ * Dealer GROUPS, the car-industry primitive. ~35% of franchise rooftops are owned by a
  * group, and Pam sells to the GROUP (one decision → many stores), not the rooftop. This
  * first pass detects the big, name-branded public groups (the ones Pam most wants); deeper
  * ownership (ZoomInfo/HubSpot corporate hierarchy) is a later upgrade.

@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent, Badge } from "@/components/ui
 import { sourceLabel, sourceVerifyHref, osmLink } from "@/components/source-tag";
 
 /**
- * Per-account DATA CONFIDENCE rubric — the trust layer made visible. Shows exactly
+ * Per-account DATA CONFIDENCE rubric, the trust layer made visible. Shows exactly
  * how many INDEPENDENT sources triangulate this rooftop, which ones (with verify
  * links), whether the manufacturer confirms it, field-by-field provenance, and when
  * it was last checked. The whole point: a rep can see *why* to trust a row before
@@ -21,13 +21,13 @@ interface Person {
 }
 
 const TIER = {
-  platinum: { label: "Platinum", blurb: "Manufacturer-confirmed or 3+ independent sources — certified.", cls: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300" },
-  gold: { label: "Gold", blurb: "Two independent sources agree — verified.", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" },
-  silver: { label: "Silver", blurb: "Single source — probable, verify before acting.", cls: "bg-muted text-muted-foreground" },
-  flagged: { label: "Flagged", blurb: "Sources conflict or the name looks non-franchise — review.", cls: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300" },
+  platinum: { label: "Platinum", blurb: "Manufacturer-confirmed or 3+ independent sources, certified.", cls: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300" },
+  gold: { label: "Gold", blurb: "Two independent sources agree, verified.", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" },
+  silver: { label: "Silver", blurb: "Single source, probable, verify before acting.", cls: "bg-muted text-muted-foreground" },
+  flagged: { label: "Flagged", blurb: "Sources conflict or the name looks non-franchise, review.", cls: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300" },
 } as const;
 
-// How each independent source *learned* the dealer exists — independence is the point.
+// How each independent source *learned* the dealer exists, independence is the point.
 const HOW: Record<string, string> = {
   osm: "community-mapped",
   google_places: "mapping + real customer reviews",
@@ -59,7 +59,7 @@ export function DataConfidence({
 
   const lastChecked = updatedAt ? new Date(updatedAt).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "—";
 
-  // What it would take to raise the grade — honest about the gap.
+  // What it would take to raise the grade, honest about the gap.
   const toRaise =
     trustTier === "platinum" ? null
     : brandConfirmed ? null
@@ -114,7 +114,7 @@ export function DataConfidence({
         <div className="rounded-lg border bg-muted/30 px-3 py-2">
           <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Field provenance</div>
           <div className="mt-1 divide-y divide-border/60">
-            <Row label="Manufacturer-confirmed" value={brandConfirmed ? "Yes — dealer code on file" : "Not yet"} ok={brandConfirmed} />
+            <Row label="Manufacturer-confirmed" value={brandConfirmed ? "Yes, dealer code on file" : "Not yet"} ok={brandConfirmed} />
             <Row label="Phone" value={phone ? (phoneValid === 1 ? "format-valid" : "present, unverified") : "missing"} ok={phone ? phoneValid === 1 : null} />
             <Row label="Website" value={website ? (websiteValid === 1 ? "reachable" : websiteValid === 0 ? "unreachable" : "not checked") : "missing"} ok={website ? (websiteValid == null ? null : websiteValid === 1) : null} />
             <Row

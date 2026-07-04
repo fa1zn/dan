@@ -27,7 +27,7 @@ export const INTEGRATIONS: Integration[] = [
     tier: "Free",
     fixedStatus: "connected",
     blurb:
-      "The rooftop backbone — every franchise dealership's name, brand, address, and coordinates, pulled from OpenStreetMap via the Overpass API. No key required.",
+      "The rooftop backbone, every franchise dealership's name, brand, address, and coordinates, pulled from OpenStreetMap via the Overpass API. No key required.",
   },
   {
     id: "website",
@@ -46,11 +46,11 @@ export const INTEGRATIONS: Integration[] = [
     envVar: "PROXY_URL",
     availableNow: true,
     blurb:
-      "Official franchise lists for ~20 brands (GM, Stellantis, Hyundai, Kia, Nissan, Subaru, BMW, Mercedes, Lexus, Acura, Audi, Volvo…) — sets brand_confirmed and pushes coverage toward ~24K. Endpoints are bot-protected, so they need a non-blocked IP.",
+      "Official franchise lists for ~20 brands (GM, Stellantis, Hyundai, Kia, Nissan, Subaru, BMW, Mercedes, Lexus, Acura, Audi, Volvo…), sets brand_confirmed and pushes coverage toward ~24K. Endpoints are bot-protected, so they need a non-blocked IP.",
     steps: [
       "Get a residential/mobile proxy (Bright Data, Oxylabs, Smartproxy, IPRoyal…).",
       "Add PROXY_URL=http://user:pass@host:port to .env.",
-      "Run `npm run pipeline:ingest` — the OEM adapters fire through the proxy.",
+      "Run `npm run pipeline:ingest`, the OEM adapters fire through the proxy.",
     ],
   },
   {
@@ -61,7 +61,7 @@ export const INTEGRATIONS: Integration[] = [
     envVar: "GOOGLE_PLACES_API_KEY",
     availableNow: true,
     blurb:
-      "Independent cross-confirmation — matches each rooftop on name+geo, confirms/fills address, phone, and website, and counts as a second source so rooftops reach gold/platinum trust. ~$200/mo Google credit covers a big chunk.",
+      "Independent cross-confirmation, matches each rooftop on name+geo, confirms/fills address, phone, and website, and counts as a second source so rooftops reach gold/platinum trust. ~$200/mo Google credit covers a big chunk.",
     steps: [
       "Google Cloud → enable Places API → create an API key (billing required).",
       "Add GOOGLE_PLACES_API_KEY to .env (restrict the key to Places API).",
@@ -83,6 +83,21 @@ export const INTEGRATIONS: Integration[] = [
     ],
   },
   {
+    id: "google-calendar",
+    name: "Google Calendar + Meet",
+    category: "Scheduling",
+    tier: "Free tier",
+    envVar: "GOOGLE_CALENDAR_TOKEN",
+    availableNow: true,
+    blurb:
+      "Books demos onto the rep's calendar with a Google Meet link attached. Today Dan opens a pre-filled Google Calendar event when a rep taps 'Booked demo'; connect the Calendar API to auto-create the event and the Meet link, and to sync demo times back into quota tracking.",
+    steps: [
+      "Google Cloud → enable the Google Calendar API → create an OAuth client.",
+      "Add GOOGLE_CALENDAR_TOKEN (OAuth refresh token) and GOOGLE_CALENDAR_ID to .env.",
+      "Dan then auto-creates the event with a Meet link whenever a rep books a demo.",
+    ],
+  },
+  {
     id: "zoominfo",
     name: "ZoomInfo",
     category: "Contact data",
@@ -90,7 +105,7 @@ export const INTEGRATIONS: Integration[] = [
     envVar: "ZOOMINFO_USERNAME",
     availableNow: true,
     blurb:
-      "Direct dials and verified emails for the decision-makers Dan already found by name — so reps reach the GM's cell, not the front desk. Credit-safe: dry-run first, scoped to your top accounts.",
+      "Direct dials and verified emails for the decision-makers Dan already found by name, so reps reach the GM's cell, not the front desk. Credit-safe: dry-run first, scoped to your top accounts.",
     steps: [
       "In ZoomInfo GTM Studio: API/MCP → REST API → Set up keys (not the MCP connectors).",
       "Add ZOOMINFO_USERNAME + ZOOMINFO_PASSWORD to .env.",
@@ -105,7 +120,7 @@ export const INTEGRATIONS: Integration[] = [
     envVar: "CLAY_TOKEN",
     availableNow: true,
     blurb:
-      "Waterfall enrichment across many providers from one place — fills gaps in contacts, emails, and firmographics the free website pass misses. Plugs into the same Enricher interface.",
+      "Waterfall enrichment across many providers from one place, fills gaps in contacts, emails, and firmographics the free website pass misses. Plugs into the same Enricher interface.",
     steps: [
       "In Clay: create a table + an HTTP API / webhook source, copy its API key.",
       "Add CLAY_TOKEN (and CLAY_WEBHOOK_URL) to .env; I'll wire the enricher to your table's fields.",

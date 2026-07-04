@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, User, ArrowRight, Star, Zap, Phone } from "lucide-react";
+import { MapPin, User, ArrowRight, Star, Phone } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
 import { StateTabs } from "@/components/state-tabs";
 import { StatusBadge } from "@/components/crm-panel";
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 type SP = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
-// A rep works the top of the list — not 2,000 rows. Show the day's best calls, hold the rest.
+// A rep works the top of the list, not 2,000 rows. Show the day's best calls, hold the rest.
 const TODAY_CAP = 20;
 
 export default async function TodayPage({ searchParams }: { searchParams: Promise<SP> }) {
@@ -26,7 +26,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
 
   const all = getCallList(state);
   // Today = fresh, callable accounts not yet worked. Logging a call advances the status,
-  // so it drops off the list — the rep clears their day instead of re-seeing worked rooftops.
+  // so it drops off the list, the rep clears their day instead of re-seeing worked rooftops.
   const callable = all.filter((i) => (i.primary?.phone || i.primary?.mobile || i.phone) && i.status === "new");
   const today = callable.slice(0, TODAY_CAP);
   const hot = today.filter((i) => i.pamfit.band === "Hot").length;
@@ -34,7 +34,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
   return (
     <div className="mx-auto max-w-3xl space-y-5 pb-12">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Today</h1>
+        <h1 className="font-serif text-3xl font-medium tracking-tight">Today</h1>
         <p className="text-sm text-muted-foreground">
           Your best calls in {state}, ranked by fit for Pam. Each one has who to ask for, why now, and an opener you can read.
           Work top-down.
@@ -50,7 +50,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
         <Link href={`/accounts?state=${state}`} className="text-primary hover:underline">See the full book →</Link>
       </p>
 
-      <ol className="space-y-3">
+      <ol className="border-t border-border divide-y divide-border">
         {today.length === 0 && <Card className="p-8 text-center text-muted-foreground">No callable rooftops in {state} yet.</Card>}
 
         {today.map((it, idx) => {
@@ -64,9 +64,9 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                 ? { number: it.phone, dnc: false, kind: "main" as const }
                 : null;
           return (
-            <Card key={it.id} className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+            <li key={it.id} className="py-6">
+              <div className="flex items-start gap-4">
+                <div className="mt-0.5 w-6 shrink-0 font-serif text-lg tabular-nums text-brand">
                   {idx + 1}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -79,7 +79,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                     {it.oem && <Badge variant="muted">{it.oem}</Badge>}
                     {it.rating != null && (
                       <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground" title={`${it.reviewCount ?? 0} Google reviews`}>
-                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {it.rating}
+                        <Star className="h-3 w-3 fill-muted-foreground/40 text-muted-foreground" /> {it.rating}
                         {it.reviewCount ? <span className="text-muted-foreground/70"> ({fmt(it.reviewCount)})</span> : null}
                       </span>
                     )}
@@ -103,18 +103,17 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                   {it.whyNow.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {it.whyNow.map((w, i) => (
-                        <span key={i} className={"inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium " +
-                          (w.tone === "hot" ? "bg-brand/10 text-brand" : w.tone === "warn" ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400" : "bg-muted text-muted-foreground")}>
-                          <Zap className="h-3 w-3" /> {w.label}
+                        <span key={i} className={"inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs " +
+                          (w.tone === "hot" ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground")}>
+                          {w.label}
                         </span>
                       ))}
                     </div>
                   )}
 
-                  {/* the opener — the star of the card */}
-                  <div className="mt-2.5 rounded-lg border-l-2 border-brand bg-brand/5 px-3 py-2 text-sm">
-                    <span className="text-xs font-medium uppercase tracking-wide text-brand">Opener</span>
-                    <p className="mt-0.5 italic text-foreground">&ldquo;{it.pamfit.opener}&rdquo;</p>
+                  {/* the opener, the star of the card */}
+                  <div className="mt-3 border-l-2 border-brand pl-3.5">
+                    <p className="font-serif text-[15px] italic leading-snug text-foreground/90">{it.pamfit.opener}</p>
                   </div>
 
                   {/* action */}
@@ -128,13 +127,13 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                       Full brief <ArrowRight className="h-3 w-3" />
                     </Link>
                   </div>
-                  {/* work it — log the call outcome, advances the account */}
+                  {/* work it, log the call outcome, advances the account */}
                   <div className="mt-2 border-t pt-2">
-                    <LogCall id={it.id} />
+                    <LogCall id={it.id} dealer={it.name} />
                   </div>
                 </div>
               </div>
-            </Card>
+            </li>
           );
         })}
       </ol>

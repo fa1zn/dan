@@ -1,4 +1,4 @@
-// Sales intelligence synthesized from the data Dan already scraped — the rep-facing
+// Sales intelligence synthesized from the data Dan already scraped, the rep-facing
 // answer to "who do I call, why, and can I trust this?" No new fetching; pure logic
 // over contacts + tech stack + signals + validation.
 
@@ -60,30 +60,30 @@ export function computeIntel(input: IntelInput): Intel {
   }
   if (!champion && people[0]) champion = { ...people[0], kind: "sales", reason: "primary contact" };
 
-  // Why call — reasons derived from existing signals, sharpest-and-most-reliable FIRST.
+  // Why call, reasons derived from existing signals, sharpest-and-most-reliable FIRST.
   // Review data (rating/volume/hours) is 94% covered and verifiable; tech detection is thin,
   // so it leads only when nothing better fires (never open a call on a guess about their stack).
   const whyCall: WhyCall[] = [];
   if (input.signals.rating && input.signals.rating < 4.0) {
-    whyCall.push({ kind: "quality", label: `Below-average rating (${input.signals.rating}★) — reviews point to slow response/callbacks.` });
+    whyCall.push({ kind: "quality", label: `Below-average rating (${input.signals.rating}★), reviews point to slow response and callbacks.` });
   }
   if (input.signals.closedSunday) {
-    whyCall.push({ kind: "hours", label: "Closed Sundays — after-hours calls & web leads go unanswered." });
+    whyCall.push({ kind: "hours", label: "Closed Sundays, after-hours calls and web leads go unanswered." });
   }
   if (input.signals.reviewCount && input.signals.reviewCount >= 400) {
     whyCall.push({
       kind: "volume",
-      label: `High inbound volume (~${input.signals.reviewCount.toLocaleString()} reviews) — lots of calls to catch.`,
+      label: `High inbound volume (~${input.signals.reviewCount.toLocaleString()} reviews), lots of calls to catch.`,
     });
   }
   const chat = CHAT_VENDORS.filter((v) => input.tools.some((t) => t.includes(v)));
   if (chat.length) {
-    whyCall.push({ kind: "displace", label: `Runs ${chat.join(" + ")} for chat/text — a Pam displacement target.` });
+    whyCall.push({ kind: "displace", label: `Runs ${chat.join(" + ")} for chat/text, a Pam displacement target.` });
   } else if (input.tools.length > 0) {
-    whyCall.push({ kind: "greenfield", label: "No chat/messaging vendor detected — greenfield for Pam." });
+    whyCall.push({ kind: "greenfield", label: "No chat/messaging vendor detected, greenfield for Pam." });
   }
 
-  // Confidence — how much of this we can stand behind.
+  // Confidence, how much of this we can stand behind.
   const sig: string[] = [];
   if (input.phone && input.phoneValid) sig.push("Phone validated");
   if (input.website && input.websiteValid) sig.push("Website live");

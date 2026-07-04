@@ -33,7 +33,7 @@ export function KpiCard({
   );
 }
 
-/** Horizontal bar list — a lightweight, server-rendered chart. */
+/** Horizontal bar list, a lightweight, server-rendered chart. */
 export function BarList({ items, color = "primary" }: { items: Tally[]; color?: "primary" | "brand" }) {
   const max = Math.max(1, ...items.map((i) => i.n));
   const bar = color === "brand" ? "bg-brand" : "bg-primary";

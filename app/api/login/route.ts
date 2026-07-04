@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-/** Auth gate — verifies the shared password and sets an httpOnly session cookie.
+/** Auth gate, verifies the shared password and sets an httpOnly session cookie.
  *  Internal-tool grade: a single team password from env. (Production would move to
  *  per-user SSO + real sessions; this closes the "wide-open app" hole now.) */
 export async function POST(req: Request) {

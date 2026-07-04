@@ -10,12 +10,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <div className="flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand font-bold text-brand-foreground">D</span>
           <div>
-            <div className="text-sm font-semibold">Dan — Pam&rsquo;s sales guy</div>
+            <div className="text-sm font-semibold">Dan, Pam&rsquo;s sales guy</div>
             <div className="text-xs text-muted-foreground">Internal sales tool · authorized access only</div>
           </div>
         </div>
         <div className="flex items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground">
-          <ShieldCheck className="h-3.5 w-3.5 text-brand" /> Contains licensed contact data — do not share or export.
+          <ShieldCheck className="h-3.5 w-3.5 text-brand" /> Contains licensed contact data, do not share or export.
         </div>
         <input
           type="password"

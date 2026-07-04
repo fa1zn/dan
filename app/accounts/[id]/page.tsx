@@ -36,7 +36,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-/** A value Dan computed/inferred (not fetched from a source) — labelled so. */
+/** A value Dan computed/inferred (not fetched from a source), labelled so. */
 function Inferred({ children }: { children: React.ReactNode }) {
   return (
     <span>
@@ -135,7 +135,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">{a.name}</h1>
+            <h1 className="font-serif text-3xl font-medium tracking-tight">{a.name}</h1>
             <StatusBadge status={crm.status} />
             {a.tier === "A" ? <Badge variant="brand">Tier A</Badge> : a.tier ? <Badge variant="muted">Tier {a.tier}</Badge> : null}
             <InfoTip label="Tier">{EXPLAIN.tier}</InfoTip>
@@ -173,7 +173,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
             {a.hs_in_crm ? <Badge variant="success">In HubSpot</Badge> : null}
             {detectGroup(a.name) ? (
               <Link href={`/groups`}>
-                <Badge variant="brand" title="Owned by a dealer group — sell to the group, not just this store">
+                <Badge variant="brand" title="Owned by a dealer group, sell to the group, not just this store">
                   {detectGroup(a.name)} group
                 </Badge>
               </Link>
@@ -261,7 +261,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
               </div>
             ) : (
               <div className="mt-1.5 text-sm text-muted-foreground">
-                No named decision-maker yet — call the main line{a.phone ? ` (${a.phone})` : ""}.
+                No named decision-maker yet, call the main line{a.phone ? ` (${a.phone})` : ""}.
               </div>
             )}
           </div>
@@ -279,7 +279,7 @@ export default async function AccountDetail({ params }: { params: Promise<{ id: 
               </ul>
             ) : (
               <div className="mt-1.5 text-sm text-muted-foreground">
-                No standout trigger scraped yet — enrich this rooftop for tech/hours/reviews signals.
+                No standout trigger scraped yet, enrich this rooftop for tech/hours/reviews signals.
               </div>
             )}
           </div>
